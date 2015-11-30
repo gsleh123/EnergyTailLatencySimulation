@@ -45,7 +45,7 @@ class StatObject:
 		""" Calculates an Exponentially Weighed Moving Average
 		Returns None if not enough samples"""
 		
-		if len(dataset) < sample_count:
+		if len(self.dataset) < sample_count:
 			return None
 
 		my_weights = []
@@ -53,5 +53,5 @@ class StatObject:
 			my_weights.append(2**b)
 
 		# Get the last sample_count samples, weight using the generated weights
-		return numpy.average(dataset[-sample_count,:], weights=my_weights)
+		return numpy.average(self.dataset[-sample_count:], weights=my_weights)
 

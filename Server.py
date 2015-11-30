@@ -2,6 +2,9 @@
 import random
 import simpy
 import math
+import numpy as np
+from collections import deque
+from pprint import pprint
 
 from Packet import Packet
 
@@ -24,9 +27,12 @@ class Server:
 		self.base_clock_rate = base_clock_rate
 		self.increased_clock_rate = increased_clock_rate
 		self.current_clock_rate = base_clock_rate
-		self.current_temp = 30
-		self.max_temp = 70
-		#self.temp_increase_coef
+
+		self.resting_temp = 30.0
+		self.current_temp = 30.0
+		self.max_temp = 70.0
+		self.recent_ewma = deque()
+		self.burst_start = 0
 		
 	def packets_arrival(self, env):
 		# packet arrivals 
@@ -35,7 +41,7 @@ class Server:
 			# Infinite loop for generating packets
 			arrival_rate = self.arrival_rate
 
-
+			self.adjust_temp()
 
 			yield env.timeout(random.expovariate(self.arrival_rate))
 			# arrival time of one packet
@@ -64,17 +70,60 @@ class Server:
 				self.flag_processing = 0
 				self.start_idle_time = env.now
 
-	def adjust_temp():
+	def adjust_temp(self):
 		""" Implement the heat control/dissapation and
 		CPU freq modifications here"""
 
 		# TODO: remove hard-coded value
-		num_of_samples = 32
+		num_of_samples = 3
 
-		ewma = Packet_Delay.EWMA(num_of_samples)
+		ewma = self.Packet_Delay.EWMA(num_of_samples)
 
 		if ewma == None:
 			return
 
-		
+		self.recent_ewma.appendleft(ewma)
+
+		# If we have less than num_of_samples^2, then skip
+		# i.e. for 32 samples per ewma,
+		# we want at least 1024 for calculating percentiles
+		if len(self.recent_ewma) < num_of_samples**2:
+			return
+
+		# Maintain the queue size to num_of_samples^2
+		self.recent_ewma.pop()
+
+		if self.current_clock_rate == self.base_clock_rate:
+			# Normal clock freq
+			
+			# This is the timing for the nth-percentile
+			percentile_timing = np.percentile(np.array(self.recent_ewma), 90)
+
+			# lower temp
+			temp_decrease_coef = 1 + (self.base_clock_rate / self.increased_clock_rate) * self.Packet_Delay.dataset[-1]/1000
+			self.current_temp = min(self.resting_temp, self.current_temp * temp_decrease_coef)
+
+			if ewma > percentile_timing or self.current_temp >= self.max_temp:
+				self.current_clock_rate = self.increased_clock_rate
+				print("%3i clock increased. temp: %f" % (self.packet_number, self.current_temp))
+				self.burst_start = self.packet_number
+
+				if self.current_temp >= self.max_temp:
+					print("Clock freq dropped due to high temp")
+
+		elif self.current_clock_rate == self.increased_clock_rate:
+			# Increased clock freq
+
+			percentile_timing = np.percentile(np.array(self.recent_ewma), 20)
+
+			# raise temp, scaling by most recent latency
+			temp_increase_coef = 1 + (self.increased_clock_rate / self.base_clock_rate) * self.Packet_Delay.dataset[-1]/1000
+			print("temp increased to %f" % (self.current_temp * temp_increase_coef))
+			self.current_temp = self.current_temp * temp_increase_coef
+
+			if ewma <= percentile_timing:
+				self.current_clock_rate = self.base_clock_rate
+				print("%3i clock decreased. temp: %i" % (self.packet_number, self.current_temp))
+
+				print("Last burst lasted %i packets\n" % (self.packet_number - self.burst_start))
 

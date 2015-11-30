@@ -2,7 +2,7 @@
 from Simulator import Simulator
 
 RANDOM_SEED = 29
-SIM_TIME = 100000
+SIM_TIME = 1000
 MU = 1
 
 def main():

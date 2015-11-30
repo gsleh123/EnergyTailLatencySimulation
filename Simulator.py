@@ -20,7 +20,7 @@ class Simulator(object):
 	
 		
 	def Run(self, service_time_base_mu):
-		for arrival_rate in [0.1, 0.2]:
+		for arrival_rate in [0.8]:
 			env = simpy.Environment()
 			Packet_Delay = StatObject()
 			Server_Idle_Periods = StatObject()
