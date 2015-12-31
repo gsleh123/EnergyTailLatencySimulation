@@ -1,12 +1,13 @@
 
 import simpy
 import random
+from collections import deque
 
 from ThermalModel import ThermalSlack
 
 env = simpy.Environment()
 hosts = []
-num_of_hosts = 1
+num_of_hosts = 4
 
 def main():
     global env
@@ -16,9 +17,13 @@ def main():
         env.process(hosts[-1].packet_arrival())
         env.process(hosts[-1].packet_process())
 
-    env.run(until=1000000)
+    env.run(until=100000)
 
     print('done')
+
+    print('Host | PktCnt')
+    for i in range(num_of_hosts):
+        print('%i | %i' % (i, hosts[i].packet_queue))
 
 
 class Host(object):
@@ -29,6 +34,23 @@ class Host(object):
         self.packet_queue = 0
         self.thermal_slack = ThermalSlack()
 
+        self.time_of_last_arrival = 0
+        # exponentially weighted rolling average of packet arrival rate
+        self.ewra = 0
+        # a coefficient for the ewra between 0-1
+        # higher values = more influence on the current measurement
+        # lower values = history keeps impact longer
+        # this method uses the entire history (through the current mean)
+        # but the number of effective samples is approximated as N = alpha^(-1)
+        # reference: http://stats.stackexchange.com/a/44651
+        self.ewra_alpha = 0.1
+
+        # TODO: softcode the maxlen
+        # this is a circular buffer for storing past ewra values
+        # these will be used to calculate percentiles
+        # maxlen=50 means the ewra at the last 50 arrivals will be used
+        self.ewra_samples = deque([], maxlen = 50)
+
     def packet_arrival(self):
         global env
 
@@ -36,6 +58,14 @@ class Host(object):
             yield env.timeout(random.expovariate(self.arrival_rate))
 
             self.packet_queue += 1
+
+            # time since the last packet arrived
+            time_diff = env.now - self.time_of_last_arrival
+
+            # decide if we should adjust the frequency
+            
+
+            self.ewra = self.ewra + self.ewra_alpha*(time_diff - self.ewra)
         
     def packet_process(self):
         global env

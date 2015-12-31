@@ -47,4 +47,13 @@ class ThermalSlack(object):
 			# We know the temp is not enough to overflow
 			self.buffer += temp_to_add
 
-		print('tick')		
+		print('tick')
+
+	def SetFreq(self, new_freq):
+		
+		# make sure this freq exists in temp_table
+		if new_freq not in temp_table:
+			raise KeyError('No thermal entry for frequency %f' % (new_freq))
+
+		self.freq = new_freq
+
