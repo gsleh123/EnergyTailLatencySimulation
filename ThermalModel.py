@@ -18,7 +18,8 @@ class ThermalSlack(object):
 		self.temp_table[2.5] = 15
 
 		self.base_freq = 1.5
-
+		self.increased_avg_freq = 2.0 # to handle increased average
+		self.sudden_spike_freq = 2.5 # to handle increased std-dev
 
 	def Tick(self):
 		""" We assume the heat generation is purely based on clock rate

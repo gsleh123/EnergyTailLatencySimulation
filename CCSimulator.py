@@ -2,6 +2,7 @@
 import simpy
 import random
 from collections import deque
+import numpy as np
 
 from ThermalModel import ThermalSlack
 
@@ -63,9 +64,27 @@ class Host(object):
             time_diff = env.now - self.time_of_last_arrival
 
             # decide if we should adjust the frequency
+            # the thermal slack class will downclock if needed (due to temp)
             
-
             self.ewra = self.ewra + self.ewra_alpha*(time_diff - self.ewra)
+
+            if len(self.ewra_samples) == 0:
+                self.ewra_samples.append(self.ewra)
+                continue
+
+            if self.thermal_slack.freq == self.thermal_slack.base_freq:
+
+                if self.ewra > np.percentile(self.ewra_samples, 80):
+                    self.thermal_slack.freq = self.thermal_slack.sudden_spike_freq
+                #elif self.ewra_samples[0:50/2]
+
+            else: # we are at a frequency higher than base
+
+                # if we are at less than 40th percentile, downclock
+                if self.ewra < np.percentile(self.ewra_samples, 40):
+                    self.thermal_slack.freq = self.thermal_slack.base_freq
+
+            self.ewra_samples.append(self.ewra)
         
     def packet_process(self):
         global env
