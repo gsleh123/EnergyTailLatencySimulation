@@ -10,11 +10,11 @@ latest_hosts = []
 
 @app.route('/js/<path:path>')
 def JS(path):
-	return send_from_directory('js', path)
+    return send_from_directory('js', path)
 
 @app.route('/css/<path:path>')
 def CSS(path):
-	return send_from_directory('css', path)
+    return send_from_directory('css', path)
 
 @app.route('/')
 def index():
@@ -22,24 +22,28 @@ def index():
 
 @app.route('/api/<int:id>')
 def api(id):
+    global latest_hosts
+
     j = {}
     if len(latest_hosts) == 0:
-    	j['packet_queue_size'] = 0
+        j['packet_queue_size'] = 0
     else:
-    	j['packet_queue_size'] = latest_hosts['val']
+        j['packet_queue_size'] = latest_hosts['val']
     #sys.stderr.write("%i" % Host.hosts[0].packet_queue.qsize())
     return json.dumps(j)
-		
-@app.route('/update/hosts/', methods=['GET', 'POST'])
+        
+@app.route('/update/hosts/', methods=['POST'])
 def UpdateHosts(resp):
-	latest_hosts = request.get_json(force=True, silent=True)
-	print latest_hosts
-	return resp
+    global latest_hosts
+    
+    latest_hosts = request.get_json(force=True, silent=True)
+    print latest_hosts
+    return resp
 
 @app.route('/shutdown')
 def shutdown():
-	shutdown_server()
-	return 'Server Shutting Down'
+    shutdown_server()
+    return 'Server Shutting Down'
 
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')
@@ -48,7 +52,7 @@ def shutdown_server():
     func()
 
 def StartWebStreamer():
-	app.run(debug = True, port=5656)
+    app.run(debug = True, port=5656)
 
 if __name__ == '__main__':
-	StartWebStreamer()
+    StartWebStreamer()
