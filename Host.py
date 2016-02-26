@@ -8,12 +8,14 @@ import sys
 
 num_of_hosts = 1
 
+
 def init_hosts(numOfHosts):
     global hosts
     global num_of_hosts
 
     hosts = []
     num_of_hosts = numOfHosts
+
 
 class Host(object):
     """docstring for Host"""
@@ -46,7 +48,7 @@ class Host(object):
             print "%i | New Packet arrival | queue size: %i" % (env.now , self.packet_queue.qsize())
 
             # time since the last packet arrived
-            #time_diff = env.now - self.time_of_last_arrival
+            # time_diff = env.now - self.time_of_last_arrival
         
     def packet_process(self):
         global env
@@ -56,7 +58,7 @@ class Host(object):
             if self.packet_queue.empty():
                 # nothing to do, keep sleeping
                 yield env.timeout(1)
-                #print "Queue empty"
+                # print "Queue empty"
                 self.empty_count += 1
             else:
                 # If freq is 0, we need to start up
@@ -76,20 +78,22 @@ class Host(object):
                 time_taken = env.now - pkt.creation_time
                 self.latencies.append(time_taken)
 
+                if len(self.latencies) > 100 and np.mean(self.latencies[-10: -1]) > np.percentile(self.latencies[-100: -1], 80):
+                    self.thermal_slack.SetFreq(self.thermal_slack.freq * 1.05)
+
                 # check if queue is empty. If so, go to sleep
                 if self.packet_queue.empty():
                     self.thermal_slack.SetFreq(0)
                     print "%i | Sleeping" % (env.now)
     
     def enable_logging(self):
-    	global env
+        global env
 
-    	while True:
-    		yield env.timeout(1)
+        while True:
+            yield env.timeout(1)
 
-    		self.packet_queuesize.append(self.packet_queue.qsize())
-    		self.freq_history.append(self.thermal_slack.freq)
-
+            self.packet_queuesize.append(self.packet_queue.qsize())
+            self.freq_history.append(self.thermal_slack.freq)
 
     def temp_tick(self):
         global env
@@ -97,5 +101,4 @@ class Host(object):
         while True:
             yield env.timeout(1)
 
-            if not CONTROL:
-                self.thermal_slack.Tick()
+            self.thermal_slack.Tick()

@@ -2,8 +2,8 @@ import sys
 import CCSimulator
 import ConfigParser
 
-def main():
 
+def main():
     if len(sys.argv) != 2:
         print "1 argument needed: path-to-config-file"
         return 1
@@ -14,5 +14,6 @@ def main():
 
     CCSimulator.Run(parser)
 
+
 if __name__ == '__main__':
-	main()
+    main()

@@ -1,20 +1,13 @@
-
-import random
-from collections import deque
-import numpy as np
-from pprint import pprint
-import simpy
-import requests
 import json
-import pandas as pd
-import sys
+import random
+
+import numpy as np
+import requests
 
 # Simulation Classes
-from simenv import env
 import Host
-from Packet import Packet
-from ThermalModel import ThermalSlack
 import Vis
+from simenv import env
 
 def Run(parser):
 
@@ -56,6 +49,7 @@ def Run(parser):
         env.process(Host.hosts[i].packet_arrival())
         env.process(Host.hosts[i].packet_process())
         env.process(Host.hosts[i].enable_logging())
+        env.process(Host.hosts[i].temp_tick())
 
     #env.process(UpdateWebStreamer())
 
@@ -65,8 +59,8 @@ def Run(parser):
 
     Vis.SetupVis()
     
-    #Vis.ShowLatencyDist()
-    #Vis.ShowQueueLengthHistory()
+    Vis.ShowLatencyDist()
+    Vis.ShowQueueLengthHistory()
     Vis.ShowFreqHistory()
 
 def UpdateWebStreamer():
