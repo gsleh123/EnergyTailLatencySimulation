@@ -1,9 +1,12 @@
 import random
 import logging
 import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 import Host
 from simenv import get_env
+import Vis
 
 
 def Run(parser):
@@ -40,10 +43,15 @@ def Run(parser):
         num_of_hosts = int(parser.get('CC_Config', 'host_count'))
 
     Host.init_hosts(num_of_hosts, arrival_rate, service_rate, sleep_alpha, freq_lower_bound, freq_upper_bound)
+    Vis.setup(1)
 
     env.run(until=timesteps)
+
+    logging.info('Simulation Complete')
 
     hosts = Host.get_hosts()
     for h in hosts:
         logging.info('Host %i has %i packets in queue', h.id, h.packets.qsize())
+
+    Vis.show_graphs()
 
