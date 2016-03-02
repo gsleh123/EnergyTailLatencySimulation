@@ -1,9 +1,14 @@
 import sys
-import CCSimulator
 import ConfigParser
+import logging
+
+import CCSimulator
 
 
 def main():
+
+    logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.DEBUG)
+
     if len(sys.argv) != 2:
         print "1 argument needed: path-to-config-file"
         return 1

@@ -1,19 +1,16 @@
-import json
 import random
-
+import logging
 import numpy as np
-import requests
 
-# Simulation Classes
 import Host
-import Vis
-from simenv import env
+from simenv import get_env
+
 
 def Run(parser):
 
-    global env
+    env = get_env()
 
-    required_options = ['freq_lower_bound', 'freq_higher_bound', 'arrival_rate', 'process_rate']
+    required_options = ['freq_lower_bound', 'freq_upper_bound', 'arrival_rate', 'service_rate']
     for opt in required_options:
         if not parser.has_option('CC_Config', opt):
             print "Option", opt, "not found in config"
@@ -25,10 +22,10 @@ def Run(parser):
         random.seed(seed)
         np.random.seed(seed)
 
-    freq_lower_bound    = float(parser.get('CC_Config', 'freq_lower_bound'))
-    freq_higher_bound   = float(parser.get('CC_Config', 'freq_higher_bound'))
-    arrival_rate        = float(parser.get('CC_Config', 'arrival_rate'))
-    process_rate        = float(parser.get('CC_Config', 'process_rate'))
+    freq_lower_bound = float(parser.get('CC_Config', 'freq_lower_bound'))
+    freq_upper_bound = float(parser.get('CC_Config', 'freq_upper_bound'))
+    arrival_rate = float(parser.get('CC_Config', 'arrival_rate'))
+    service_rate = float(parser.get('CC_Config', 'service_rate'))
 
     sleep_alpha = 0
     if parser.has_option('CC_Config', 'sleep_alpha'):
@@ -42,39 +39,11 @@ def Run(parser):
     if parser.has_option('CC_Config', 'host_count'):
         num_of_hosts = int(parser.get('CC_Config', 'host_count'))
 
-    Host.init_hosts(num_of_hosts)
-
-    for i in range(Host.num_of_hosts):
-        Host.hosts.append(Host.Host(i, arrival_rate, process_rate, sleep_alpha, freq_lower_bound, freq_higher_bound))
-        env.process(Host.hosts[i].packet_arrival())
-        env.process(Host.hosts[i].packet_process())
-        env.process(Host.hosts[i].enable_logging())
-        env.process(Host.hosts[i].temp_tick())
-
-    #env.process(UpdateWebStreamer())
+    Host.init_hosts(num_of_hosts, arrival_rate, service_rate, sleep_alpha, freq_lower_bound, freq_upper_bound)
 
     env.run(until=timesteps)
 
-    print('done')
+    hosts = Host.get_hosts()
+    for h in hosts:
+        logging.info('Host %i has %i packets in queue', h.id, h.packets.qsize())
 
-    Vis.SetupVis()
-    
-    Vis.ShowLatencyDist()
-    Vis.ShowQueueLengthHistory()
-    Vis.ShowFreqHistory()
-
-def UpdateWebStreamer():
-    global env
-
-    url = "http://localhost:5656/update/hosts/0"
-
-    while True:
-        yield env.timeout(1000)
-
-        data = {'val': [0]}
-        for h in Host.hosts:
-            data['val'].append(h.packet_queue.qsize())
-
-        print json.dumps(data)
-
-        response = requests.post(url, headers={'Content-Type': 'application/json'}, data=json.dumps(data))
