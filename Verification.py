@@ -5,11 +5,12 @@ import matplotlib.pyplot as plt
 
 def poisson_vs_exponential():
     sns.set_context("poster")
-    for l in xrange(9, 10, 3):
-        poi = np.random.poisson(lam=l, size=500)
-        sns.kdeplot(poi, label='Arrival (Poisson lambda=%.0f)' % l)
+    for l in [1./7]:
+        s = np.random.exponential(scale=l, size=500)
+        print(s)
+        sns.kdeplot(s, label='Arrival (Exponential lambda=%.0f)' % l)
 
-    for s in xrange(8, 11, 8):
+    for s in [1./15]:
         expo = np.random.exponential(scale=s, size=500)
         sns.kdeplot(expo, label='Service (Exponential scale=%.0f)' % s)
 

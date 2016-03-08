@@ -17,7 +17,7 @@ def main():
     parser = ConfigParser.SafeConfigParser()
     parser.read(config_filename)
 
-    CCSimulator.Run(parser)
+    CCSimulator.run(parser)
 
 
 if __name__ == '__main__':

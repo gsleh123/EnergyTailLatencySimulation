@@ -1,15 +1,13 @@
 import random
 import logging
 import numpy as np
-import seaborn as sns
-import matplotlib.pyplot as plt
 
 import Host
 from simenv import get_env
 import Vis
 
 
-def Run(parser):
+def run(parser):
 
     env = get_env()
 
@@ -42,6 +40,8 @@ def Run(parser):
     if parser.has_option('CC_Config', 'host_count'):
         num_of_hosts = int(parser.get('CC_Config', 'host_count'))
 
+    env.process(track_progress(timesteps))
+
     Host.init_hosts(num_of_hosts, arrival_rate, service_rate, sleep_alpha, freq_lower_bound, freq_upper_bound)
     Vis.setup(1)
 
@@ -54,4 +54,13 @@ def Run(parser):
         logging.info('Host %i has %i packets in queue', h.id, h.packets.qsize())
 
     Vis.show_graphs()
+
+
+def track_progress(total_timesteps):
+    env = get_env()
+    completion_percentage = 0.
+    while True:
+        yield env.timeout(total_timesteps/10.)
+        completion_percentage += 10
+        print "%.0f%%" % completion_percentage
 

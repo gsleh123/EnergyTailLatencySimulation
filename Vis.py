@@ -30,10 +30,11 @@ def log():
 
         hosts = Host.get_hosts()
 
-        qsize_over_time = qsize_over_time.append(pd.DataFrame(
-            {'timestep': [env.now] * len(hosts), 'queuesize': [h.packets.qsize() for h in hosts], 'hostid': [h.id for h in hosts]}
-        ))
-
+        qsize_over_time = qsize_over_time.append(pd.DataFrame({
+            'timestep': [env.now] * len(hosts),
+             'queuesize': [h.packets.qsize() for h in hosts],
+             'hostid': [h.id for h in hosts]
+        }))
 
 
 def show_graphs():

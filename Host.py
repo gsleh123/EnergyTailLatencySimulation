@@ -42,7 +42,10 @@ class Host:
         env = get_env()
 
         while True:
-            yield env.timeout(np.random.poisson(lam=self.arrival_rate))
+            yield env.timeout(np.random.exponential(scale=1./self.arrival_rate))
+
+            # 1 / arrival_rate as input into exponential
+
             logging.info('Packet arrived, time %i', env.now)
 
             self.packets.put(Packet())
@@ -56,7 +59,7 @@ class Host:
                 yield env.timeout(1)
                 continue
 
-            yield env.timeout(np.random.exponential(scale=self.service_rate))
+            yield env.timeout(np.random.exponential(scale=1./self.service_rate))
             self.packets.get()
 
             logging.info('Packet processed, time %i', env.now)
