@@ -44,7 +44,7 @@ def show_graphs():
 def show_qsize_history():
     global qsize_over_time
 
-    #lm = sns.lmplot(x='timestep', y='queuesize', hue='hostid', data=qsize_over_time, fit_reg=False, size=7, aspect=3)
+    # lm = sns.lmplot(x='timestep', y='queuesize', hue='hostid', data=qsize_over_time, fit_reg=False, size=7, aspect=3)
     ts = sns.tsplot(data=qsize_over_time, time='timestep', value='queuesize', condition='hostid')
     plt.gcf().suptitle('Queue length over time', fontsize=24)
     plt.tight_layout()
