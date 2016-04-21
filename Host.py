@@ -7,18 +7,17 @@ from TrafficController import TrafficController
 hosts = []
 
 
-def init_hosts(num, arrival_rate, service_rate, sleep_alpha, freq_lower_bound, freq_upper_bound,
-               computation_communication_ratio, mpip_report_type):
+def init_hosts(config):
     global hosts
     global num_of_hosts
 
     hosts = []
-    num_of_hosts = num
+    num_of_hosts = config['num_of_hosts']
+
+    traffic_controller = TrafficController(config)
 
     for i in range(num_of_hosts):
-        hosts.append(Host(i, TrafficController(arrival_rate, service_rate, sleep_alpha,
-                                               computation_communication_ratio, mpip_report_type),
-                          freq_lower_bound, freq_upper_bound))
+        hosts.append(Host(i, traffic_controller, config))
         get_env().process(hosts[i].packet_arrival())
         get_env().process(hosts[i].packet_service())
         get_env().process(hosts[i].logging(1))
@@ -31,11 +30,11 @@ def get_hosts():
 
 
 class Host:
-    def __init__(self, idd, traffic_controller, freq_lower_bound, freq_upper_bound):
+    def __init__(self, idd, traffic_controller, config):
         self.id = idd
 
-        self.freq_lower_bound = freq_lower_bound
-        self.freq_upper_bound = freq_upper_bound
+        self.freq_lower_bound = config['freq_lower_bound']
+        self.freq_upper_bound = config['freq_upper_bound']
 
         self.traffic_controller = traffic_controller
 
@@ -45,28 +44,26 @@ class Host:
         while True:
 
             # wait until there's something to do
-            while self.traffic_controller.queue_arrivals_empty():
+            while not self.traffic_controller.is_packet_waiting_for_arrival(self.id):
                 # TODO: maybe keep track of waiting time
                 yield env.timeout(1)
                 continue
 
-            yield env.timeout(self.traffic_controller.next_incoming())
+            # there is a packet. Service it.
+            self.traffic_controller.receive_arrival_packet(self.id)
 
             logging.info('Packet arrived, time %i', env.now)
-
-            self.packets.put(Packet())
 
     def packet_service(self):
         env = get_env()
 
         while True:
 
-            if self.packets.empty():
+            if not self.traffic_controller.is_packet_waiting_for_service(self.id):
                 yield env.timeout(1)
                 continue
 
-            yield env.timeout()
-            self.packets.get()
+            self.traffic_controller.service_packet(self.id)
 
             logging.info('Packet processed, time %i', env.now)
 

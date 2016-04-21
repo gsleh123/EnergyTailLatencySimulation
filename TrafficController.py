@@ -1,53 +1,43 @@
-import numpy as np
+
 from Queue import Queue
 
 class TrafficController:
-    def __init__(self, arrival_rate, service_rate, sleep_alpha,
-                 computation_communication_ratio, mpip_report_type):
+    """
+    An abstract class for different control schemes
+    The packets are always kept with the Controller, never given to the hosts
+    Note: Not using abc module, just skeleton functions
+    """
+    def __init__(self, config):
 
-        self.arrival_rate = arrival_rate
-        self.service_rate = service_rate
-        self.sleep_alpha = sleep_alpha
+        self.arrival_queue = Queue()
 
-        self.packets_arrival = Queue()
-        self.packets_service = Queue()
+        raise NotImplementedError()
 
-        self.true_next_incoming = self.next_incoming_simulated
-        if mpip_report_type == 'MILC':
-            self.true_next_incoming = self.next_incoming_mpip
+    def is_packet_waiting_for_arrival(self, host_id):
+        """
+        :param host_id: The id of the host requesting
+        :return: True if there is a packet waiting to 'arrive'
+        """
+        raise NotImplementedError()
 
-    def queue_arrivals_empty(self):
-        return self.packets_arrival.qsize() == 0
+    def receive_arrival_packet(self, host_id):
+        """
+        Request the next packet, Controller should remove from arrival_queue
+        :param host_id: The id of the host requesting
+        :return: None
+        """
+        raise NotImplementedError()
 
-    def next_incoming(self):
+    def is_packet_waiting_for_service(self, host_id):
         """
-        Request the next packet
-        :return:
+        :param host_id: The id of the host requesting
+        :return: True if there is a packet that needs to be serviced
         """
-        return self.true_next_incoming()
+        raise NotImplementedError()
 
-    def next_incoming_simulated(self):
+    def service_packet(self, host_id):
         """
-        Full simulation. Sample from a pure distribution
-        """
-        # 1 / arrival_rate as input into exponential
-        return np.random.exponential(scale=1. / self.arrival_rate)
-
-    def next_incoming_mpip(self):
-        """
-        Sample using an mpip report
-        """
-        return 0
-
-    def packet_post_process(self):
-        """
-        What to do after a packet is serviced
-        :return:
-        """
-        pass
-
-    def service_packet(self):
-        """
+        :param host_id: The id of the host requesting
         :return: How long to service packet for
         """
-        return np.random.exponential(scale=1. / self.service_rate)
+        raise NotImplementedError()
