@@ -40,9 +40,18 @@ def run(parser):
     if parser.has_option('CC_Config', 'host_count'):
         num_of_hosts = int(parser.get('CC_Config', 'host_count'))
 
+    computation_communication_ratio = 0.5
+    if parser.has_option('CC_Config', 'computation_communication_ratio'):
+        computation_communication_ratio = int(parser.get('CC_Config', 'computation_communication_ratio'))
+
+    mpip_report_type = ''
+    if parser.has_option('CC_Config', 'mpip_report_type'):
+        mpip_report_type = parser.get('CC_Config', 'mpip_report_type')
+
     env.process(track_progress(timesteps))
 
-    Host.init_hosts(num_of_hosts, arrival_rate, service_rate, sleep_alpha, freq_lower_bound, freq_upper_bound)
+    Host.init_hosts(num_of_hosts, arrival_rate, service_rate, sleep_alpha, freq_lower_bound, freq_upper_bound,
+                    computation_communication_ratio, mpip_report_type)
     Vis.setup(1)
 
     env.run(until=timesteps)
