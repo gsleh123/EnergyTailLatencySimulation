@@ -1,18 +1,20 @@
+import numpy as np
 from Queue import Queue
-from simenv import get_env
 
 
-class TrafficController:
-    """
-    An abstract class for different control schemes
-    The packets are always kept with the Controller, never given to the hosts
-    Note: Not using abc module, just skeleton functions
-    """
+class TrafficControllerSimulated:
     def __init__(self, config):
-        raise NotImplementedError()
 
-    def tick(self):
-        raise NotImplementedError()
+        self.arrival_rate = config['arrival_rate']
+
+        self.service_rate = config['service_rate']
+        self.sleep_alpha = config['sleep_alpha']
+
+        self.packets_arrival = dict()
+        self.packets_service = dict()
+        for host_id in range(config['num_of_hosts']):
+            self.packets_arrival[host_id] = Queue()
+            self.packets_service[host_id] = Queue()
 
     def is_packet_waiting_for_arrival(self, host_id):
         """
@@ -23,7 +25,7 @@ class TrafficController:
 
     def receive_arrival_packet(self, host_id):
         """
-        Request the next packet, Controller should remove from their arrival queue
+        Request the next packet, Controller should remove from arrival_queue
         :param host_id: The id of the host requesting
         :return: None
         """
@@ -41,4 +43,4 @@ class TrafficController:
         :param host_id: The id of the host requesting
         :return: How long to service packet for
         """
-        raise NotImplementedError()
+        return np.random.exponential(scale=1. / self.service_rate)

@@ -1,8 +1,8 @@
 import logging
-
 from simenv import get_env
 from Packet import Packet
-from TrafficController import TrafficController
+from TrafficControllerSimulated import TrafficControllerSimulated
+from TrafficControllerMilcSampled import TrafficControllerMilcSampled
 
 hosts = []
 
@@ -14,7 +14,11 @@ def init_hosts(config):
     hosts = []
     num_of_hosts = config['num_of_hosts']
 
-    traffic_controller = TrafficController(config)
+    if config['mpip_report_type'] == 'MILC':
+        traffic_controller = TrafficControllerMilcSampled(config)
+    else:
+        traffic_controller = TrafficControllerSimulated(config)
+    get_env().process(traffic_controller.tick())
 
     for i in range(num_of_hosts):
         hosts.append(Host(i, traffic_controller, config))
@@ -73,4 +77,5 @@ class Host:
         while True:
             yield env.timeout(log_interval)
 
-            logging.info('Host %i has %i packets in queue', self.id, self.packets.qsize())
+            logging.info('Host %i has %i packets in queue', self.id,
+                         self.traffic_controller.service_queue[self.id].qsize())

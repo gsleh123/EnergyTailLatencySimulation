@@ -23,8 +23,8 @@ def run(parser):
     logging.info('Simulation Complete')
 
     hosts = Host.get_hosts()
-    for h in hosts:
-        logging.info('Host %i has %i packets in queue', h.id, h.packets.qsize())
+    # for h in hosts:
+    #     logging.info('Host %i has %i packets in queue', h.id, h.packets.qsize())
 
     Vis.show_graphs()
 
@@ -73,7 +73,7 @@ def create_config_dict(parser):
 
     computation_communication_ratio = 0.5
     if parser.has_option('CC_Config', 'computation_communication_ratio'):
-        computation_communication_ratio = int(parser.get('CC_Config', 'computation_communication_ratio'))
+        computation_communication_ratio = float(parser.get('CC_Config', 'computation_communication_ratio'))
     options['computation_communication_ratio'] = computation_communication_ratio
 
     mpip_report_type = ''
