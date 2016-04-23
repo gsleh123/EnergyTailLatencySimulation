@@ -92,7 +92,8 @@ def track_progress(total_timesteps):
     env = get_env()
     completion_percentage = 0.
     while True:
+        print "%.0f%%" % completion_percentage
         yield env.timeout(total_timesteps/10.)
         completion_percentage += 10
-        print "%.0f%%" % completion_percentage
+
 

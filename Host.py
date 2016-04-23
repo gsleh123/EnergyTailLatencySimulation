@@ -1,5 +1,6 @@
 import logging
 from simenv import get_env
+import numpy as np
 from Packet import Packet
 from TrafficControllerSimulated import TrafficControllerSimulated
 from TrafficControllerMilcSampled import TrafficControllerMilcSampled
@@ -66,6 +67,8 @@ class Host:
             if not self.traffic_controller.is_packet_waiting_for_service(self.id):
                 yield env.timeout(1)
                 continue
+
+            yield env.timeout(np.random.exponential(scale=1./2))
 
             self.traffic_controller.service_packet(self.id)
 
