@@ -53,7 +53,7 @@ class Host:
             # wait until there's something to do
             while not self.traffic_controller.is_packet_waiting_for_arrival(self.id):
                 # TODO: maybe keep track of waiting time
-                yield env.timeout(1)
+                yield env.timeout(0.1)
                 continue
 
             # there is a packet. Service it.
@@ -71,7 +71,7 @@ class Host:
         while True:
 
             if not self.traffic_controller.is_packet_waiting_for_service(self.id):
-                yield env.timeout(1)
+                yield env.timeout(0.1)
                 continue
 
             yield env.timeout(self.traffic_controller.get_service_wait_time(self.id))

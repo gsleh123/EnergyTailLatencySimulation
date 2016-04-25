@@ -7,6 +7,7 @@ from simenv import get_env
 
 lognormal_param = namedtuple('lognormal_param', 'mean sigma')
 
+
 class TrafficControllerMilcSampled:
     """
     An abstract class for different control schemes
@@ -35,7 +36,10 @@ class TrafficControllerMilcSampled:
 
         sim_complete = False
 
-        while not self.current_milc_timestep <= self.milc_timesteps:
+        while self.current_milc_timestep <= self.milc_timesteps:
+
+            # entering new milc timestep, so generate the new packets
+            print 'Entering timestep', self.current_milc_timestep
 
             # todo: check if any hosts have completed a 'cycle'
 
@@ -44,7 +48,9 @@ class TrafficControllerMilcSampled:
                 if np.random.sample() > 0.2:
                     self.arrival_queue[host_id].put(Packet())
 
-            yield env.timeout(1)
+            yield env.timeout(0.1)
+
+            self.current_milc_timestep += 1
 
     def is_packet_waiting_for_arrival(self, host_id):
         """
@@ -63,8 +69,10 @@ class TrafficControllerMilcSampled:
         self.service_queue[host_id].put(pkt)
 
     def get_arrival_wait_time(self, host_id):
-        return np.random.lognormal(mean=self.arrival_distributions[host_id].mean,
+        wait = np.random.lognormal(mean=self.arrival_distributions[host_id].mean,
                                    sigma=self.arrival_distributions[host_id].sigma)
+        print 'arrival', host_id, wait
+        return wait
 
     def is_packet_waiting_for_service(self, host_id):
         """
@@ -78,7 +86,9 @@ class TrafficControllerMilcSampled:
         # todo: make note that this packet is done, generate new packets if needed.
 
     def get_service_wait_time(self, host_id):
-        return np.random.lognormal(self.service_lognormal_param.mean, self.service_lognormal_param.sigma)
+        wait = np.random.lognormal(self.service_lognormal_param.mean, self.service_lognormal_param.sigma)
+        print 'service', host_id, wait
+        return wait
 
     def __load_mpip_report(self):
 
@@ -139,7 +149,7 @@ class TrafficControllerMilcSampled:
             line = lines[line_number]
 
             # try to estimate the lognormal distribution's sigma, given the max, min as 95%.
-            sigma = min  # NOT CORRECT!
+            sigma = mean - min  # NOT CORRECT!
             logging.info('%i %f', rank, sigma)
 
             avg_mean += mean

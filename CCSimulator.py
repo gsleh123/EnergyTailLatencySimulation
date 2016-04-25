@@ -13,12 +13,12 @@ def run(parser):
 
     config = create_config_dict(parser)
 
-    env.process(track_progress(config['timesteps']))
+    # env.process(track_progress(config['timesteps']))
 
     traffic_controller = Host.init_hosts(config)
     Vis.setup(rate=1)
 
-    env.run(traffic_controller.tick())
+    env.run(env.process(traffic_controller.tick()))
 
     logging.info('Simulation Complete')
 

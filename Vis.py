@@ -26,7 +26,7 @@ def log():
 
     env = get_env()
     while True:
-        yield env.timeout(sample_rate)
+        yield env.timeout(0.1)
 
         hosts = Host.get_hosts()
 
@@ -36,6 +36,8 @@ def log():
              'hostid': [h.id for h in hosts]
         }))
 
+        print 'vis', env.now
+
 
 def show_graphs():
     show_qsize_history()
@@ -43,6 +45,8 @@ def show_graphs():
 
 def show_qsize_history():
     global qsize_over_time
+
+    print qsize_over_time
 
     # lm = sns.lmplot(x='timestep', y='queuesize', hue='hostid', data=qsize_over_time, fit_reg=False, size=7, aspect=3)
     ts = sns.tsplot(data=qsize_over_time, time='timestep', value='queuesize', condition='hostid')
