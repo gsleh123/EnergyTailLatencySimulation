@@ -43,4 +43,4 @@ class TrafficControllerSimulated:
         :param host_id: The id of the host requesting
         :return: How long to service packet for
         """
-        return np.random.exponential(scale=1. / self.service_rate)
+        raise NotImplementedError()

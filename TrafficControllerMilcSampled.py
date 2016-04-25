@@ -1,9 +1,11 @@
 import numpy as np
 from Queue import Queue
 from collections import namedtuple
+import logging
 from Packet import Packet
 from simenv import get_env
 
+lognormal_param = namedtuple('lognormal_param', 'mean sigma')
 
 class TrafficControllerMilcSampled:
     """
@@ -19,21 +21,21 @@ class TrafficControllerMilcSampled:
             self.arrival_queue[host_id] = Queue()
             self.service_queue[host_id] = Queue()
 
-        # todo: read milc filepath from config file
-        # for now just hardcode the sample
+        self.service_lognormal_param = None
+        self.arrival_distributions = dict()
 
         self.__load_mpip_report()
-        # todo: that...For now just use a preset distribution
-        # self.arrival_distributions = dict()
-        # lognormal_param = namedtuple('lognormal_param', 'mean sigma')
-        # for host_id in range(config['num_of_hosts']):
-        #     self.arrival_distributions[host_id] = lognormal_param(5, 0.5)
+
+        self.milc_timesteps = config['timesteps']
+        self.current_milc_timestep = 0
 
     def tick(self):
 
         env = get_env()
 
-        while True:
+        sim_complete = False
+
+        while not self.current_milc_timestep <= self.milc_timesteps:
 
             # todo: check if any hosts have completed a 'cycle'
 
@@ -60,6 +62,10 @@ class TrafficControllerMilcSampled:
         pkt = self.arrival_queue[host_id].get()
         self.service_queue[host_id].put(pkt)
 
+    def get_arrival_wait_time(self, host_id):
+        return np.random.lognormal(mean=self.arrival_distributions[host_id].mean,
+                                   sigma=self.arrival_distributions[host_id].sigma)
+
     def is_packet_waiting_for_service(self, host_id):
         """
         :param host_id: The id of the host requesting
@@ -68,19 +74,23 @@ class TrafficControllerMilcSampled:
         return self.service_queue[host_id].qsize() > 0
 
     def service_packet(self, host_id):
-        """
-        Called when host wants to tell the controller it has finished servicing a packet
-        :param host_id: The id of the host requesting
-        :return:
-        """
         pkt = self.service_queue[host_id].get()
         # todo: make note that this packet is done, generate new packets if needed.
 
-    def __load_mpip_report(self):
-        lognormal_param = namedtuple('lognormal_param', 'mean sigma')
+    def get_service_wait_time(self, host_id):
+        return np.random.lognormal(self.service_lognormal_param.mean, self.service_lognormal_param.sigma)
 
-        with open('node4_sample/su3_rmd.128.9161.1.mpiP') as file:
+    def __load_mpip_report(self):
+
+                # todo: read milc filepath from config file
+        # for now just hardcode the sample
+
+        with open('data/node4_sample/su3_rmd.128.9161.1.mpiP') as file:
             lines = [line.rstrip('\n') for line in file]
+
+        avg_mean = 0.
+        avg_sigma = 0.
+        entry_count = 0
 
         line_number = 0
         line = lines[line_number]
@@ -102,6 +112,10 @@ class TrafficControllerMilcSampled:
 
             mpi_call_type = split[0]
             site = int(split[1])
+            if split[2].startswith('*'):  # the "all" line
+                line_number += 1
+                line = lines[line_number]
+                continue
             rank = int(split[2])
             count = int(split[3])
             max = float(split[4])
@@ -111,7 +125,7 @@ class TrafficControllerMilcSampled:
             mpi_percent = float(split[8])
 
             # we are focusing on call site 2 for MPI_Isend and call site 11 for MPI_Allreduce
-            if site is not 2 or site is not 11:
+            if site not in [2, 11]:
                 line_number += 1
                 line = lines[line_number]
                 continue
@@ -125,6 +139,16 @@ class TrafficControllerMilcSampled:
             line = lines[line_number]
 
             # try to estimate the lognormal distribution's sigma, given the max, min as 95%.
-            sigma = (max - min) / 4  # NOT CORRECT!
+            sigma = min  # NOT CORRECT!
+            logging.info('%i %f', rank, sigma)
+
+            avg_mean += mean
+            avg_sigma += sigma
+            entry_count += 1
 
             self.arrival_distributions[rank] = lognormal_param(mean, sigma)
+
+        # we need to calculate the average mean and sigma to use for computation time
+        self.service_lognormal_param = lognormal_param(avg_mean/entry_count, avg_sigma/entry_count)
+
+        # done

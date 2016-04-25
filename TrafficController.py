@@ -12,6 +12,10 @@ class TrafficController:
         raise NotImplementedError()
 
     def tick(self):
+        """
+        This is the main loop of the simulation
+        When this returns, the simulation finishes
+        """
         raise NotImplementedError()
 
     def is_packet_waiting_for_arrival(self, host_id):
@@ -29,6 +33,14 @@ class TrafficController:
         """
         raise NotImplementedError()
 
+    def get_arrival_wait_time(self, host_id):
+        """
+        Allow hosts to ask how long they should wait before receiving a new packet
+        :param host_id: The id of the host requesting
+        :return: Length of time for env.timeout to wait
+        """
+        raise NotImplementedError()
+
     def is_packet_waiting_for_service(self, host_id):
         """
         :param host_id: The id of the host requesting
@@ -39,6 +51,14 @@ class TrafficController:
     def service_packet(self, host_id):
         """
         :param host_id: The id of the host requesting
-        :return: How long to service packet for
+        :return: None
+        """
+        raise NotImplementedError()
+
+    def get_service_wait_time(self, host_id):
+        """
+        Allow hosts to ask how long they should wait before servicing a new packet
+        :param host_id: The id of the host requesting
+        :return: Length of time for env.timeout to wait
         """
         raise NotImplementedError()

@@ -15,10 +15,10 @@ def run(parser):
 
     env.process(track_progress(config['timesteps']))
 
-    Host.init_hosts(config)
+    traffic_controller = Host.init_hosts(config)
     Vis.setup(rate=1)
 
-    env.run(until=config['timesteps'])
+    env.run(traffic_controller.tick())
 
     logging.info('Simulation Complete')
 

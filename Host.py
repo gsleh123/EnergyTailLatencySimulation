@@ -28,6 +28,8 @@ def init_hosts(config):
         get_env().process(hosts[i].logging(1))
         # get_env().process(Host.hosts[i].temp_tick())
 
+    return traffic_controller
+
 
 def get_hosts():
     global hosts
@@ -55,6 +57,10 @@ class Host:
                 continue
 
             # there is a packet. Service it.
+            # since detection of the packet arrival is instant and in reality
+            # it takes time to send/receive, we first wait
+            yield env.timeout(self.traffic_controller.get_arrival_wait_time(self.id))
+
             self.traffic_controller.receive_arrival_packet(self.id)
 
             logging.info('Packet arrived, time %i', env.now)
@@ -68,7 +74,7 @@ class Host:
                 yield env.timeout(1)
                 continue
 
-            yield env.timeout(np.random.exponential(scale=1./2))
+            yield env.timeout(self.traffic_controller.get_service_wait_time(self.id))
 
             self.traffic_controller.service_packet(self.id)
 
