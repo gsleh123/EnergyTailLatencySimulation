@@ -1,11 +1,13 @@
 import logging
 from simenv import get_env
 import numpy as np
+from collections import namedtuple
 from Packet import Packet
-from TrafficControllerSimulated import TrafficControllerSimulated
-from TrafficControllerMilcSampled import TrafficControllerMilcSampled
+from MILCHost import MILCHost
 
 hosts = []
+
+lognormal_param = namedtuple('lognormal_param', 'mean sigma')
 
 
 def init_hosts(config):
@@ -13,22 +15,17 @@ def init_hosts(config):
     global num_of_hosts
 
     hosts = []
-    num_of_hosts = config['num_of_hosts']
-
-    if config['mpip_report_type'] == 'MILC':
-        traffic_controller = TrafficControllerMilcSampled(config)
-    else:
-        traffic_controller = TrafficControllerSimulated(config)
-    get_env().process(traffic_controller.tick())
+    num_of_hosts = config['host_count']
 
     for i in range(num_of_hosts):
-        hosts.append(Host(i, traffic_controller, config))
-        get_env().process(hosts[i].packet_arrival())
-        get_env().process(hosts[i].packet_service())
-        get_env().process(hosts[i].logging(1))
-        # get_env().process(Host.hosts[i].temp_tick())
-
-    return traffic_controller
+        if config['mpip_report_type'] == 'MILC':
+            arrival_distributions, service_lognormal_param = __load_mpip_report()
+            hosts.append(MILCHost(i, config, arrival_distributions, service_lognormal_param))
+            get_env().process(hosts[i].process())
+        # else:
+        #     hosts.append(Host(i, config))
+        #     get_env().process(hosts[i].packet_arrival())
+        #     get_env().process(hosts[i].packet_service())
 
 
 def get_hosts():
@@ -36,55 +33,78 @@ def get_hosts():
     return hosts
 
 
-class Host:
-    def __init__(self, idd, traffic_controller, config):
-        self.id = idd
+def __load_mpip_report():
 
-        self.freq_lower_bound = config['freq_lower_bound']
-        self.freq_upper_bound = config['freq_upper_bound']
+    # todo: read milc filepath from config file
+    # for now just hardcode the sample
 
-        self.traffic_controller = traffic_controller
+    with open('data/node4_sample/su3_rmd.128.9161.1.mpiP') as file:
+        lines = [line.rstrip('\n') for line in file]
 
-    def packet_arrival(self):
-        env = get_env()
+    avg_mean = 0.
+    avg_sigma = 0.
+    entry_count = 0
 
-        while True:
+    # to return
+    arrival_distributions = dict()
 
-            # wait until there's something to do
-            while not self.traffic_controller.is_packet_waiting_for_arrival(self.id):
-                # TODO: maybe keep track of waiting time
-                yield env.timeout(0.1)
-                continue
+    line_number = 0
+    line = lines[line_number]
+    while not line.startswith('@--- Callsite Time statistics'):
+        line_number += 1
+        line = lines[line_number]
 
-            # there is a packet. Service it.
-            # since detection of the packet arrival is instant and in reality
-            # it takes time to send/receive, we first wait
-            yield env.timeout(self.traffic_controller.get_arrival_wait_time(self.id))
+    # now we are at the callsite stats. finish skipping the header
+    line_number += 3
+    line = lines[line_number]  # this is the first callsite line
+    while not line.startswith('-'):
 
-            self.traffic_controller.receive_arrival_packet(self.id)
+        split = line.split()  # whitespace is default
 
-            logging.info('Packet arrived, time %i', env.now)
+        if len(line) < 2 or len(split) < 8:
+            line_number += 1
+            line = lines[line_number]
+            continue
 
-    def packet_service(self):
-        env = get_env()
+        mpi_call_type = split[0]
+        site = int(split[1])
+        if split[2].startswith('*'):  # the "all" line
+            line_number += 1
+            line = lines[line_number]
+            continue
+        rank = int(split[2])
+        count = int(split[3])
+        max = float(split[4])
+        mean = float(split[5])
+        min = float(split[6])
+        app_percent = float(split[7])
+        mpi_percent = float(split[8])
 
-        while True:
+        # we are focusing on call site 2 for MPI_Isend and call site 11 for MPI_Allreduce
+        if site not in [2, 11]:
+            line_number += 1
+            line = lines[line_number]
+            continue
 
-            if not self.traffic_controller.is_packet_waiting_for_service(self.id):
-                yield env.timeout(0.1)
-                continue
+        if site is 2:  # MPI_ISend
+            pass
+        elif site is 11:  # MPI_Allreduce
+            pass  # todo
 
-            yield env.timeout(self.traffic_controller.get_service_wait_time(self.id))
+        line_number += 1
+        line = lines[line_number]
 
-            self.traffic_controller.service_packet(self.id)
+        # try to estimate the lognormal distribution's sigma, given the max, min as 95%.
+        sigma = mean - min  # NOT CORRECT!
+        logging.info('%i %f', rank, sigma)
 
-            logging.info('Packet processed, time %i', env.now)
+        avg_mean += mean
+        avg_sigma += sigma
+        entry_count += 1
 
-    def logging(self, log_interval):
-        env = get_env()
+        arrival_distributions[rank] = lognormal_param(mean*200, sigma*200)
 
-        while True:
-            yield env.timeout(log_interval)
+    # we need to calculate the average mean and sigma to use for computation time
+    service_lognormal_param = lognormal_param(avg_mean/entry_count, avg_sigma/entry_count)
 
-            logging.info('Host %i has %i packets in queue', self.id,
-                         self.traffic_controller.service_queue[self.id].qsize())
+    return arrival_distributions, service_lognormal_param

@@ -26,17 +26,15 @@ def log():
 
     env = get_env()
     while True:
-        yield env.timeout(0.1)
+        yield env.timeout(1)
 
         hosts = Host.get_hosts()
 
         qsize_over_time = qsize_over_time.append(pd.DataFrame({
             'timestep': [env.now] * len(hosts),
-             'queuesize': [h.traffic_controller.service_queue[h.id].qsize() for h in hosts],
+             'queuesize': [h.service_queue.qsize() for h in hosts],
              'hostid': [h.id for h in hosts]
         }))
-
-        print 'vis', env.now
 
 
 def show_graphs():

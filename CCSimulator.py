@@ -8,17 +8,16 @@ import Vis
 
 
 def run(parser):
-
     env = get_env()
 
     config = create_config_dict(parser)
 
     # env.process(track_progress(config['timesteps']))
 
-    traffic_controller = Host.init_hosts(config)
-    Vis.setup(rate=1)
+    Host.init_hosts(config)
+    # Vis.setup(rate=1)
 
-    env.run(env.process(traffic_controller.tick()))
+    env.run()
 
     logging.info('Simulation Complete')
 
@@ -26,7 +25,7 @@ def run(parser):
     # for h in hosts:
     #     logging.info('Host %i has %i packets in queue', h.id, h.packets.qsize())
 
-    Vis.show_graphs()
+    # Vis.show_graphs()
 
 
 def create_config_dict(parser):
@@ -69,7 +68,7 @@ def create_config_dict(parser):
     num_of_hosts = 1
     if parser.has_option('CC_Config', 'host_count'):
         num_of_hosts = int(parser.get('CC_Config', 'host_count'))
-    options['num_of_hosts'] = num_of_hosts
+    options['host_count'] = num_of_hosts
 
     computation_communication_ratio = 0.5
     if parser.has_option('CC_Config', 'computation_communication_ratio'):
@@ -82,18 +81,4 @@ def create_config_dict(parser):
     options['mpip_report_type'] = mpip_report_type
 
     return options
-
-
-def track_progress(total_timesteps):
-    """
-    When the problem scale the program takes awhile to finish. This prints progress at 10% intervals
-    :param total_timesteps: The total number of timesteps for this simulation
-    """
-    env = get_env()
-    completion_percentage = 0.
-    while True:
-        print "%.0f%%" % completion_percentage
-        yield env.timeout(total_timesteps/10.)
-        completion_percentage += 10
-
 
