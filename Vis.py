@@ -63,12 +63,12 @@ def show_host_distributions():
     for host in hosts:
         allreduce_mean = host.allreduce_mean
         allreduce_sigma = host.allreduce_sigma
-        allreduce = np.random.lognormal(mean=allreduce_mean, sigma=allreduce_sigma, size=100)
+        allreduce = np.random.lognormal(mean=allreduce_mean, sigma=allreduce_sigma, size=60)
         sns.distplot(allreduce, hist=False, label='host %i' % host.id, ax=ax[0])
 
         isend_mean = host.isend_mean
         isend_sigma = host.isend_sigma
-        isend = np.random.lognormal(mean=isend_mean, sigma=isend_sigma, size=100)
+        isend = np.random.lognormal(mean=isend_mean, sigma=isend_sigma, size=60)
         sns.distplot(isend, hist=False, label='host %i' % host.id, ax=ax[1])
 
     ax[0].set_title('Rank MPI_AllReduce distributions')

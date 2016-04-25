@@ -2,7 +2,7 @@ import logging
 from simenv import get_env
 import numpy as np
 from collections import namedtuple
-from Packet import Packet
+import itertools
 import MILCHost
 
 hosts = []
@@ -17,10 +17,15 @@ def init_hosts(config):
     hosts = []
     num_of_hosts = config['host_count']
 
+    host_to_dimension, dimension_to_host = __generate_rank_to_dimension_lookup(
+         config['host_count'], config['MILC']['dimensions'])
+
     for i in range(num_of_hosts):
         if config['mpip_report_type'] == 'MILC':
             isend_distributions, allreduce_distributions, service_lognormal_param = __load_mpip_report()
-            hosts.append(MILCHost.MILCHost(i, config, isend_distributions, allreduce_distributions, service_lognormal_param))
+            hosts.append(MILCHost.MILCHost(i, config,
+                                           isend_distributions, allreduce_distributions, service_lognormal_param,
+                                           host_to_dimension[i], dimension_to_host))
             get_env().process(hosts[i].process())
         # else:
         #     hosts.append(Host(i, config))
@@ -34,6 +39,28 @@ def init_hosts(config):
 def get_hosts():
     global hosts
     return hosts
+
+
+def __generate_rank_to_dimension_lookup(host_count, problem_dimensions):
+    """
+    create a lookup (and reverse lookup) table between rank and dimension
+    """
+    # Note, since itertools.product starts with the last iterable,
+    # We reverse the order of the variables to match MILC
+    # todo: check that problem dimensions* and host count match in size
+    host_to_dimension = [None] * host_count
+    dimension_to_host = dict()
+    host_id = 0
+    for t, z, y, x in itertools.product(range(problem_dimensions[3]), range(problem_dimensions[2]),
+                                        range(problem_dimensions[1]), range(problem_dimensions[0])):
+        host_to_dimension[host_id] = [x, y, z, t]
+        dimension_to_host[x, y, z, t] = host_id
+        host_id += 1
+
+    print host_to_dimension
+    print dimension_to_host
+
+    return host_to_dimension, dimension_to_host
 
 
 def __load_mpip_report():

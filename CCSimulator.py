@@ -80,5 +80,12 @@ def create_config_dict(parser):
         mpip_report_type = parser.get('CC_Config', 'mpip_report_type')
     options['mpip_report_type'] = mpip_report_type
 
+    if options['mpip_report_type'] == 'MILC':
+        options['MILC'] = dict()
+        # todo: check entry exists
+        dimensions = parser.get('MILC', 'problem_dimensions')
+        options['MILC']['dimensions'] = [int(i) for i in dimensions.split()]
+        print options['MILC']['dimensions'] 
+
     return options
 
