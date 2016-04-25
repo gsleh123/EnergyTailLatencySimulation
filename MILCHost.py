@@ -8,8 +8,16 @@ import Host
 MILC_TIMESTEP = 0
 
 
+def MILC_Runner(target_timestep):
+    global MILC_TIMESTEP
+    env = get_env()
+
+    while MILC_TIMESTEP <= target_timestep:
+        yield env.timeout(1)
+
+
 class MILCHost:
-    def __init__(self, idd, config, arrival_distributions, service_lognormal_param):
+    def __init__(self, idd, config, isend_distributions, allreduce_distributions, service_lognormal_param):
         self.id = idd
 
         self.target_timestep = config['timesteps']
@@ -25,8 +33,10 @@ class MILCHost:
         print self.id, 'my neighbors', self.neighbors
 
         # distributions to sample with
-        self.comm_mean = arrival_distributions[self.id].mean
-        self.comm_sigma = arrival_distributions[self.id].sigma
+        self.allreduce_mean = allreduce_distributions[self.id].mean
+        self.allreduce_sigma = allreduce_distributions[self.id].sigma
+        self.isend_mean = isend_distributions[self.id].mean
+        self.isend_sigma = isend_distributions[self.id].sigma
         self.comp_mean = service_lognormal_param.mean
         self.comp_sigma = service_lognormal_param.sigma
 
@@ -51,7 +61,7 @@ class MILCHost:
 
             # send out packets
             for i in range(len(self.neighbors)):
-                yield env.timeout(np.random.lognormal(mean=self.comm_mean, sigma=self.comm_sigma))
+                yield env.timeout(np.random.lognormal(mean=self.isend_mean, sigma=self.isend_sigma))
                 if self.id == 0:
                     pass
                 hosts[self.neighbors[i]].received_packet_count_for_cycle += 1
@@ -65,7 +75,7 @@ class MILCHost:
             yield env.timeout(np.random.lognormal(mean=self.comp_mean, sigma=self.comp_sigma))
 
             # Computation done. Do the MPI_AllReduce call by sending a packet to host/rank 0
-            yield env.timeout(np.random.lognormal(mean=self.comm_mean, sigma=self.comm_sigma))
+            yield env.timeout(np.random.lognormal(mean=self.allreduce_mean, sigma=self.allreduce_sigma))
             hosts[0].all_reduce_receive_count += 1
 
             # Done with cycle
@@ -85,7 +95,7 @@ class MILCHost:
                 yield env.timeout(np.random.lognormal(mean=self.comp_mean, sigma=self.comp_sigma))
 
                 # mimic sending back the data
-                yield env.timeout(np.random.lognormal(mean=self.comm_mean, sigma=self.comm_sigma))
+                yield env.timeout(np.random.lognormal(mean=self.allreduce_mean, sigma=self.allreduce_sigma))
 
                 # reset the allreduce counter
                 self.all_reduce_receive_count = 0

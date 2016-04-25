@@ -3,7 +3,7 @@ from simenv import get_env
 import numpy as np
 from collections import namedtuple
 from Packet import Packet
-from MILCHost import MILCHost
+import MILCHost
 
 hosts = []
 
@@ -19,13 +19,16 @@ def init_hosts(config):
 
     for i in range(num_of_hosts):
         if config['mpip_report_type'] == 'MILC':
-            arrival_distributions, service_lognormal_param = __load_mpip_report()
-            hosts.append(MILCHost(i, config, arrival_distributions, service_lognormal_param))
+            isend_distributions, allreduce_distributions, service_lognormal_param = __load_mpip_report()
+            hosts.append(MILCHost.MILCHost(i, config, isend_distributions, allreduce_distributions, service_lognormal_param))
             get_env().process(hosts[i].process())
         # else:
         #     hosts.append(Host(i, config))
         #     get_env().process(hosts[i].packet_arrival())
         #     get_env().process(hosts[i].packet_service())
+
+    target_timestep = config['timesteps']
+    return get_env().process(MILCHost.MILC_Runner(target_timestep))
 
 
 def get_hosts():
@@ -46,7 +49,8 @@ def __load_mpip_report():
     entry_count = 0
 
     # to return
-    arrival_distributions = dict()
+    allreduce_distributions = dict()
+    isend_distributions = dict()
 
     line_number = 0
     line = lines[line_number]
@@ -86,25 +90,24 @@ def __load_mpip_report():
             line = lines[line_number]
             continue
 
-        if site is 2:  # MPI_ISend
-            pass
-        elif site is 11:  # MPI_Allreduce
-            pass  # todo
-
         line_number += 1
         line = lines[line_number]
 
         # try to estimate the lognormal distribution's sigma, given the max, min as 95%.
-        sigma = mean - min  # NOT CORRECT!
+        sigma = (mean - min)/4  # NOT CORRECT!
         logging.info('%i %f', rank, sigma)
 
         avg_mean += mean
         avg_sigma += sigma
         entry_count += 1
 
-        arrival_distributions[rank] = lognormal_param(mean*200, sigma*200)
+        if site is 2:  # MPI_ISend
+            isend_distributions[rank] = lognormal_param(mean*10, sigma*10)
+        elif site is 11:  # MPI_Allreduce
+            allreduce_distributions[rank] = lognormal_param(mean*10, sigma*10)
 
     # we need to calculate the average mean and sigma to use for computation time
+    # todo: use the ini file variable
     service_lognormal_param = lognormal_param(avg_mean/entry_count, avg_sigma/entry_count)
 
-    return arrival_distributions, service_lognormal_param
+    return isend_distributions, allreduce_distributions, service_lognormal_param
