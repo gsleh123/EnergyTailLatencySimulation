@@ -40,6 +40,7 @@ def log():
 def show_graphs():
     # show_qsize_history()
     show_host_distributions()
+    show_host_range()
 
 
 def show_qsize_history():
@@ -83,4 +84,29 @@ def show_host_distributions():
 
     plt.tight_layout()
     plt.show()
+
+
+def show_host_range():
+    isend_distributions, allreduce_distributions, service_lognormal_param, raw_data = Host.__load_mpip_report()
+
+    f, ax = plt.subplots(2, figsize=(42, 38))
+
+    allreduce = list()
+    isend = list()
+
+    for host_id in raw_data.keys():
+        h_allreduce = raw_data[host_id]['allreduce']
+        h_isend = raw_data[host_id]['isend']
+        allreduce.append([h_allreduce[0], h_allreduce[1], h_allreduce[2]])
+        isend.append([h_isend[0], h_isend[1], h_isend[2]])
+
+    sns.boxplot(ax=ax[0], data=allreduce, width=0)
+    sns.boxplot(ax=ax[1], data=isend, width=0)
+
+    ax[0].set_title('Allreduce')
+    ax[1].set_title('ISend')
+
+    # plt.show()
+    plt.savefig('host_range.png')
+    print 'host_range.png written'
 

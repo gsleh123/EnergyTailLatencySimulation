@@ -22,7 +22,7 @@ def init_hosts(config):
 
     for i in range(num_of_hosts):
         if config['mpip_report_type'] == 'MILC':
-            isend_distributions, allreduce_distributions, service_lognormal_param = __load_mpip_report()
+            isend_distributions, allreduce_distributions, service_lognormal_param, raw_data = __load_mpip_report()
             hosts.append(MILCHost.MILCHost(i, config,
                                            isend_distributions, allreduce_distributions, service_lognormal_param,
                                            host_to_dimension[i], dimension_to_host))
@@ -78,6 +78,7 @@ def __load_mpip_report():
     # to return
     allreduce_distributions = dict()
     isend_distributions = dict()
+    raw_data = dict()
 
     line_number = 0
     line = lines[line_number]
@@ -121,20 +122,25 @@ def __load_mpip_report():
         line = lines[line_number]
 
         # try to estimate the lognormal distribution's sigma, given the max, min as 95%.
-        sigma = (mean - min)/4  # NOT CORRECT!
+        sigma = (mean - min)/6  # NOT CORRECT!
         logging.info('%i %f', rank, sigma)
 
         avg_mean += mean
         avg_sigma += sigma
         entry_count += 1
 
-        if site is 2:  # MPI_ISend
+        if rank not in raw_data:
+            raw_data[rank] = dict()
+
+        if site == 2:  # MPI_ISend
             isend_distributions[rank] = lognormal_param(mean*10, sigma*10)
-        elif site is 11:  # MPI_Allreduce
+            raw_data[rank]['isend'] = [min, mean, max]
+        elif site == 11:  # MPI_Allreduce
             allreduce_distributions[rank] = lognormal_param(mean*10, sigma*10)
+            raw_data[rank]['allreduce'] = [min, mean, max]
 
     # we need to calculate the average mean and sigma to use for computation time
     # todo: use the ini file variable
     service_lognormal_param = lognormal_param(avg_mean/entry_count, avg_sigma/entry_count)
 
-    return isend_distributions, allreduce_distributions, service_lognormal_param
+    return isend_distributions, allreduce_distributions, service_lognormal_param, raw_data
