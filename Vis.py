@@ -1,10 +1,12 @@
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
 import numpy as np
 import pandas as pd
 import seaborn as sns
 
 import Host
 from simenv import get_env
+import MILCHost
 
 sample_rate = 1
 qsize_over_time = pd.DataFrame(columns=['timestep', 'queuesize', 'hostid'])
@@ -37,10 +39,11 @@ def log():
         # }))
 
 
-def show_graphs():
+def show_graphs(config):
     # show_qsize_history()
-    show_host_distributions()
-    show_host_range()
+    # show_host_distributions()
+    # show_host_range()
+    show_host_activity_gnatt(config)
 
 
 def show_qsize_history():
@@ -109,4 +112,54 @@ def show_host_range():
     # plt.show()
     plt.savefig('host_range.png')
     print 'host_range.png written'
+
+
+def show_host_activity_gnatt(config):
+    hosts = Host.get_hosts()
+
+    # todo: draw vert lines where timesteps occur
+
+    host_ids = list()
+    activity = list()
+    act_start = list()
+    act_end = list()
+
+    for host in hosts:
+        host_ids.extend([host.id] * len(host.activity))
+        activity.extend(host.activity)
+        act_start.extend(host.act_start)
+        act_end.extend(host.act_end)
+        # since we dont capture the end for the final activity, add it here
+        act_end.append(get_env().now)
+
+    palette = sns.color_palette()
+
+    def col(activity_num):
+        return [palette[val] for val in activity_num]
+
+    plt.hlines(host_ids, act_start, act_end, colors=col(activity))
+
+    axes = plt.gca()
+
+    axes.set_xlim([min(act_start) - 1, max(act_end) + 1])
+    axes.set_ylim([min(host_ids) - 1, max(host_ids) + 1])
+
+    milc_comm_isend_patch = mpatches.Patch(color=palette[MILCHost.MILC_ACTIVITY_COMM_ISEND],
+                                           label='MILC_ACTIVITY_COMM_ISEND')
+    milc_comm_allreduce_patch = mpatches.Patch(color=palette[MILCHost.MILC_ACTIVITY_COMM_ALLREDUCE],
+                                               label='MILC_ACTIVITY_COMM_ALLREDUCE')
+    milc_compute_patch = mpatches.Patch(color=palette[MILCHost.MILC_ACTIVITY_COMPUTE],
+                                        label='MILC_ACTIVITY_COMPUTE')
+    milc_wait_patch = mpatches.Patch(color=palette[MILCHost.MILC_ACTIVITY_WAIT],
+                                     label='MILC_ACTIVITY_WAIT')
+
+    box = axes.get_position()
+    axes.set_position([box.x0, box.y0 + box.height * 0.1,
+                       box.width, box.height * 0.9])
+
+    plt.legend(handles=[milc_comm_isend_patch, milc_comm_allreduce_patch, milc_compute_patch, milc_wait_patch],
+               loc='upper center', bbox_to_anchor=(0.5, -0.05),
+               fancybox=True, shadow=True, ncol=5)
+
+    plt.show()
 

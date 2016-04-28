@@ -10,6 +10,12 @@ MILC_COMP_CYCLES_PER_TIMESTEP = 4
 
 SIMPY_WAIT_RESOLUTION = 0.05
 
+MILC_ACTIVITY_COMM_ISEND = 0
+MILC_ACTIVITY_COMM_ALLREDUCE = 1
+MILC_ACTIVITY_COMPUTE = 2
+MILC_ACTIVITY_WAIT = 3
+
+
 def MILC_Runner(target_timestep):
     global MILC_TIMESTEP
     env = get_env()
@@ -48,38 +54,35 @@ class MILCHost:
         if idd == 0:
             self.all_reduce_receive_count = 0
 
+        # gnatt vis
+        self.activity = list()
+        self.act_start = [0]
+        self.act_end = list()
+
     def __figure_out_neighbors(self, dimension_to_host, problem_size):
         neighbor_indicies = [None]*4
         for i in range(4):
             neighbor_indicies[i] = self.__neighbor_dimension_helper(i, problem_size)
 
         self.neighbors.append(dimension_to_host[
-                                  self.dimension[0], self.dimension[1], self.dimension[2], neighbor_indicies[3][0]
-                              ])
+                                  self.dimension[0], self.dimension[1], self.dimension[2], neighbor_indicies[3][0]])
         self.neighbors.append(dimension_to_host[
-                                  self.dimension[0], self.dimension[1], self.dimension[2], neighbor_indicies[3][1]
-                              ])
+                                  self.dimension[0], self.dimension[1], self.dimension[2], neighbor_indicies[3][1]])
 
         self.neighbors.append(dimension_to_host[
-                                  self.dimension[0], self.dimension[1], neighbor_indicies[2][0], self.dimension[3]
-                              ])
+                                  self.dimension[0], self.dimension[1], neighbor_indicies[2][0], self.dimension[3]])
         self.neighbors.append(dimension_to_host[
-                                  self.dimension[0], self.dimension[1], neighbor_indicies[2][1], self.dimension[3]
-                              ])
+                                  self.dimension[0], self.dimension[1], neighbor_indicies[2][1], self.dimension[3]])
 
         self.neighbors.append(dimension_to_host[
-                                  self.dimension[0], neighbor_indicies[1][0], self.dimension[2], self.dimension[3]
-                              ])
+                                  self.dimension[0], neighbor_indicies[1][0], self.dimension[2], self.dimension[3]])
         self.neighbors.append(dimension_to_host[
-                                  self.dimension[0], neighbor_indicies[1][1], self.dimension[2], self.dimension[3]
-                              ])
+                                  self.dimension[0], neighbor_indicies[1][1], self.dimension[2], self.dimension[3]])
 
         self.neighbors.append(dimension_to_host[
-                                  neighbor_indicies[0][0], self.dimension[1], self.dimension[2], self.dimension[3]
-                              ])
+                                  neighbor_indicies[0][0], self.dimension[1], self.dimension[2], self.dimension[3]])
         self.neighbors.append(dimension_to_host[
-                                  neighbor_indicies[0][1], self.dimension[1], self.dimension[2], self.dimension[3]
-                              ])
+                                  neighbor_indicies[0][1], self.dimension[1], self.dimension[2], self.dimension[3]])
 
         self.neighbors = self.neighbors
 
@@ -118,19 +121,23 @@ class MILCHost:
             # loop a few times, not sure how many MILC does.
             for l in range(MILC_COMP_CYCLES_PER_TIMESTEP):
                 # send out packets
+                self.gnatt_change_activity(MILC_ACTIVITY_COMM_ISEND)
                 for i in range(len(self.neighbors)):
                     yield env.timeout(np.random.lognormal(mean=self.isend_mean, sigma=self.isend_sigma))
                     if self.id == 0:
                         pass
                     hosts[self.neighbors[i]].received_packet_count_for_cycle[l] += 1
 
+                self.gnatt_change_activity(MILC_ACTIVITY_WAIT)
                 while self.received_packet_count_for_cycle[l] < len(self.neighbors):
                     yield env.timeout(SIMPY_WAIT_RESOLUTION)
 
                 # we have received all the packets from our neighbors. Do some computation
+                self.gnatt_change_activity(MILC_ACTIVITY_COMPUTE)
                 yield env.timeout(np.random.lognormal(mean=self.comp_mean, sigma=self.comp_sigma))
 
             # Computation done. Do the MPI_AllReduce call by sending a packet to host/rank 0
+            self.gnatt_change_activity(MILC_ACTIVITY_COMM_ALLREDUCE)
             yield env.timeout(np.random.lognormal(mean=self.allreduce_mean, sigma=self.allreduce_sigma))
             hosts[0].all_reduce_receive_count += 1
 
@@ -138,6 +145,7 @@ class MILCHost:
             # reset own counters
             self.received_packet_count_for_cycle = [0] * MILC_COMP_CYCLES_PER_TIMESTEP
 
+            self.gnatt_change_activity(MILC_ACTIVITY_WAIT)
             if self.id != 0:
                 # wait around for timestep to change
                 while MILC_TIMESTEP == current_timestep:
@@ -148,9 +156,11 @@ class MILCHost:
                     yield env.timeout(SIMPY_WAIT_RESOLUTION)
 
                 # we have recieved all the AllReduce packets. Do some computation on it
+                self.gnatt_change_activity(MILC_ACTIVITY_COMPUTE)
                 yield env.timeout(np.random.lognormal(mean=self.comp_mean, sigma=self.comp_sigma))
 
                 # mimic sending back the data
+                self.gnatt_change_activity(MILC_ACTIVITY_COMM_ALLREDUCE)
                 yield env.timeout(np.random.lognormal(mean=self.allreduce_mean, sigma=self.allreduce_sigma))
 
                 # reset the allreduce counter
@@ -158,3 +168,9 @@ class MILCHost:
 
                 # change the MILC_TIMESTEP
                 MILC_TIMESTEP += 1
+
+    def gnatt_change_activity(self, new_activity):
+        global MILC_TIMESTEP
+        self.activity.append(new_activity)
+        self.act_start.append(get_env().now)
+        self.act_end.append(get_env().now)

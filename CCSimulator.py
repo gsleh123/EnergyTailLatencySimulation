@@ -25,7 +25,7 @@ def run(parser):
     # for h in hosts:
     #     logging.info('Host %i has %i packets in queue', h.id, h.packets.qsize())
 
-    Vis.show_graphs()
+    Vis.show_graphs(config)
 
 
 def create_config_dict(parser):
