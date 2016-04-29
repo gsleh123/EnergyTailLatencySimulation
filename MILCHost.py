@@ -9,6 +9,7 @@ MILC_TIMESTEP = 0
 MILC_COMP_CYCLES_PER_TIMESTEP = 4
 
 SIMPY_WAIT_RESOLUTION = 0.05
+SIMPY_SPEED_SCALE = (1./10) ** 4
 
 MILC_ACTIVITY_COMM_ISEND = 0
 MILC_ACTIVITY_COMM_ALLREDUCE = 1
@@ -53,6 +54,8 @@ class MILCHost:
         # special counter for host 0 which is the reciever of the AllReduce
         if idd == 0:
             self.all_reduce_receive_count = 0
+            # primarily for gnatt vis. tracks env.now when we change timesteps
+            self.timestep_change_locations = list()
 
         # gnatt vis
         self.activity = list()
@@ -123,22 +126,25 @@ class MILCHost:
                 # send out packets
                 self.gnatt_change_activity(MILC_ACTIVITY_COMM_ISEND)
                 for i in range(len(self.neighbors)):
-                    yield env.timeout(np.random.lognormal(mean=self.isend_mean, sigma=self.isend_sigma))
-                    if self.id == 0:
-                        pass
+                    yield env.timeout(self.__get_isend_time())
                     hosts[self.neighbors[i]].received_packet_count_for_cycle[l] += 1
 
                 self.gnatt_change_activity(MILC_ACTIVITY_WAIT)
                 while self.received_packet_count_for_cycle[l] < len(self.neighbors):
-                    yield env.timeout(SIMPY_WAIT_RESOLUTION)
+                    yield env.timeout(self.__get_wait_time())
 
                 # we have received all the packets from our neighbors. Do some computation
                 self.gnatt_change_activity(MILC_ACTIVITY_COMPUTE)
-                yield env.timeout(np.random.lognormal(mean=self.comp_mean, sigma=self.comp_sigma))
+                yield env.timeout(self.__get_comp_time())
+
+                logging.info('Host %i | ISend loop %i completed', self.id, l)
+
+            if self.id == 0:
+                pass
 
             # Computation done. Do the MPI_AllReduce call by sending a packet to host/rank 0
             self.gnatt_change_activity(MILC_ACTIVITY_COMM_ALLREDUCE)
-            yield env.timeout(np.random.lognormal(mean=self.allreduce_mean, sigma=self.allreduce_sigma))
+            yield env.timeout(self.__get_allreduce_time())
             hosts[0].all_reduce_receive_count += 1
 
             # Done with cycle
@@ -149,25 +155,41 @@ class MILCHost:
             if self.id != 0:
                 # wait around for timestep to change
                 while MILC_TIMESTEP == current_timestep:
-                    yield env.timeout(SIMPY_WAIT_RESOLUTION)
+                    yield env.timeout(self.__get_wait_time())
             else:
                 # for host 0
                 while self.all_reduce_receive_count != len(hosts):
-                    yield env.timeout(SIMPY_WAIT_RESOLUTION)
+                    yield env.timeout(self.__get_wait_time())
 
                 # we have recieved all the AllReduce packets. Do some computation on it
                 self.gnatt_change_activity(MILC_ACTIVITY_COMPUTE)
-                yield env.timeout(np.random.lognormal(mean=self.comp_mean, sigma=self.comp_sigma))
+                yield env.timeout(self.__get_comp_time())
 
                 # mimic sending back the data
                 self.gnatt_change_activity(MILC_ACTIVITY_COMM_ALLREDUCE)
-                yield env.timeout(np.random.lognormal(mean=self.allreduce_mean, sigma=self.allreduce_sigma))
+                yield env.timeout(self.__get_allreduce_time())
 
                 # reset the allreduce counter
                 self.all_reduce_receive_count = 0
 
+                # record this timestep change
+                self.timestep_change_locations.append(env.now)
+
                 # change the MILC_TIMESTEP
                 MILC_TIMESTEP += 1
+
+    def __get_isend_time(self):
+        return np.random.lognormal(mean=self.isend_mean, sigma=self.isend_sigma) * SIMPY_SPEED_SCALE
+
+    def __get_allreduce_time(self):
+        return np.random.lognormal(mean=self.allreduce_mean, sigma=self.allreduce_sigma) * SIMPY_SPEED_SCALE
+
+    def __get_comp_time(self):
+        val = np.random.lognormal(mean=self.comp_mean, sigma=self.comp_sigma) * SIMPY_SPEED_SCALE
+        return val
+
+    def __get_wait_time(self):
+        return SIMPY_WAIT_RESOLUTION
 
     def gnatt_change_activity(self, new_activity):
         global MILC_TIMESTEP

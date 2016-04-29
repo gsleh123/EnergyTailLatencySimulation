@@ -26,11 +26,9 @@ def init_hosts(config):
             hosts.append(MILCHost.MILCHost(i, config,
                                            isend_distributions, allreduce_distributions, service_lognormal_param,
                                            host_to_dimension[i], dimension_to_host))
-            get_env().process(hosts[i].process())
-        # else:
-        #     hosts.append(Host(i, config))
-        #     get_env().process(hosts[i].packet_arrival())
-        #     get_env().process(hosts[i].packet_service())
+
+    for i in np.random.permutation(num_of_hosts):
+        get_env().process(hosts[i].process())
 
     target_timestep = config['timesteps']
     return get_env().process(MILCHost.MILC_Runner(target_timestep))
@@ -56,9 +54,6 @@ def __generate_rank_to_dimension_lookup(host_count, problem_dimensions):
         host_to_dimension[host_id] = [x, y, z, t]
         dimension_to_host[x, y, z, t] = host_id
         host_id += 1
-
-    print host_to_dimension
-    print dimension_to_host
 
     return host_to_dimension, dimension_to_host
 
@@ -106,9 +101,9 @@ def __load_mpip_report():
             continue
         rank = int(split[2])
         count = int(split[3])
-        max = float(split[4])
-        mean = float(split[5])
-        min = float(split[6])
+        max = float(split[4])*1000  # milliseconds -> microseconds
+        mean = float(split[5])*1000  # this also makes taking the log for values < 1 work
+        min = float(split[6])*1000
         app_percent = float(split[7])
         mpi_percent = float(split[8])
 
@@ -122,8 +117,22 @@ def __load_mpip_report():
         line = lines[line_number]
 
         # try to estimate the lognormal distribution's sigma, given the max, min as 95%.
-        sigma = (mean - min)/6  # NOT CORRECT!
-        logging.info('%i %f', rank, sigma)
+        # we use a naive approach: apply log to the min, mean max,
+        # presume normal distribution,
+        # take the exponential of the calculated sigma
+        log_min = np.log(min)
+        log_mean = np.log(mean)
+        log_max = np.log(max)
+
+        # sigma = np.mean([(log_min - log_mean) / -2.5, (log_max - log_mean) / 3.5])
+        sigma = (log_min - log_mean) / -3
+        sigma = np.exp(sigma)
+
+        logging.info('%i %f %f %f %f', rank, min, mean, max, sigma)
+
+        # max our waiting time shorter
+        mean /= 1
+        sigma /= 1
 
         avg_mean += mean
         avg_sigma += sigma
@@ -133,10 +142,10 @@ def __load_mpip_report():
             raw_data[rank] = dict()
 
         if site == 2:  # MPI_ISend
-            isend_distributions[rank] = lognormal_param(mean*10, sigma*10)
+            isend_distributions[rank] = lognormal_param(mean, sigma)
             raw_data[rank]['isend'] = [min, mean, max]
         elif site == 11:  # MPI_Allreduce
-            allreduce_distributions[rank] = lognormal_param(mean*10, sigma*10)
+            allreduce_distributions[rank] = lognormal_param(mean, sigma)
             raw_data[rank]['allreduce'] = [min, mean, max]
 
     # we need to calculate the average mean and sigma to use for computation time

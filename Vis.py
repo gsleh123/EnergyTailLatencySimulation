@@ -107,7 +107,12 @@ def show_host_range():
     sns.boxplot(ax=ax[1], data=isend, width=0)
 
     ax[0].set_title('Allreduce')
+    ax[0].set_xlabel('Host ID')
+    ax[0].set_ylabel('Time (ms)')
+
     ax[1].set_title('ISend')
+    ax[1].set_xlabel('Host ID')
+    ax[1].set_ylabel('Time (ms)')
 
     # plt.show()
     plt.savefig('host_range.png')
@@ -124,6 +129,8 @@ def show_host_activity_gnatt(config):
     act_start = list()
     act_end = list()
 
+    f, ax = plt.subplots(1, figsize=(12, 8))
+
     for host in hosts:
         host_ids.extend([host.id] * len(host.activity))
         activity.extend(host.activity)
@@ -132,18 +139,23 @@ def show_host_activity_gnatt(config):
         # since we dont capture the end for the final activity, add it here
         act_end.append(get_env().now)
 
-    palette = sns.color_palette()
+    palette = sns.color_palette("husl")
 
     def col(activity_num):
         return [palette[val] for val in activity_num]
 
     plt.hlines(host_ids, act_start, act_end, colors=col(activity))
 
-    axes = plt.gca()
+    axes = ax
 
     axes.set_xlim([min(act_start) - 1, max(act_end) + 1])
     axes.set_ylim([min(host_ids) - 1, max(host_ids) + 1])
 
+    milc_timestep_changes = hosts[0].timestep_change_locations
+    for change_time in milc_timestep_changes:
+        plt.axvline(x=change_time, color=palette[5])
+
+    # LEGEND
     milc_comm_isend_patch = mpatches.Patch(color=palette[MILCHost.MILC_ACTIVITY_COMM_ISEND],
                                            label='MILC_ACTIVITY_COMM_ISEND')
     milc_comm_allreduce_patch = mpatches.Patch(color=palette[MILCHost.MILC_ACTIVITY_COMM_ALLREDUCE],
@@ -158,8 +170,14 @@ def show_host_activity_gnatt(config):
                        box.width, box.height * 0.9])
 
     plt.legend(handles=[milc_comm_isend_patch, milc_comm_allreduce_patch, milc_compute_patch, milc_wait_patch],
-               loc='upper center', bbox_to_anchor=(0.5, -0.05),
+               loc='upper center', bbox_to_anchor=(0.5, -0.1),
                fancybox=True, shadow=True, ncol=5)
+    # END LEGEND
+
+    axes.set_xlabel('Simulation Time')
+    axes.set_ylabel('Host ID')
+
+    plt.tight_layout(rect=(-0, 0.12, 1, 1))
 
     plt.show()
 
