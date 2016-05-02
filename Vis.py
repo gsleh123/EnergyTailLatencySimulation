@@ -21,43 +21,11 @@ def setup(rate):
 
     sample_rate = rate
 
-    get_env().process(log())
-
-
-def log():
-    global qsize_over_time
-
-    env = get_env()
-    while True:
-        yield env.timeout(1)
-
-        hosts = Host.get_hosts()
-
-        # qsize_over_time = qsize_over_time.append(pd.DataFrame({
-        #     'timestep': [env.now] * len(hosts),
-        #      'queuesize': [h.service_queue.qsize() for h in hosts],
-        #      'hostid': [h.id for h in hosts]
-        # }))
-
 
 def show_graphs(config):
-    # show_qsize_history()
     # show_host_distributions(config)
-    show_host_range(config)
-    # show_host_activity_gnatt(config)
-
-
-def show_qsize_history():
-    global qsize_over_time
-
-    # print qsize_over_time
-    #
-    # # lm = sns.lmplot(x='timestep', y='queuesize', hue='hostid', data=qsize_over_time, fit_reg=False, size=7, aspect=3)
-    # ts = sns.tsplot(data=qsize_over_time, time='timestep', value='queuesize', condition='hostid')
-    # plt.gcf().suptitle('Queue length over time', fontsize=24)
-    # plt.tight_layout()
-    #
-    # plt.show()
+    # show_host_range(config)
+    show_host_activity_gnatt(config)
 
 
 def show_host_distributions(config):
@@ -97,6 +65,10 @@ def show_host_range(config):
 
     allreduce = list()
     isend = list()
+    allreduce_means = list()
+    isend_means = list()
+    allreduce_mins = list()
+    isend_mins = list()
 
     for host_id in raw_data.keys():
         h_allreduce = raw_data[host_id]['allreduce']
@@ -109,20 +81,33 @@ def show_host_range(config):
         allreduce.append([h_allreduce[0], h_allreduce[1], h_allreduce[2]])
         isend.append([h_isend[0], h_isend[1], h_isend[2]])
 
+        allreduce_means.append(h_allreduce[1])
+        isend_means.append(h_isend[1])
+
+        allreduce_mins.append(h_allreduce[0])
+        isend_mins.append(h_isend[0])
+
     sns.boxplot(ax=ax[0], data=allreduce, width=0)
     sns.boxplot(ax=ax[1], data=isend, width=0)
+
+    ax[0].plot(allreduce_means, color='r')
+    ax[1].plot(isend_means, color='r')
 
     ax[0].set_title('Allreduce')
     ax[0].set_xlabel('Host ID')
     ax[0].set_ylabel('Time (ms)')
+    ax[0].set(yscale="log")
 
     ax[1].set_title('ISend')
     ax[1].set_xlabel('Host ID')
     ax[1].set_ylabel('Time (ms)')
+    ax[1].set(yscale="log")
 
     # plt.show()
+    plt.tight_layout()
     plt.savefig('host_range.png')
     print 'host_range.png written'
+    plt.close()
 
 
 def show_host_activity_gnatt(config):
@@ -135,7 +120,7 @@ def show_host_activity_gnatt(config):
     act_start = list()
     act_end = list()
 
-    f, ax = plt.subplots(1, figsize=(12, 8))
+    f, ax = plt.subplots(1, figsize=(15, 12))
     ax.yaxis.grid(False)
 
     ax.set(axis_bgcolor='lightgray')
@@ -151,14 +136,20 @@ def show_host_activity_gnatt(config):
         # since we dont capture the end for the final activity, add it here
         act_end.append(milc_timestep_changes[-1])
 
-    palette = sns.color_palette("husl")
-    palette[MILCHost.MILC_ACTIVITY_WAIT] = "dimgray"
+    palette = sns.color_palette('husl')
+    palette[MILCHost.MILC_ACTIVITY_COMM_ISEND] = '#1b9e77'
+    palette[MILCHost.MILC_ACTIVITY_COMM_ALLREDUCE] = '#d95f02'
+    palette[MILCHost.MILC_ACTIVITY_COMPUTE] = '#7570b3'
+    palette[MILCHost.MILC_ACTIVITY_WAIT] = (0.2, 0.2, 0.2)
 
     def col(activity_num):
         return [palette[val] for val in activity_num]
 
+    line_collection = plt.hlines(host_ids, act_start, act_end, color='black')
+    line_collection.set_linewidth(10)
+
     line_collection = plt.hlines(host_ids, act_start, act_end, colors=col(activity))
-    line_collection.set_linewidth(5)
+    line_collection.set_linewidth(8)
 
     axes = ax
 
@@ -168,7 +159,7 @@ def show_host_activity_gnatt(config):
     # draw vertical lines for timestep change locations
     for change_time in milc_timestep_changes:
         vert_line = plt.axvline(x=change_time, color=palette[5])
-        vert_line.set_alpha(0.3)
+        vert_line.set_alpha(0.4)
 
     # draw alternating row backgrounds
     for i in range(0, len(hosts), 2):
@@ -194,10 +185,11 @@ def show_host_activity_gnatt(config):
                fancybox=True, shadow=True, ncol=5)
     # END LEGEND
 
+    axes.set_title('Simulation Gnatt Chart')
     axes.set_xlabel('Simulation Time')
     axes.set_ylabel('Host ID')
 
-    plt.tight_layout(rect=(-0, 0.12, 1, 1))
+    plt.tight_layout(rect=(-0, 0.1, 1, 1))
 
     plt.show()
 

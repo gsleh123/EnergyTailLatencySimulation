@@ -131,7 +131,9 @@ def __load_mpip_report(config):
         # logging.info('%i %f %f %f %f', rank, min, mean, max, sigma)
 
         # scaling by 1/100
+        min *= config['timescalar']
         mean *= config['timescalar']
+        max *= config['timescalar']
         sigma *= config['timescalar']
 
         avg_mean += mean

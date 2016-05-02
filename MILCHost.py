@@ -63,6 +63,14 @@ class MILCHost:
         self.act_end = list()
 
     def __figure_out_neighbors(self, dimension_to_host, problem_size):
+        # easy way to test seperate groups 'clusters'
+        # if self.id == 80:
+        #     self.neighbors = [80]
+        # else:
+        #     import math
+        #     self.neighbors = [int(math.floor(self.id/10)*10 + l) for l in range(10)]
+        # return
+
         neighbor_indicies = [None]*4
         for i in range(4):
             neighbor_indicies[i] = self.__neighbor_dimension_helper(i, problem_size)
