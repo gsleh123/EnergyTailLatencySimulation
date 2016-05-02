@@ -1,6 +1,7 @@
 import random
 import logging
 import numpy as np
+import time
 
 import Host
 from simenv import get_env
@@ -12,18 +13,16 @@ def run(parser):
 
     config = create_config_dict(parser)
 
-    # env.process(track_progress(config['timesteps']))
+    config['timescalar'] = 1/100.
 
     proc = Host.init_hosts(config)
     Vis.setup(rate=1)
 
+    time.sleep(1)
+
     env.run(proc)
 
     logging.info('Simulation Complete')
-
-    hosts = Host.get_hosts()
-    # for h in hosts:
-    #     logging.info('Host %i has %i packets in queue', h.id, h.packets.qsize())
 
     Vis.show_graphs(config)
 

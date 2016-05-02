@@ -1,3 +1,4 @@
+import logging
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import numpy as np
@@ -41,9 +42,9 @@ def log():
 
 def show_graphs(config):
     # show_qsize_history()
-    # show_host_distributions()
-    # show_host_range()
-    show_host_activity_gnatt(config)
+    # show_host_distributions(config)
+    show_host_range(config)
+    # show_host_activity_gnatt(config)
 
 
 def show_qsize_history():
@@ -59,24 +60,24 @@ def show_qsize_history():
     # plt.show()
 
 
-def show_host_distributions():
+def show_host_distributions(config):
     hosts = Host.get_hosts()
 
     f, ax = plt.subplots(2, figsize=(12, 8))
 
     for host in hosts:
-        allreduce_mean = host.allreduce_mean
-        allreduce_sigma = host.allreduce_sigma
+        allreduce_mean = host.allreduce_mean * config['timescalar']
+        allreduce_sigma = host.allreduce_sigma * config['timescalar']
         allreduce = np.random.lognormal(mean=allreduce_mean, sigma=allreduce_sigma, size=60)
         sns.distplot(allreduce, hist=False, label='host %i' % host.id, ax=ax[0])
 
-        isend_mean = host.isend_mean
-        isend_sigma = host.isend_sigma
+        isend_mean = host.isend_mean * config['timescalar']
+        isend_sigma = host.isend_sigma * config['timescalar']
         isend = np.random.lognormal(mean=isend_mean, sigma=isend_sigma, size=60)
         sns.distplot(isend, hist=False, label='host %i' % host.id, ax=ax[1])
 
     ax[0].set_title('Rank MPI_AllReduce distributions')
-    ax[0].set_xlabel('Time (ms)')
+    ax[0].set_xlabel('Time (us)')
     ax[0].set_ylabel('Frequency %')
     ax[0].set_xlim([0, 35])
 
@@ -89,8 +90,8 @@ def show_host_distributions():
     plt.show()
 
 
-def show_host_range():
-    isend_distributions, allreduce_distributions, service_lognormal_param, raw_data = Host.__load_mpip_report()
+def show_host_range(config):
+    isend_distributions, allreduce_distributions, service_lognormal_param, raw_data = Host.__load_mpip_report(config)
 
     f, ax = plt.subplots(2, figsize=(42, 38))
 
@@ -100,6 +101,11 @@ def show_host_range():
     for host_id in raw_data.keys():
         h_allreduce = raw_data[host_id]['allreduce']
         h_isend = raw_data[host_id]['isend']
+
+        # apply the reverse-scaling
+        h_allreduce = [v / config['timescalar'] / 1000 for v in h_allreduce]
+        h_isend = [v / config['timescalar'] / 1000 for v in h_isend]
+
         allreduce.append([h_allreduce[0], h_allreduce[1], h_allreduce[2]])
         isend.append([h_isend[0], h_isend[1], h_isend[2]])
 
@@ -130,6 +136,12 @@ def show_host_activity_gnatt(config):
     act_end = list()
 
     f, ax = plt.subplots(1, figsize=(12, 8))
+    ax.yaxis.grid(False)
+
+    ax.set(axis_bgcolor='lightgray')
+
+    # has the data on when the time step changes happened
+    milc_timestep_changes = hosts[0].timestep_change_locations
 
     for host in hosts:
         host_ids.extend([host.id] * len(host.activity))
@@ -137,23 +149,31 @@ def show_host_activity_gnatt(config):
         act_start.extend(host.act_start)
         act_end.extend(host.act_end)
         # since we dont capture the end for the final activity, add it here
-        act_end.append(get_env().now)
+        act_end.append(milc_timestep_changes[-1])
 
     palette = sns.color_palette("husl")
+    palette[MILCHost.MILC_ACTIVITY_WAIT] = "dimgray"
 
     def col(activity_num):
         return [palette[val] for val in activity_num]
 
-    plt.hlines(host_ids, act_start, act_end, colors=col(activity))
+    line_collection = plt.hlines(host_ids, act_start, act_end, colors=col(activity))
+    line_collection.set_linewidth(5)
 
     axes = ax
 
-    axes.set_xlim([min(act_start) - 1, max(act_end) + 1])
+    axes.set_xlim([min(act_start) - max(act_end)*0.1, max(act_end)*1.1])
     axes.set_ylim([min(host_ids) - 1, max(host_ids) + 1])
 
-    milc_timestep_changes = hosts[0].timestep_change_locations
+    # draw vertical lines for timestep change locations
     for change_time in milc_timestep_changes:
-        plt.axvline(x=change_time, color=palette[5])
+        vert_line = plt.axvline(x=change_time, color=palette[5])
+        vert_line.set_alpha(0.3)
+
+    # draw alternating row backgrounds
+    for i in range(0, len(hosts), 2):
+        plt.axhspan(ymin=i-0.5, ymax=i+0.5, xmin=axes.get_xlim()[0], xmax=axes.get_xlim()[1]*10,
+                    facecolor='0.3', alpha=0.2)
 
     # LEGEND
     milc_comm_isend_patch = mpatches.Patch(color=palette[MILCHost.MILC_ACTIVITY_COMM_ISEND],

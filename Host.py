@@ -22,7 +22,7 @@ def init_hosts(config):
 
     for i in range(num_of_hosts):
         if config['mpip_report_type'] == 'MILC':
-            isend_distributions, allreduce_distributions, service_lognormal_param, raw_data = __load_mpip_report()
+            isend_distributions, allreduce_distributions, service_lognormal_param, raw_data = __load_mpip_report(config)
             hosts.append(MILCHost.MILCHost(i, config,
                                            isend_distributions, allreduce_distributions, service_lognormal_param,
                                            host_to_dimension[i], dimension_to_host))
@@ -58,7 +58,7 @@ def __generate_rank_to_dimension_lookup(host_count, problem_dimensions):
     return host_to_dimension, dimension_to_host
 
 
-def __load_mpip_report():
+def __load_mpip_report(config):
 
     # todo: read milc filepath from config file
     # for now just hardcode the sample
@@ -128,11 +128,11 @@ def __load_mpip_report():
         sigma = (log_min - log_mean) / -3
         sigma = np.exp(sigma)
 
-        logging.info('%i %f %f %f %f', rank, min, mean, max, sigma)
+        # logging.info('%i %f %f %f %f', rank, min, mean, max, sigma)
 
-        # max our waiting time shorter
-        mean /= 1
-        sigma /= 1
+        # scaling by 1/100
+        mean *= config['timescalar']
+        sigma *= config['timescalar']
 
         avg_mean += mean
         avg_sigma += sigma

@@ -8,8 +8,8 @@ import Host
 MILC_TIMESTEP = 0
 MILC_COMP_CYCLES_PER_TIMESTEP = 4
 
-SIMPY_WAIT_RESOLUTION = 0.05
-SIMPY_SPEED_SCALE = (1./10) ** 4
+SIMPY_WAIT_RESOLUTION = 0.0001
+SIMPY_SPEED_SCALE = (1./10) ** 3
 
 MILC_ACTIVITY_COMM_ISEND = 0
 MILC_ACTIVITY_COMM_ALLREDUCE = 1
@@ -21,7 +21,7 @@ def MILC_Runner(target_timestep):
     global MILC_TIMESTEP
     env = get_env()
 
-    while MILC_TIMESTEP <= target_timestep:
+    while MILC_TIMESTEP < target_timestep:
         yield env.timeout(1)
 
 
@@ -58,7 +58,7 @@ class MILCHost:
             self.timestep_change_locations = list()
 
         # gnatt vis
-        self.activity = list()
+        self.activity = [-1]
         self.act_start = [0]
         self.act_end = list()
 
@@ -137,10 +137,7 @@ class MILCHost:
                 self.gnatt_change_activity(MILC_ACTIVITY_COMPUTE)
                 yield env.timeout(self.__get_comp_time())
 
-                logging.info('Host %i | ISend loop %i completed', self.id, l)
-
-            if self.id == 0:
-                pass
+                # logging.info('Host %i | ISend loop %i completed', self.id, l)
 
             # Computation done. Do the MPI_AllReduce call by sending a packet to host/rank 0
             self.gnatt_change_activity(MILC_ACTIVITY_COMM_ALLREDUCE)
@@ -182,10 +179,13 @@ class MILCHost:
         return np.random.lognormal(mean=self.isend_mean, sigma=self.isend_sigma) * SIMPY_SPEED_SCALE
 
     def __get_allreduce_time(self):
-        return np.random.lognormal(mean=self.allreduce_mean, sigma=self.allreduce_sigma) * SIMPY_SPEED_SCALE
+        val = np.random.lognormal(mean=self.allreduce_mean, sigma=self.allreduce_sigma) * SIMPY_SPEED_SCALE
+        logging.info('ALLREDUCE TIME: %f', val)
+        return val
 
     def __get_comp_time(self):
         val = np.random.lognormal(mean=self.comp_mean, sigma=self.comp_sigma) * SIMPY_SPEED_SCALE
+        logging.info('COMP TIME: %f', val)
         return val
 
     def __get_wait_time(self):
