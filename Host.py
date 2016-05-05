@@ -63,8 +63,11 @@ def __load_mpip_report(config):
     # todo: read milc filepath from config file
     # for now just hardcode the sample
 
-    with open('data/node4_sample/su3_rmd.128.9161.1.mpiP') as file:
-        lines = [line.rstrip('\n') for line in file]
+    filename = 'data/node4_sample/su3_rmd.128.9161.1.mpiP'
+    # filename = 'data/node4_sample/su3_rmd.128.16720.1.mpiP'
+
+    with open(filename) as mpip_file:
+        lines = [line.rstrip('\n') for line in mpip_file]
 
     avg_mean = 0.
     avg_sigma = 0.
@@ -101,11 +104,20 @@ def __load_mpip_report(config):
             continue
         rank = int(split[2])
         count = int(split[3])
-        max = float(split[4])*1000  # milliseconds -> microseconds
-        mean = float(split[5])*1000  # this also makes taking the log for values < 1 work
-        min = float(split[6])*1000
+        max = float(split[4])
+        mean = float(split[5])
+        min = float(split[6])
         app_percent = float(split[7])
         mpi_percent = float(split[8])
+
+        # we want the mean of the underlying normal, not of the lognormal
+        mean = np.exp(mean)
+
+        # milliseconds -> microseconds
+        # this also makes taking the log for values < 1 work
+        max *= 1000
+        mean *= 1000
+        min *= 1000
 
         # we are focusing on call site 2 for MPI_Isend and call site 11 for MPI_Allreduce
         if site not in [2, 11]:

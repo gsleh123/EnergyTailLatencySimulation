@@ -24,7 +24,7 @@ def setup(rate):
 
 def show_graphs(config):
     # show_host_distributions(config)
-    # show_host_range(config)
+    show_host_range(config)
     show_host_activity_gnatt(config)
 
 
@@ -63,12 +63,12 @@ def show_host_range(config):
 
     f, ax = plt.subplots(2, figsize=(42, 38))
 
-    allreduce = list()
-    isend = list()
+    allreduce_min = list()
+    allreduce_max = list()
+    isend_min = list()
+    isend_max = list()
     allreduce_means = list()
     isend_means = list()
-    allreduce_mins = list()
-    isend_mins = list()
 
     for host_id in raw_data.keys():
         h_allreduce = raw_data[host_id]['allreduce']
@@ -78,17 +78,17 @@ def show_host_range(config):
         h_allreduce = [v / config['timescalar'] / 1000 for v in h_allreduce]
         h_isend = [v / config['timescalar'] / 1000 for v in h_isend]
 
-        allreduce.append([h_allreduce[0], h_allreduce[1], h_allreduce[2]])
-        isend.append([h_isend[0], h_isend[1], h_isend[2]])
+        allreduce_min.append(h_allreduce[0])
+        allreduce_max.append(h_allreduce[2])
+
+        isend_min.append(h_isend[0])
+        isend_max.append(h_isend[2])
 
         allreduce_means.append(h_allreduce[1])
         isend_means.append(h_isend[1])
 
-        allreduce_mins.append(h_allreduce[0])
-        isend_mins.append(h_isend[0])
-
-    sns.boxplot(ax=ax[0], data=allreduce, width=0)
-    sns.boxplot(ax=ax[1], data=isend, width=0)
+    ax[0].vlines(range(len(raw_data.keys())), allreduce_min, allreduce_max)
+    ax[0].vlines(range(len(raw_data.keys())), allreduce_min, allreduce_max)
 
     ax[0].plot(allreduce_means, color='r')
     ax[1].plot(isend_means, color='r')
@@ -107,6 +107,29 @@ def show_host_range(config):
     plt.tight_layout()
     plt.savefig('host_range.png')
     print 'host_range.png written'
+    plt.close()
+
+    f, ax = plt.subplots(2, figsize=(12, 8))
+    # sns.violinplot(ax=ax[0], x=allreduce_min, color=sns.color_palette('husl')[1], bw=.01)
+    sns.boxplot(ax=ax[0], x=allreduce_min, color=sns.color_palette('husl')[1])
+    # sns.distplot(ax=ax[0], a=allreduce_min, color=sns.color_palette('husl')[1])
+    # sns.violinplot(ax=ax[1], x=isend_min, color=sns.color_palette('husl')[2], bw=.01)
+    sns.boxplot(ax=ax[1], x=isend_min, color=sns.color_palette('husl')[2])
+
+    ax[0].set_title('Allreduce minimums')
+    ax[0].set_xlabel('Time (ms)')
+
+    ax[1].set_title('ISend minimums')
+    ax[1].set_xlabel('Time (ms)')
+
+    print 'Allreduce\'s Minimum Summary:'
+    print 'min: %f | mean: %f | max: %f' % (min(allreduce_min), np.mean(allreduce_min), max(allreduce_max))
+
+    print 'ISend\'s Minimum Summary:'
+    print 'min: %f | mean: %f | max: %f' % (min(isend_min), np.mean(isend_min), max(isend_min))
+
+    plt.tight_layout()
+    plt.show()
     plt.close()
 
 
@@ -146,14 +169,14 @@ def show_host_activity_gnatt(config):
         return [palette[val] for val in activity_num]
 
     line_collection = plt.hlines(host_ids, act_start, act_end, color='black')
-    line_collection.set_linewidth(10)
+    line_collection.set_linewidth(8)
 
     line_collection = plt.hlines(host_ids, act_start, act_end, colors=col(activity))
-    line_collection.set_linewidth(8)
+    line_collection.set_linewidth(6)
 
     axes = ax
 
-    axes.set_xlim([min(act_start) - max(act_end)*0.1, max(act_end)*1.1])
+    axes.set_xlim([min(act_start) - max(act_end)*0.05, max(act_end)*1.05])
     axes.set_ylim([min(host_ids) - 1, max(host_ids) + 1])
 
     # draw vertical lines for timestep change locations
@@ -192,4 +215,3 @@ def show_host_activity_gnatt(config):
     plt.tight_layout(rect=(-0, 0.1, 1, 1))
 
     plt.show()
-

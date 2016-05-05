@@ -8,8 +8,8 @@ import Host
 MILC_TIMESTEP = 0
 MILC_COMP_CYCLES_PER_TIMESTEP = 4
 
-SIMPY_WAIT_RESOLUTION = 0.0001
-SIMPY_SPEED_SCALE = (1./10) ** 3
+SIMPY_WAIT_RESOLUTION = 0.00001
+SIMPY_SPEED_SCALE = (1./10) ** 4
 
 MILC_ACTIVITY_COMM_ISEND = 0
 MILC_ACTIVITY_COMM_ALLREDUCE = 1
@@ -39,7 +39,7 @@ class MILCHost:
         self.neighbors = []
         self.__figure_out_neighbors(dimension_to_host, config['MILC']['dimensions'])
 
-        print self.id, 'my neighbors', self.neighbors
+        logging.info('%i my neighbors %s', self.id, ''.join(['%i ' % i for i in self.neighbors]))
 
         # distributions to sample with
         self.allreduce_mean = allreduce_distributions[self.id].mean
@@ -63,7 +63,7 @@ class MILCHost:
         self.act_end = list()
 
     def __figure_out_neighbors(self, dimension_to_host, problem_size):
-        # easy way to test seperate groups 'clusters'
+        # easy way to test separate groups 'clusters'
         # if self.id == 80:
         #     self.neighbors = [80]
         # else:
@@ -184,7 +184,9 @@ class MILCHost:
                 MILC_TIMESTEP += 1
 
     def __get_isend_time(self):
-        return np.random.lognormal(mean=self.isend_mean, sigma=self.isend_sigma) * SIMPY_SPEED_SCALE
+        val = np.random.lognormal(mean=self.isend_mean, sigma=self.isend_sigma) * SIMPY_SPEED_SCALE
+        logging.info('ISend TIME: %f', val)
+        return val
 
     def __get_allreduce_time(self):
         val = np.random.lognormal(mean=self.allreduce_mean, sigma=self.allreduce_sigma) * SIMPY_SPEED_SCALE
