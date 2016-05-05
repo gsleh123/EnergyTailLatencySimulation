@@ -33,29 +33,44 @@ def show_host_distributions(config):
 
     f, ax = plt.subplots(2, figsize=(12, 8))
 
+    allreduce_bounds = [0, 0]
+    isend_bounds = [0, 0]
+
     for host in hosts:
         allreduce_mean = host.allreduce_mean * config['timescalar']
         allreduce_sigma = host.allreduce_sigma * config['timescalar']
-        allreduce = np.random.lognormal(mean=allreduce_mean, sigma=allreduce_sigma, size=60)
-        sns.distplot(allreduce, hist=False, label='host %i' % host.id, ax=ax[0])
+        # allreduce = np.random.lognormal(mean=allreduce_mean, sigma=allreduce_sigma, size=60)
+        allreduce = np.random.normal(loc=allreduce_mean, scale=allreduce_sigma, size=60)
+        sns.distplot(allreduce, hist=False, ax=ax[0])
+        allreduce_bounds[0] = min([min(allreduce), allreduce_bounds[0]])
+        allreduce_bounds[1] = max([max(allreduce), allreduce_bounds[1]])
 
         isend_mean = host.isend_mean * config['timescalar']
         isend_sigma = host.isend_sigma * config['timescalar']
-        isend = np.random.lognormal(mean=isend_mean, sigma=isend_sigma, size=60)
-        sns.distplot(isend, hist=False, label='host %i' % host.id, ax=ax[1])
+        # isend = np.random.lognormal(mean=isend_mean, sigma=isend_sigma, size=60)
+        isend = np.random.normal(loc=isend_mean, scale=isend_sigma, size=60)
+        sns.distplot(isend, hist=False, ax=ax[1])
+        isend_bounds[0] = min([min(isend), isend_bounds[0]])
+        isend_bounds[1] = max([max(isend), isend_bounds[1]])
+
+    allreduce_bounds[0] *= 0.9
+    allreduce_bounds[1] *= 1.1
+    isend_bounds[0] *= 0.9
+    isend_bounds[1] *= 1.1
 
     ax[0].set_title('Rank MPI_AllReduce distributions')
     ax[0].set_xlabel('Time (us)')
     ax[0].set_ylabel('Frequency %')
-    ax[0].set_xlim([0, 35])
+    ax[0].set_xlim(allreduce_bounds)
 
     ax[1].set_title('Rank MPI_ISend distributions')
     ax[1].set_xlabel('Time (us)')
     ax[1].set_ylabel('Frequency %')
-    ax[1].set_xlim([1, 1.2])
+    ax[1].set_xlim(isend_bounds)
 
     plt.tight_layout()
     plt.show()
+    plt.close()
 
 
 def show_host_range(config):

@@ -6,7 +6,7 @@ from Queue import Queue
 import Host
 
 MILC_TIMESTEP = 0
-MILC_COMP_CYCLES_PER_TIMESTEP = 4
+MILC_COMP_CYCLES_PER_TIMESTEP = 8
 
 SIMPY_WAIT_RESOLUTION = 0.00001
 SIMPY_SPEED_SCALE = (1./10) ** 4
@@ -168,7 +168,7 @@ class MILCHost:
 
                 # we have recieved all the AllReduce packets. Do some computation on it
                 self.gnatt_change_activity(MILC_ACTIVITY_COMPUTE)
-                yield env.timeout(self.__get_comp_time())
+                yield env.timeout(0.1* self.__get_comp_time())
 
                 # mimic sending back the data
                 self.gnatt_change_activity(MILC_ACTIVITY_COMM_ALLREDUCE)
@@ -184,17 +184,23 @@ class MILCHost:
                 MILC_TIMESTEP += 1
 
     def __get_isend_time(self):
-        val = np.random.lognormal(mean=self.isend_mean, sigma=self.isend_sigma) * SIMPY_SPEED_SCALE
+        # val = np.random.lognormal(mean=self.isend_mean, sigma=self.isend_sigma) * SIMPY_SPEED_SCALE
+        val = np.random.normal(loc=self.isend_mean, scale=self.isend_sigma) * SIMPY_SPEED_SCALE
         logging.info('ISend TIME: %f', val)
         return val
 
     def __get_allreduce_time(self):
-        val = np.random.lognormal(mean=self.allreduce_mean, sigma=self.allreduce_sigma) * SIMPY_SPEED_SCALE
+        # val = np.random.lognormal(mean=self.allreduce_mean, sigma=self.allreduce_sigma) * SIMPY_SPEED_SCALE
+        val = np.random.normal(loc=self.allreduce_mean, scale=self.allreduce_sigma) * SIMPY_SPEED_SCALE
         logging.info('ALLREDUCE TIME: %f', val)
         return val
 
     def __get_comp_time(self):
-        val = np.random.lognormal(mean=self.comp_mean, sigma=self.comp_sigma) * SIMPY_SPEED_SCALE
+        val = -1
+        while val < 0:
+            # val = np.random.lognormal(mean=self.comp_mean, sigma=self.comp_sigma) * SIMPY_SPEED_SCALE
+            # val = np.random.normal(loc=self.comp_mean, scale=self.comp_sigma) * SIMPY_SPEED_SCALE
+            val = self.comp_mean * SIMPY_SPEED_SCALE
         logging.info('COMP TIME: %f', val)
         return val
 

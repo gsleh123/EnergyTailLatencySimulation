@@ -111,7 +111,7 @@ def __load_mpip_report(config):
         mpi_percent = float(split[8])
 
         # we want the mean of the underlying normal, not of the lognormal
-        mean = np.exp(mean)
+        # mean = np.exp(mean)
 
         # milliseconds -> microseconds
         # this also makes taking the log for values < 1 work
@@ -132,13 +132,14 @@ def __load_mpip_report(config):
         # we use a naive approach: apply log to the min, mean max,
         # presume normal distribution,
         # take the exponential of the calculated sigma
-        log_min = np.log(min)
-        log_mean = np.log(mean)
-        log_max = np.log(max)
+        # log_min = np.log(min)
+        # log_mean = np.log(mean)
+        # log_max = np.log(max)
 
         # sigma = np.mean([(log_min - log_mean) / -2.5, (log_max - log_mean) / 3.5])
-        sigma = (log_min - log_mean) / -3
-        sigma = np.exp(sigma)
+        # sigma = (log_min - log_mean) / -3
+        sigma = (min - mean) / -3
+        # sigma = np.exp(sigma)
 
         # logging.info('%i %f %f %f %f', rank, min, mean, max, sigma)
 

@@ -13,7 +13,7 @@ def run(parser):
 
     config = create_config_dict(parser)
 
-    config['timescalar'] = 1/1000.
+    config['timescalar'] = 1/1.
 
     proc = Host.init_hosts(config)
     Vis.setup(rate=1)
