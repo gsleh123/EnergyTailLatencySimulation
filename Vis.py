@@ -24,8 +24,9 @@ def setup(rate):
 
 def show_graphs(config):
     # show_host_distributions(config)
-    show_host_range(config)
-    show_host_activity_gnatt(config)
+    # show_host_range(config)
+    # show_host_activity_gnatt(config)
+    show_sampling_dist(config)
 
 
 def show_host_distributions(config):
@@ -230,3 +231,97 @@ def show_host_activity_gnatt(config):
     plt.tight_layout(rect=(-0, 0.1, 1, 1))
 
     plt.show()
+    plt.close()
+
+
+def show_sampling_dist(config):
+    with open('data/node4_sample/samples.txt') as f:
+        lines = f.readlines()
+
+    isend = dict()
+    allreduce = dict()
+
+    isend_all = list()
+    allreduce_all = list()
+
+    isend_procs = dict()
+    allreduce_procs = dict()
+
+    for line in lines:
+        data = line.split()
+        host_id = int(data[0])
+        type = data[1]
+
+        proc = host_id // 32
+        if not isend_procs.has_key(proc):
+            isend_procs[proc] = list()
+        if not allreduce_procs.has_key(proc):
+            allreduce_procs[proc] = list()
+
+        timing_data = map(int, data[2:])
+
+        if type.startswith('a'):
+            allreduce[host_id] = timing_data
+            allreduce_all += timing_data
+            allreduce_procs[proc] += timing_data
+        elif type.startswith('i'):
+            isend[host_id] = timing_data
+            isend_all += timing_data
+            isend_procs[proc] += timing_data
+
+    colors = sns.color_palette()
+
+    # the first row being all 32 cores, the second row being the combined
+    # same for allreduce
+    f_procs_isend, ax_procs_isend = plt.subplots(2, len(isend_procs), figsize=(15, 12))
+    f_procs_allreduce, ax_procs_allreduce = plt.subplots(2, len(isend_procs), figsize=(15, 12))
+    # timeseries
+    f_ts, ax_ts = plt.subplots(2, figsize=(15, 12))
+    f_bp, ax_bp = plt.subplots(2, figsize=(15, 12))
+    f, ax = plt.subplots(2, figsize=(15, 12))
+
+    for proc in range(len(isend_procs)):
+        for core in range(32):
+            host_id = proc*32 + core
+            sns.distplot(ax=ax_procs_isend[0, proc], a=isend[host_id], label='core %i' % core, hist=False)
+            sns.distplot(ax=ax_procs_allreduce[0, proc], a=allreduce[host_id], label='core %i' % core, hist=False)
+
+        # timeseries
+        for core in [0, 1, 2]:
+            sns.tsplot(ax=ax_ts[0], data=isend[core], err_style=None, color=colors[core], alpha=0.4)
+            sns.tsplot(ax=ax_ts[1], data=allreduce[core], err_style=None, color=colors[core], alpha=0.4)
+
+        ax_procs_isend[0, proc].set_title('Node %i MPI_ISend' % proc)
+        ax_procs_allreduce[0, proc].set_title('Node %i MPI_Allreduce' % proc)
+
+        ax_ts[0].set_title('MPI_ISend Timeseries (Host [0, 1, 2])')
+        ax_ts[1].set_title('MPI_Allreduce Timeseries (Host [0, 1, 2])')
+
+        # all data combined
+        sns.distplot(ax=ax_procs_isend[1, proc], a=isend_procs[proc])
+        sns.distplot(ax=ax_procs_allreduce[1, proc], a=allreduce_procs[proc])
+
+    sns.distplot(ax=ax[0], a=isend_all)
+    sns.distplot(ax=ax[1], a=allreduce_all)
+
+    sns.violinplot(ax=ax_bp[0], data=isend_all)
+    sns.violinplot(ax=ax_bp[1], data=allreduce_all)
+
+    ax[0].set_title('MPI_ISend (All Nodes)')
+    ax[1].set_title('MPI_Allreduce (All Nodes)')
+
+    ax_bp[0].set_title('MPI_ISend (All Nodes)')
+    ax_bp[1].set_title('MPI_Allreduce (All Nodes)')
+
+    f_procs_isend.tight_layout()
+    f_procs_allreduce.tight_layout()
+    f_ts.tight_layout()
+    f.tight_layout()
+
+    plt.show()
+    plt.close()
+
+
+if __name__ == '__main__':
+    setup(rate=1)
+    show_graphs(config=None)  # todo: None is bad...
