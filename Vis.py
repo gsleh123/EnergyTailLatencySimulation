@@ -310,11 +310,17 @@ def show_sampling_dist(config):
     ax_all[0].set_ylabel('Call Time Frequency')
     ax_all[1].set_ylabel('Call Time Frequency')
 
+    bounds_isend = [0, np.percentile(isend_all, 99)]
+    bounds_allreduce = [0, np.percentile(allreduce_all, 99)]
+
     for proc in range(len(isend_procs)):
         for core in range(32):
             host_id = proc*32 + core
             sns.distplot(ax=ax_procs_isend[0, proc], a=isend[host_id], hist=False)
             sns.distplot(ax=ax_procs_allreduce[0, proc], a=allreduce[host_id], hist=False)
+
+            ax_procs_isend[0, proc].set_xlim(bounds_isend)
+            ax_procs_allreduce[0, proc].set_xlim(bounds_allreduce)
 
         # timeseries
         for core in [0, 1, 2]:
@@ -324,6 +330,8 @@ def show_sampling_dist(config):
         # all data combined
         sns.distplot(ax=ax_procs_isend[1, proc], a=isend_procs[proc])
         sns.distplot(ax=ax_procs_allreduce[1, proc], a=allreduce_procs[proc])
+        ax_procs_isend[1, proc].set_xlim(bounds_isend)
+        ax_procs_allreduce[1, proc].set_xlim(bounds_allreduce)
 
         # subplot titles
         ax_procs_isend[0, proc].set_title('Node %i MPI_ISend' % proc)
@@ -337,7 +345,6 @@ def show_sampling_dist(config):
 
     sns.boxplot(ax=ax_bp[0], data=isend_all, orient='h')
     sns.boxplot(ax=ax_bp[1], data=allreduce_all, orient='h')
-    # sns.swarmplot(ax=ax_bp[1], data=allreduce_all)
 
     layout_rect = (0, 0, 1, 0.95)
 
