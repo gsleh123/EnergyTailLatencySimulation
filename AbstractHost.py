@@ -16,6 +16,10 @@ def Abstract_Runner(target_timestep):
 
 
 class AbstractHost:
+    """
+    :type packets: Queue.Queue of Packet
+    :type problem_type: int
+    """
     def __init__(self, hostid, config, arrival_distribution, arrival_kwargs, service_distribution, service_kwargs,
                  send_to, should_generate):
         """
@@ -38,6 +42,14 @@ class AbstractHost:
 
         self.packets = Queue()
 
+        # Problem-specific variables
+
+        # For problem 3, gather, we keep track via a dict of queues, indexed by hostid
+        if self.problem_type == 3 and self.id == 0:
+            self.packets_gather = dict()
+            for i in range(1, config['host_count']):
+                self.packets_gather[i] = Queue()
+
         # data collection
         self.packet_latency = list()
 
@@ -47,7 +59,8 @@ class AbstractHost:
         while True:
             if self.should_generate:
                 yield env.timeout(self.arrival_dist(**self.arrival_kwargs))
-                self.packets.put(Packet(env.now))
+                pkt = Packet(env.now, self.id)
+                self.packets.put(pkt)
                 logging.info('Host %i generated a packet' % self.id)
             else:
                 yield env.timeout(1)
@@ -56,31 +69,58 @@ class AbstractHost:
         env = get_env()
 
         while True:
-            if self.packets.qsize() == 0:
-                yield env.timeout(0.1)
-                continue
+
+            if self.problem_type != 3 or self.id != 0:
+                if self.packets.qsize() == 0:
+                    yield env.timeout(0.1)
+                    continue
+            else:
+                # problem type 3, host 0
+
+                # other hosts still add packets to our self.packets structure
+                # transfer them to the queue dict
+                while self.packets.qsize() > 0:
+                    p = self.packets.get()
+                    self.packets_gather[p.last_parent].put(p)
+
+                can_gather = not any(q.empty() for q in self.packets_gather.itervalues())
+                if not can_gather:
+                    yield env.timeout(1)
+                    continue
 
             yield env.timeout(self.service_dist(**self.service_kwargs))
-            pkt = self.packets.get()
-            logging.info('Host %i serviced a packet' % self.id)
 
-            # if not last destination, send onward
-            if len(self.send_to) > 0:
+            if self.problem_type != 3 or self.id != 0:
+                pkt = self.packets.get()
+                logging.info('Host %i serviced a packet' % self.id)
 
-                if self.problem_type == 1:
-                    host_destination = Host.get_hosts()[np.random.choice(self.send_to)]
-                    # todo: communication time
-                    host_destination.packets.put(pkt)
-                    logging.info('Host %i sent packet to host %i' % (self.id, host_destination.id))
-                elif self.problem_type == 2:
-                    for hostindex in self.send_to:
-                        host_destination = Host.get_hosts()[hostindex]
+                # if not last destination, send onward
+                if len(self.send_to) > 0:
+
+                    pkt.last_parent = self.id
+
+                    if self.problem_type in [1, 3]:
+                        host_destination = Host.get_hosts()[np.random.choice(self.send_to)]
                         # todo: communication time
                         host_destination.packets.put(pkt)
                         logging.info('Host %i sent packet to host %i' % (self.id, host_destination.id))
+                    elif self.problem_type == 2:
+                        for hostindex in self.send_to:
+                            host_destination = Host.get_hosts()[hostindex]
+                            # todo: communication time
+                            host_destination.packets.put(pkt)
+                            logging.info('Host %i sent packet to host %i' % (self.id, host_destination.id))
 
-            # if last destination, log it
-            else:
-                full_processing_time = env.now - pkt.birth_tick
-                self.packet_latency.append(full_processing_time)
-                logging.info('Host %i finished packet. time spent: %f' % (self.id, full_processing_time))
+                # if last destination, log it
+                else:
+                    self.finish_packet(env, pkt)
+            else:  # problem 3
+                logging.info('Host %i has gathered and serviced a set' % self.id)
+                pkts = [q.get(block=False) for q in self.packets_gather.itervalues()]
+                for pkt in pkts:
+                    self.finish_packet(env, pkt)
+
+    def finish_packet(self, env, pkt):
+        full_processing_time = env.now - pkt.birth_tick
+        self.packet_latency.append(full_processing_time)
+        logging.info('Host %i finished packet. time spent: %f' % (self.id, full_processing_time))

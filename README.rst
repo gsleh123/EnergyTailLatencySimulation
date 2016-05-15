@@ -60,3 +60,4 @@ problem_type
   The type of problem to set up
   :1: Scatter. Host 0 generates packets, and randomly sends to another host. That host services and discards
   :2: Broadcast. Host 0 generates and services packets, then sends to all
+  :3: GatherAll. Host 0 collects packets. Every time host 0 receives 1 packet from all N-1 other hosts, it processes them.

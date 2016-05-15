@@ -42,6 +42,12 @@ def init_hosts(config):
                 if i == 0:
                     send_to += range(1, num_of_hosts)
                 should_generate = i == 0
+            elif problem_type == 3:
+                if i != 0:
+                    send_to.append(0)
+                    should_generate = True
+                else:
+                    should_generate = False
             else:
                 raise LookupError('Problem type %i not found' % problem_type)
             hosts.append(AbstractHost.AbstractHost(i, config, arrival_distribution, arrival_kwargs,

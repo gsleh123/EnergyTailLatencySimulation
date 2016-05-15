@@ -2,6 +2,7 @@ import random
 import logging
 import numpy as np
 import time
+import scipy.stats
 
 import Host
 from simenv import get_env
@@ -103,10 +104,10 @@ def create_config_dict(parser):
 
         if arrival_dist_str == 'exponential':
             options['Abstract']['arrival_distribution'] = np.random.exponential
-            options['Abstract']['arrival_kwargs'] = {'scale': 10}
+            options['Abstract']['arrival_kwargs'] = {'scale': 4}
         elif arrival_dist_str == 'pareto':
-            options['Abstract']['arrival_distribution'] = np.random.pareto
-            options['Abstract']['arrival_kwargs'] = {'shape': 5}
+            options['Abstract']['arrival_distribution'] = scipy.stats.pareto.rvs
+            options['Abstract']['arrival_kwargs'] = {'b': 3, 'loc': 0, 'scale': 5}
         elif arrival_dist_str == 'lognormal':
             options['Abstract']['arrival_distribution'] = np.random.lognormal
             options['Abstract']['arrival_kwargs'] = {'mean': 5, 'sigma': 1}
@@ -115,8 +116,8 @@ def create_config_dict(parser):
             options['Abstract']['service_distribution'] = np.random.exponential
             options['Abstract']['service_kwargs'] = {'scale': 3}
         elif service_dist_str == 'pareto':
-            options['Abstract']['service_distribution'] = np.random.pareto
-            options['Abstract']['service_kwargs'] = {'shape': 5}
+            options['Abstract']['service_distribution'] = scipy.stats.pareto.rvs
+            options['Abstract']['service_kwargs'] = {'b': 2, 'loc': 0, 'scale': 1}
         elif service_dist_str == 'lognormal':
             options['Abstract']['service_distribution'] = np.random.lognormal
             options['Abstract']['service_kwargs'] = {'mean': 5, 'sigma': 1}

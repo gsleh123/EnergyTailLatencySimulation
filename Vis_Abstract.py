@@ -31,12 +31,22 @@ def show_packet_lifetimes(config):
         lifetimes += host.packet_latency
 
     sns.distplot(ax=ax[0], a=lifetimes)
-    ax[0].set_title('Packet Lifetime distribution')
-    ax[0].set_xlabel('Lifetime (sim time)')
+    problem_string = ""
+    problem_type = config['Abstract']['problem_type']
+
+    if problem_type == 1:
+        problem_string = 'Scatter'
+    elif problem_type == 2:
+        problem_string = 'Broadcast'
+    elif problem_type == 3:
+        problem_string = 'Gather'
+
+    ax[0].set_title('Packet Lifetime distribution | %s' % problem_string)
     ax[0].set_ylabel('Freq')
 
     sns.boxplot(ax=ax[1], data=lifetimes, orient='h')
     ax[1].set_title('Packet Lifetime Boxplot')
+    ax[1].set_xlabel('Lifetime (sim time)')
 
     plt.tight_layout()
 
