@@ -5,7 +5,8 @@ import time
 
 import Host
 from simenv import get_env
-import Vis
+import Vis_MILC
+import Vis_Abstract
 
 
 def run(parser):
@@ -14,9 +15,14 @@ def run(parser):
     config = create_config_dict(parser)
 
     config['timescalar'] = 1/1.
+    report_type = config['mpip_report_type']
 
     proc = Host.init_hosts(config)
-    Vis.setup(rate=1)
+
+    if report_type == 'MILC':
+        Vis_MILC.setup(rate=1)
+    elif report_type == 'Abstract':
+        Vis_Abstract.setup()
 
     time.sleep(1)
 
@@ -24,7 +30,10 @@ def run(parser):
 
     logging.info('Simulation Complete')
 
-    Vis.show_graphs(config)
+    if report_type == 'MILC':
+        Vis_MILC.show_graphs(config)
+    elif report_type == 'Abstract':
+        Vis_Abstract.show_graphs(config)
 
 
 def create_config_dict(parser):
@@ -89,19 +98,31 @@ def create_config_dict(parser):
         options['Abstract'] = dict()
         options['Abstract']['problem_type'] = int(parser.get('Abstract', 'problem_type'))
 
-        if parser.get('Abstract', 'service_distribution') == 'exponential':
-            options['service_distribution'] = np.random.exponential
-        elif parser.get('Abstract', 'service_distribution') == 'pareto':
-            options['service_distribution'] = np.random.pareto
-        elif parser.get('Abstract', 'service_distribution') == 'lognormal':
-            options['service_distribution'] = np.random.lognormal
+        arrival_dist_str = parser.get('Abstract', 'arrival_distribution')
+        service_dist_str = parser.get('Abstract', 'service_distribution')
 
-        if parser.get('Abstract', 'service_distribution') == 'exponential':
-            options['service_distribution'] = np.random.exponential
-        elif parser.get('Abstract', 'service_distribution') == 'pareto':
-            options['service_distribution'] = np.random.pareto
-        elif parser.get('Abstract', 'service_distribution') == 'lognormal':
-            options['service_distribution'] = np.random.lognormal
+        if arrival_dist_str == 'exponential':
+            options['Abstract']['arrival_distribution'] = np.random.exponential
+            options['Abstract']['arrival_kwargs'] = {'scale': 10}
+        elif arrival_dist_str == 'pareto':
+            options['Abstract']['arrival_distribution'] = np.random.pareto
+            options['Abstract']['arrival_kwargs'] = {'shape': 5}
+        elif arrival_dist_str == 'lognormal':
+            options['Abstract']['arrival_distribution'] = np.random.lognormal
+            options['Abstract']['arrival_kwargs'] = {'mean': 5, 'sigma': 1}
+
+        if service_dist_str == 'exponential':
+            options['Abstract']['service_distribution'] = np.random.exponential
+            options['Abstract']['service_kwargs'] = {'scale': 3}
+        elif service_dist_str == 'pareto':
+            options['Abstract']['service_distribution'] = np.random.pareto
+            options['Abstract']['service_kwargs'] = {'shape': 5}
+        elif service_dist_str == 'lognormal':
+            options['Abstract']['service_distribution'] = np.random.lognormal
+            options['Abstract']['service_kwargs'] = {'mean': 5, 'sigma': 1}
+
+        options['Abstract']['arrival_dist_str'] = arrival_dist_str
+        options['Abstract']['service_dist_str'] = service_dist_str
 
     return options
 

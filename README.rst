@@ -51,3 +51,12 @@ computation_communication_ratio
 .. _mpip_report_type:
 mpip_report_type
   This option allows for a string of an application to mimic communication traffic using. The only supported application at the moment is 'MILC'
+
+
+Abstract Overview
+-----------------
+
+problem_type
+  The type of problem to set up
+  :1: Scatter. Host 0 generates packets, and randomly sends to another host. That host services and discards
+  :2: Broadcast. Host 0 generates and services packets, then sends to all

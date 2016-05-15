@@ -19,8 +19,9 @@ def init_hosts(config):
     num_of_hosts = config['host_count']
     report_type = config['mpip_report_type']
 
-    host_to_dimension, dimension_to_host = __generate_rank_to_dimension_lookup(
-         config['host_count'], config['MILC']['dimensions'])
+    if report_type == 'MILC':
+        host_to_dimension, dimension_to_host = __generate_rank_to_dimension_lookup(
+             config['host_count'], config['MILC']['dimensions'])
 
     for i in range(num_of_hosts):
         if report_type == 'MILC':
@@ -29,10 +30,31 @@ def init_hosts(config):
                                            isend_distributions, allreduce_distributions, service_lognormal_param,
                                            host_to_dimension[i], dimension_to_host))
         elif report_type == 'Abstract':
-            pass
+            arrival_distribution = config['Abstract']['arrival_distribution']
+            service_distribution = config['Abstract']['service_distribution']
+            arrival_kwargs = config['Abstract']['arrival_kwargs']
+            service_kwargs = config['Abstract']['service_kwargs']
+            send_to = list()
+
+            # use the problem type to setup configuration
+            problem_type = config['Abstract']['problem_type']
+            if problem_type == 1 or problem_type == 2:
+                if i == 0:
+                    send_to += range(1, num_of_hosts)
+                should_generate = i == 0
+            else:
+                raise LookupError('Problem type %i not found' % problem_type)
+            hosts.append(AbstractHost.AbstractHost(i, config, arrival_distribution, arrival_kwargs,
+                                                   service_distribution, service_kwargs, send_to, should_generate))
+
+    env = get_env()
 
     for i in np.random.permutation(num_of_hosts):
-        get_env().process(hosts[i].process())
+        if report_type == 'MILC':
+            env.process(hosts[i].process())
+        elif report_type == 'Abstract':
+            env.process(hosts[i].process_arrivals())
+            env.process(hosts[i].process_service())
 
     target_timestep = config['timesteps']
 
