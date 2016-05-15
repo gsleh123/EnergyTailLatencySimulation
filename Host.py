@@ -4,6 +4,7 @@ import numpy as np
 from collections import namedtuple
 import itertools
 import MILCHost
+import AbstractHost
 
 hosts = []
 
@@ -16,22 +17,31 @@ def init_hosts(config):
 
     hosts = []
     num_of_hosts = config['host_count']
+    report_type = config['mpip_report_type']
 
     host_to_dimension, dimension_to_host = __generate_rank_to_dimension_lookup(
          config['host_count'], config['MILC']['dimensions'])
 
     for i in range(num_of_hosts):
-        if config['mpip_report_type'] == 'MILC':
+        if report_type == 'MILC':
             isend_distributions, allreduce_distributions, service_lognormal_param, raw_data = __load_mpip_report(config)
             hosts.append(MILCHost.MILCHost(i, config,
                                            isend_distributions, allreduce_distributions, service_lognormal_param,
                                            host_to_dimension[i], dimension_to_host))
+        elif report_type == 'Abstract':
+            pass
 
     for i in np.random.permutation(num_of_hosts):
         get_env().process(hosts[i].process())
 
     target_timestep = config['timesteps']
-    return get_env().process(MILCHost.MILC_Runner(target_timestep))
+
+    if report_type == 'MILC':
+        return get_env().process(MILCHost.MILC_Runner(target_timestep))
+    elif report_type == 'Abstract':
+        return get_env().process(AbstractHost.Abstract_Runner(target_timestep))
+    else:
+        return get_env().timeout(1)
 
 
 def get_hosts():

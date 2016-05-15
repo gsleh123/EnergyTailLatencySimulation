@@ -84,7 +84,24 @@ def create_config_dict(parser):
         # todo: check entry exists
         dimensions = parser.get('MILC', 'problem_dimensions')
         options['MILC']['dimensions'] = [int(i) for i in dimensions.split()]
-        print options['MILC']['dimensions'] 
+
+    if options['mpip_report_type'] == 'Abstract':
+        options['Abstract'] = dict()
+        options['Abstract']['problem_type'] = int(parser.get('Abstract', 'problem_type'))
+
+        if parser.get('Abstract', 'service_distribution') == 'exponential':
+            options['service_distribution'] = np.random.exponential
+        elif parser.get('Abstract', 'service_distribution') == 'pareto':
+            options['service_distribution'] = np.random.pareto
+        elif parser.get('Abstract', 'service_distribution') == 'lognormal':
+            options['service_distribution'] = np.random.lognormal
+
+        if parser.get('Abstract', 'service_distribution') == 'exponential':
+            options['service_distribution'] = np.random.exponential
+        elif parser.get('Abstract', 'service_distribution') == 'pareto':
+            options['service_distribution'] = np.random.pareto
+        elif parser.get('Abstract', 'service_distribution') == 'lognormal':
+            options['service_distribution'] = np.random.lognormal
 
     return options
 
