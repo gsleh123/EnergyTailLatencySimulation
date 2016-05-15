@@ -6,7 +6,7 @@ import seaborn as sns
 import Host
 from simenv import get_env
 import AbstractHost
-
+import networkx as nx
 
 def setup():
     sns.set_context('poster')
@@ -15,11 +15,31 @@ def setup():
 
 def show_graphs(config):
 
-    show_dist_pair(config)
-
-    show_packet_lifetimes(config)
+    show_network(config)
+    # show_dist_pair(config)
+    # show_packet_lifetimes(config)
 
     pass
+
+
+def show_network(config):
+    graph = nx.DiGraph()
+
+    hosts = Host.get_hosts()
+
+    for host in hosts:
+        graph.add_node(host.id)
+
+    for host in hosts:
+        for dest in host.send_to:
+            graph.add_edge(host.id, dest)
+
+    fig = plt.figure(figsize=(20, 12))
+
+    nx.draw_shell(graph, with_labels=True)
+
+    plt.show()
+    plt.close()
 
 
 def show_dist_pair(config):
