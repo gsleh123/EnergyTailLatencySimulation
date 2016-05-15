@@ -46,7 +46,7 @@ sleep_alpha
   Modifies the time spent sleeping to "wake up" a core. Currently unused.
 
 computation_communication_ratio
-  The ratio of communication and computation time. A value of 0.5 means at freq=freq_upper_bound, the CPU spends on average 50% time on communication (sending/receiving) and 50% computing.
+  The ratio of communication and computation time. A value of 1 means there is a 1:1 ratio of communication vs computation. Values greater than 1 mean more time is spent in communication.
 
 .. _mpip_report_type:
 mpip_report_type

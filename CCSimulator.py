@@ -3,6 +3,7 @@ import logging
 import numpy as np
 import time
 import scipy.stats
+import ast
 
 import Host
 from simenv import get_env
@@ -26,6 +27,8 @@ def run(parser):
         Vis_Abstract.setup()
 
     time.sleep(1)
+
+    logging.info('Simulation Started')
 
     env.run(proc)
 
@@ -79,10 +82,10 @@ def create_config_dict(parser):
         num_of_hosts = int(parser.get('CC_Config', 'host_count'))
     options['host_count'] = num_of_hosts
 
-    computation_communication_ratio = 0.5
-    if parser.has_option('CC_Config', 'computation_communication_ratio'):
-        computation_communication_ratio = float(parser.get('CC_Config', 'computation_communication_ratio'))
-    options['computation_communication_ratio'] = computation_communication_ratio
+    computation_comm_ratio = 0.5
+    if parser.has_option('CC_Config', 'computation_comm_ratio'):
+        computation_comm_ratio = float(parser.get('CC_Config', 'computation_comm_ratio'))
+    options['computation_comm_ratio'] = computation_comm_ratio
 
     mpip_report_type = ''
     if parser.has_option('CC_Config', 'mpip_report_type'):
@@ -100,30 +103,33 @@ def create_config_dict(parser):
         options['Abstract']['problem_type'] = int(parser.get('Abstract', 'problem_type'))
 
         arrival_dist_str = parser.get('Abstract', 'arrival_distribution')
-        service_dist_str = parser.get('Abstract', 'service_distribution')
+        arrival_kwargs = ast.literal_eval(parser.get('Abstract', 'arrival_kwargs'))
+        comm_dist_str = parser.get('Abstract', 'comm_distribution')
+        comm_kwargs = ast.literal_eval(parser.get('Abstract', 'comm_kwargs'))
 
         if arrival_dist_str == 'exponential':
             options['Abstract']['arrival_distribution'] = np.random.exponential
-            options['Abstract']['arrival_kwargs'] = {'scale': 4}
         elif arrival_dist_str == 'pareto':
             options['Abstract']['arrival_distribution'] = scipy.stats.pareto.rvs
-            options['Abstract']['arrival_kwargs'] = {'b': 3, 'loc': 0, 'scale': 5}
         elif arrival_dist_str == 'lognormal':
             options['Abstract']['arrival_distribution'] = np.random.lognormal
-            options['Abstract']['arrival_kwargs'] = {'mean': 5, 'sigma': 1}
 
-        if service_dist_str == 'exponential':
-            options['Abstract']['service_distribution'] = np.random.exponential
-            options['Abstract']['service_kwargs'] = {'scale': 3}
-        elif service_dist_str == 'pareto':
-            options['Abstract']['service_distribution'] = scipy.stats.pareto.rvs
-            options['Abstract']['service_kwargs'] = {'b': 2, 'loc': 0, 'scale': 1}
-        elif service_dist_str == 'lognormal':
-            options['Abstract']['service_distribution'] = np.random.lognormal
-            options['Abstract']['service_kwargs'] = {'mean': 5, 'sigma': 1}
+        if comm_dist_str == 'exponential':
+            options['Abstract']['comm_distribution'] = np.random.exponential
+        elif comm_dist_str == 'pareto':
+            options['Abstract']['comm_distribution'] = scipy.stats.pareto.rvs
+        elif comm_dist_str == 'lognormal':
+            options['Abstract']['comm_distribution'] = np.random.lognormal
 
         options['Abstract']['arrival_dist_str'] = arrival_dist_str
-        options['Abstract']['service_dist_str'] = service_dist_str
+        options['Abstract']['comm_dist_str'] = comm_dist_str
+        options['Abstract']['arrival_kwargs'] = arrival_kwargs
+        options['Abstract']['comm_kwargs'] = comm_kwargs
+
+        # since it's not easy to get the mean of a random distribution,
+        # we just sample and take the sample mean
+        samples = options['Abstract']['comm_distribution'](size=200, **(options['Abstract']['comm_kwargs']))
+        options['Abstract']['comp_time'] = np.mean(samples) * options['computation_comm_ratio']
 
     return options
 

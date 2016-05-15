@@ -1,6 +1,5 @@
 import logging
 import matplotlib.pyplot as plt
-from matplotlib import gridspec
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -16,9 +15,30 @@ def setup():
 
 def show_graphs(config):
 
+    show_dist_pair(config)
+
     show_packet_lifetimes(config)
 
     pass
+
+
+def show_dist_pair(config):
+
+    fig, ax = plt.subplots(1)
+    d1 = config['Abstract']['arrival_distribution'](size=100, **(config['Abstract']['arrival_kwargs']))
+    d2 = config['Abstract']['comm_distribution'](size=100, **(config['Abstract']['comm_kwargs']))
+    sns.distplot(d1, label='Arrival %s | %s' % (config['Abstract']['arrival_dist_str'], config['Abstract']['arrival_kwargs']))
+    sns.distplot(d2, label='Comm %s | %s' % (config['Abstract']['comm_dist_str'], config['Abstract']['comm_kwargs']))
+
+    ax.set_title('Arrival vs Communication Distributions')
+    ax.set_xlabel('Sim Time')
+    ax.set_ylabel('Freq')
+
+    legend = plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+    plt.close()
 
 
 def show_packet_lifetimes(config):
@@ -52,7 +72,8 @@ def show_packet_lifetimes(config):
 
     fig.text(0.6, 0.8, 'Arrival Dist: %s\n  Params: %s\nService Dist: %s\n  Params: %s' % (
         config['Abstract']['arrival_dist_str'], config['Abstract']['arrival_kwargs'],
-        config['Abstract']['service_dist_str'], config['Abstract']['service_kwargs']))
+        config['Abstract']['comm_dist_str'], config['Abstract']['comm_kwargs']))
 
     plt.show()
     plt.close()
+

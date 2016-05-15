@@ -31,9 +31,10 @@ def init_hosts(config):
                                            host_to_dimension[i], dimension_to_host))
         elif report_type == 'Abstract':
             arrival_distribution = config['Abstract']['arrival_distribution']
-            service_distribution = config['Abstract']['service_distribution']
+            comm_distribution = config['Abstract']['comm_distribution']
             arrival_kwargs = config['Abstract']['arrival_kwargs']
-            service_kwargs = config['Abstract']['service_kwargs']
+            comm_kwargs = config['Abstract']['comm_kwargs']
+            comp_time = config['Abstract']['comp_time']
             send_to = list()
 
             # use the problem type to setup configuration
@@ -51,7 +52,7 @@ def init_hosts(config):
             else:
                 raise LookupError('Problem type %i not found' % problem_type)
             hosts.append(AbstractHost.AbstractHost(i, config, arrival_distribution, arrival_kwargs,
-                                                   service_distribution, service_kwargs, send_to, should_generate))
+                                                   comm_distribution, comm_kwargs, comp_time, send_to, should_generate))
 
     env = get_env()
 

@@ -20,13 +20,14 @@ class AbstractHost:
     :type packets: Queue.Queue of Packet
     :type problem_type: int
     """
-    def __init__(self, hostid, config, arrival_distribution, arrival_kwargs, service_distribution, service_kwargs,
-                 send_to, should_generate):
+    def __init__(self, hostid, config, arrival_distribution, arrival_kwargs, comm_distribution, comm_kwargs,
+                 comp_time, send_to, should_generate):
         """
         :param arrival_distribution: function to generate arrival wait times from
         :param arrival_kwargs: keyword arguments to feed into the arrival distribution
-        :param service_distribution: function to generate service wait times from
-        :param service_kwargs: keyword arguments to feed into the arrival distribution
+        :param comm_distribution: function to generate service wait times from
+        :param comm_kwargs: keyword arguments to feed into the arrival distribution
+        :param comp_time: Fixed time to spend computing
         :param send_to: list of hosts to randomly send packets done servicing to
         :param should_generate: should the host generate its own packets
         :return:
@@ -34,8 +35,9 @@ class AbstractHost:
         self.id = hostid
         self.arrival_dist = arrival_distribution
         self.arrival_kwargs = arrival_kwargs
-        self.service_dist = service_distribution
-        self.service_kwargs = service_kwargs
+        self.comm_dist = comm_distribution
+        self.comm_kwargs = comm_kwargs
+        self.comp_time = comp_time
         self.send_to = send_to
         self.should_generate = should_generate
         self.problem_type = config['Abstract']['problem_type']
@@ -88,7 +90,8 @@ class AbstractHost:
                     yield env.timeout(1)
                     continue
 
-            yield env.timeout(self.service_dist(**self.service_kwargs))
+            # yield env.timeout(self.service_dist(**self.service_kwargs))
+            yield env.timeout(self.comp_time)
 
             if self.problem_type != 3 or self.id != 0:
                 pkt = self.packets.get()
@@ -101,13 +104,19 @@ class AbstractHost:
 
                     if self.problem_type in [1, 3]:
                         host_destination = Host.get_hosts()[np.random.choice(self.send_to)]
-                        # todo: communication time
+
+                        comm_time = self.comm_dist(**self.comm_kwargs)
+                        logging.info('Host %i waiting for %f for computation' % (self.id, comm_time))
+                        yield env.timeout(comm_time)
+
                         host_destination.packets.put(pkt)
                         logging.info('Host %i sent packet to host %i' % (self.id, host_destination.id))
                     elif self.problem_type == 2:
                         for hostindex in self.send_to:
                             host_destination = Host.get_hosts()[hostindex]
-                            # todo: communication time
+
+                            yield env.timeout(self.comm_dist(**self.comm_kwargs))
+
                             host_destination.packets.put(pkt)
                             logging.info('Host %i sent packet to host %i' % (self.id, host_destination.id))
 
