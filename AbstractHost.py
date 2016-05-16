@@ -60,10 +60,11 @@ class AbstractHost:
 
         while True:
             if self.should_generate:
-                yield env.timeout(self.arrival_dist(**self.arrival_kwargs))
+                time_till_next_packet_arrival = self.arrival_dist(**self.arrival_kwargs)
+                yield env.timeout(time_till_next_packet_arrival)
                 pkt = Packet(env.now, self.id)
                 self.packets.put(pkt)
-                logging.info('Host %i generated a packet' % self.id)
+                logging.info('Host %i generated a packet after %f time' % (self.id, time_till_next_packet_arrival))
             else:
                 yield env.timeout(1)
 
@@ -112,11 +113,14 @@ class AbstractHost:
                         host_destination.packets.put(pkt)
                         logging.info('Host %i sent packet to host %i' % (self.id, host_destination.id))
                     elif self.problem_type == 2:
+
+                        comm_time = self.comm_dist(**self.comm_kwargs)
+
+                        yield env.timeout(comm_time)
+                        logging.info("Finished communication after %f time" % comm_time)
+
                         for hostindex in self.send_to:
                             host_destination = Host.get_hosts()[hostindex]
-
-                            yield env.timeout(self.comm_dist(**self.comm_kwargs))
-
                             host_destination.packets.put(pkt)
                             logging.info('Host %i sent packet to host %i' % (self.id, host_destination.id))
 

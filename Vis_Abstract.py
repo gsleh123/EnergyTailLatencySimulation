@@ -8,6 +8,7 @@ from simenv import get_env
 import AbstractHost
 import networkx as nx
 
+
 def setup():
     sns.set_context('poster')
     sns.set_palette(sns.color_palette('Set2', 10))
@@ -16,8 +17,8 @@ def setup():
 def show_graphs(config):
 
     show_network(config)
-    # show_dist_pair(config)
-    # show_packet_lifetimes(config)
+    show_dist_pair(config)
+    show_packet_lifetimes(config)
 
     pass
 
