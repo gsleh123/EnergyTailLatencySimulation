@@ -44,7 +44,11 @@ class AbstractHost:
 
         self.packets = Queue()
 
-        # Problem-specific variables
+        # region DVFS
+        self.freq = 1.0
+        # endregion
+
+        # region Problem-specific variables
 
         # For problem 3, gather, we keep track via a dict of queues, indexed by hostid
         if self.problem_type == 3 and self.id == 0:
@@ -52,13 +56,20 @@ class AbstractHost:
             for i in range(1, config['host_count']):
                 self.packets_gather[i] = Queue()
 
+        # endregion Problem-specific Variables
+
         # data collection
         self.packet_latency = list()
+        self.queue_size = dict()
 
     def process_arrivals(self):
         env = get_env()
 
         while True:
+
+            # change frequency as required
+            self.freq = np.interp(self.packets.qsize(), [0, 10], [1, 1.5])
+
             if self.should_generate:
                 time_till_next_packet_arrival = self.arrival_dist(**self.arrival_kwargs)
                 yield env.timeout(time_till_next_packet_arrival)
@@ -66,7 +77,7 @@ class AbstractHost:
                 self.packets.put(pkt)
                 logging.info('Host %i generated a packet after %f time' % (self.id, time_till_next_packet_arrival))
             else:
-                yield env.timeout(1)
+                yield env.timeout(0.1)
 
     def process_service(self):
         env = get_env()
@@ -91,8 +102,9 @@ class AbstractHost:
                     yield env.timeout(1)
                     continue
 
-            # yield env.timeout(self.service_dist(**self.service_kwargs))
-            yield env.timeout(self.comp_time)
+            comp_time = np.interp(self.freq, [1, 1.5], [self.comp_time, self.comp_time * (1/1.5)])
+
+            yield env.timeout(comp_time)
 
             if self.problem_type != 3 or self.id != 0:
                 pkt = self.packets.get()
@@ -132,6 +144,13 @@ class AbstractHost:
                 pkts = [q.get(block=False) for q in self.packets_gather.itervalues()]
                 for pkt in pkts:
                     self.finish_packet(env, pkt)
+
+    def process_logging(self):
+        env = get_env()
+
+        while True:
+            self.queue_size[env.now] = self.packets.qsize()
+            yield env.timeout(1)
 
     def finish_packet(self, env, pkt):
         full_processing_time = env.now - pkt.birth_tick

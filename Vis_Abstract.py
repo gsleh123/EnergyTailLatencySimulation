@@ -19,6 +19,7 @@ def show_graphs(config):
     show_network(config)
     show_dist_pair(config)
     show_packet_lifetimes(config)
+    show_queuesize_history(config)
 
     pass
 
@@ -58,6 +59,7 @@ def show_dist_pair(config):
     legend = plt.legend()
 
     plt.tight_layout()
+    plt.savefig('fig/abstract_distribution_pair.png')
     plt.show()
     plt.close()
 
@@ -95,6 +97,30 @@ def show_packet_lifetimes(config):
         config['Abstract']['arrival_dist_str'], config['Abstract']['arrival_kwargs'],
         config['Abstract']['comm_dist_str'], config['Abstract']['comm_kwargs']))
 
+    plt.savefig('fig/abstract_packet_lifetimes.png')
+
     plt.show()
     plt.close()
 
+
+def show_queuesize_history(config):
+    fig, ax = plt.subplots(2, figsize=(15, 10), sharex=True)
+
+    hosts = Host.get_hosts()
+
+    colors = sns.color_palette('Set2')
+
+    for host in hosts:
+        ax_to_use = ax[0] if host.id == 0 else ax[1]
+        alpha = 1. if host.id == 0 else 0.7
+        queue_sizes = host.queue_size.values()
+        sns.tsplot(ax=ax_to_use, data=queue_sizes, err_style=None, color=colors[host.id], alpha=alpha)
+
+    ax[0].set_title('Host 0 Queue Size over Time')
+    ax[1].set_title('Hosts 1-%i Queue Size Over Time' % (len(hosts)-1))
+    ax[1].set_xlabel('Sim Time Step')
+    ax[0].set_ylabel('Queue Size (packet count)')
+    ax[1].set_ylabel('Queue Size (packet count)')
+
+    plt.show()
+    plt.close()

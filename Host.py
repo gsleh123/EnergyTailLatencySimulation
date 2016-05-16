@@ -62,6 +62,7 @@ def init_hosts(config):
         elif report_type == 'Abstract':
             env.process(hosts[i].process_arrivals())
             env.process(hosts[i].process_service())
+            env.process(hosts[i].process_logging())
 
     target_timestep = config['timesteps']
 

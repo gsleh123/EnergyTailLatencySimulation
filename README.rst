@@ -50,7 +50,7 @@ computation_communication_ratio
 
 .. _mpip_report_type:
 mpip_report_type
-  This option allows for a string of an application to mimic communication traffic using. The only supported application at the moment is 'MILC'
+  This option allows for a string of an application to mimic communication traffic using. The only supported application at the moment is 'MILC', and an abstract "application" is available using 'ABSTRACT'
 
 
 Abstract Overview
