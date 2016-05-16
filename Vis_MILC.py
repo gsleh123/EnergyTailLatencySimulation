@@ -26,7 +26,7 @@ def show_graphs(config):
     # show_host_distributions(config)
     # show_host_range(config)
     # show_host_activity_gnatt(config)
-    # show_sampling_dist(config)
+    show_sampling_dist(config)
 
     pass
 
@@ -239,7 +239,7 @@ def show_host_activity_gnatt(config):
 def show_sampling_dist(config):
     logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.INFO)
 
-    with open('data/node8_sample/samples.txt') as f_all:
+    with open('data/node128_sample/samples.txt') as f_all:
         lines = f_all.readlines()
 
     isend = dict()
@@ -257,18 +257,18 @@ def show_sampling_dist(config):
         type = data[1]
 
         proc = host_id // 32
-        if not isend_procs.has_key(proc):
+        if proc not in isend_procs:
             isend_procs[proc] = list()
-        if not allreduce_procs.has_key(proc):
+        if proc not in allreduce_procs:
             allreduce_procs[proc] = list()
 
         timing_data = map(int, data[2:])
 
-        if type.startswith('a'):
+        if type[0] == 'a':
             allreduce[host_id] = timing_data
             allreduce_all += timing_data
             allreduce_procs[proc] += timing_data
-        elif type.startswith('i'):
+        elif type[0] == 'i':
             isend[host_id] = timing_data
             isend_all += timing_data
             isend_procs[proc] += timing_data
@@ -281,15 +281,15 @@ def show_sampling_dist(config):
 
     # the first row being all 32 cores, the second row being the combined
     # same for allreduce
-    f_procs_isend, ax_procs_isend = plt.subplots(2, len(isend_procs), figsize=figsize, sharey=True)
-    f_procs_allreduce, ax_procs_allreduce = plt.subplots(2, len(isend_procs), figsize=figsize, sharey=True)
+    # f_procs_isend, ax_procs_isend = plt.subplots(2, len(isend_procs), figsize=figsize, sharey=True)
+    # f_procs_allreduce, ax_procs_allreduce = plt.subplots(2, len(isend_procs), figsize=figsize, sharey=True)
     # timeseries
     f_ts, ax_ts = plt.subplots(2, figsize=figsize)
     f_bp, ax_bp = plt.subplots(2, figsize=figsize)
     f_all, ax_all = plt.subplots(2, figsize=figsize)
 
-    f_procs_isend.suptitle('MPI_ISend by Node')
-    f_procs_allreduce.suptitle('MPI_Allreduce by Node')
+    # f_procs_isend.suptitle('MPI_ISend by Node')
+    # f_procs_allreduce.suptitle('MPI_Allreduce by Node')
     f_ts.suptitle('MPI ISend/Allreduce over Time (Ranks 0,1,2)')
     f_bp.suptitle('MPI ISend/Allreduce Boxplot')
     f_all.suptitle('MPI ISend/Allreduce Distribution')
@@ -301,8 +301,8 @@ def show_sampling_dist(config):
     ax_bp[0].set_title('MPI_ISend (All Nodes)')
     ax_bp[1].set_title('MPI_Allreduce (All Nodes)')
 
-    ax_procs_isend[0, 0].set_ylabel('Time (us)')
-    ax_procs_allreduce[0, 0].set_ylabel('Time (us)')
+    # ax_procs_isend[0, 0].set_ylabel('Time (us)')
+    # ax_procs_allreduce[0, 0].set_ylabel('Time (us)')
     ax_ts[0].set_xlabel('Sampling Index (Random Sampling 0.1%)')
     ax_ts[1].set_xlabel('Sampling Index (All Calls 100%)')
     ax_ts[0].set_ylabel('Call Time (us)')
@@ -318,11 +318,11 @@ def show_sampling_dist(config):
     for proc in range(len(isend_procs)):
         for core in range(32):
             host_id = proc*32 + core
-            sns.distplot(ax=ax_procs_isend[0, proc], a=isend[host_id], hist=False)
-            sns.distplot(ax=ax_procs_allreduce[0, proc], a=allreduce[host_id], hist=False)
+            # sns.distplot(ax=ax_procs_isend[0, proc], a=isend[host_id], hist=False)
+            # sns.distplot(ax=ax_procs_allreduce[0, proc], a=allreduce[host_id], hist=False)
 
-            ax_procs_isend[0, proc].set_xlim(bounds_isend)
-            ax_procs_allreduce[0, proc].set_xlim(bounds_allreduce)
+            # ax_procs_isend[0, proc].set_xlim(bounds_isend)
+            # ax_procs_allreduce[0, proc].set_xlim(bounds_allreduce)
 
         # timeseries
         for core in [0, 1, 2]:
@@ -330,14 +330,14 @@ def show_sampling_dist(config):
             sns.tsplot(ax=ax_ts[1], data=allreduce[core], err_style=None, color=colors[core], alpha=0.4)
 
         # all data combined
-        sns.distplot(ax=ax_procs_isend[1, proc], a=isend_procs[proc])
-        sns.distplot(ax=ax_procs_allreduce[1, proc], a=allreduce_procs[proc])
-        ax_procs_isend[1, proc].set_xlim(bounds_isend)
-        ax_procs_allreduce[1, proc].set_xlim(bounds_allreduce)
-
-        # subplot titles
-        ax_procs_isend[0, proc].set_title('Node %i MPI_ISend' % proc)
-        ax_procs_allreduce[0, proc].set_title('Node %i MPI_Allreduce' % proc)
+        # sns.distplot(ax=ax_procs_isend[1, proc], a=isend_procs[proc])
+        # sns.distplot(ax=ax_procs_allreduce[1, proc], a=allreduce_procs[proc])
+        # ax_procs_isend[1, proc].set_xlim(bounds_isend)
+        # ax_procs_allreduce[1, proc].set_xlim(bounds_allreduce)
+        #
+        # # subplot titles
+        # ax_procs_isend[0, proc].set_title('Node %i MPI_ISend' % proc)
+        # ax_procs_allreduce[0, proc].set_title('Node %i MPI_Allreduce' % proc)
 
         ax_ts[0].set_title('MPI_ISend Timeseries (Host [0, 1, 2])')
         ax_ts[1].set_title('MPI_Allreduce Timeseries (Host [0, 1, 2])')
@@ -350,16 +350,16 @@ def show_sampling_dist(config):
 
     layout_rect = (0, 0, 1, 0.95)
 
-    f_procs_isend.tight_layout(rect=layout_rect)
-    f_procs_allreduce.tight_layout(rect=layout_rect)
+    # f_procs_isend.tight_layout(rect=layout_rect)
+    # f_procs_allreduce.tight_layout(rect=layout_rect)
     f_ts.tight_layout(rect=layout_rect)
     f_bp.tight_layout(rect=layout_rect)
     f_all.tight_layout(rect=layout_rect)
 
     logging.info('Plotting done, saving figures')
 
-    f_procs_isend.savefig('fig/MPI_ISend_by_node.png')
-    f_procs_allreduce.savefig('fig/MPI_Allreduce_by_node.png')
+    # f_procs_isend.savefig('fig/MPI_ISend_by_node.png')
+    # f_procs_allreduce.savefig('fig/MPI_Allreduce_by_node.png')
     f_ts.savefig('fig/MPI_over_time.png')
     f_bp.savefig('fig/MPI_boxplot.png')
     f_all.savefig('fig/MPI_distribution.png')
