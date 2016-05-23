@@ -113,6 +113,8 @@ def create_config_dict(parser):
             options['Abstract']['arrival_distribution'] = scipy.stats.pareto.rvs
         elif arrival_dist_str == 'lognormal':
             options['Abstract']['arrival_distribution'] = np.random.lognormal
+        elif arrival_dist_str == 'fixed':
+            options['Abstract']['arrival_distribution'] = np.random.choice
 
         if comm_dist_str == 'exponential':
             options['Abstract']['comm_distribution'] = np.random.exponential
@@ -120,6 +122,8 @@ def create_config_dict(parser):
             options['Abstract']['comm_distribution'] = scipy.stats.pareto.rvs
         elif comm_dist_str == 'lognormal':
             options['Abstract']['comm_distribution'] = np.random.lognormal
+        elif comm_dist_str == 'fixed':
+            options['Abstract']['comm_distribution'] = np.random.choice
 
         options['Abstract']['arrival_dist_str'] = arrival_dist_str
         options['Abstract']['comm_dist_str'] = comm_dist_str

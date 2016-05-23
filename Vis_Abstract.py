@@ -47,6 +47,7 @@ def show_network(config):
 def show_dist_pair(config):
 
     fig, ax = plt.subplots(1)
+    # check if fixed. if so, don't draw distplot
     d1 = config['Abstract']['arrival_distribution'](size=100, **(config['Abstract']['arrival_kwargs']))
     d2 = config['Abstract']['comm_distribution'](size=100, **(config['Abstract']['comm_kwargs']))
     sns.distplot(d1, label='Arrival %s | %s' % (config['Abstract']['arrival_dist_str'], config['Abstract']['arrival_kwargs']))
