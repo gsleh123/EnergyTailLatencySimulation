@@ -68,7 +68,7 @@ class AbstractHost:
         while True:
 
             # change frequency as required
-            self.freq = np.interp(self.packets.qsize(), [0, 10], [1, 1.5])
+            self.freq = np.interp(self.packets.qsize(), [1, 10], [1, 1.5])
 
             if self.should_generate:
                 time_till_next_packet_arrival = self.arrival_dist(**self.arrival_kwargs)
@@ -102,9 +102,11 @@ class AbstractHost:
                     yield env.timeout(1)
                     continue
 
-            comp_time = np.interp(self.freq, [1, 1.5], [self.comp_time, self.comp_time * (1/1.5)])
+            # comp_time = np.interp(self.freq, [1, 1.5], [self.comp_time, self.comp_time * (1/1.5)])
+            comp_time = self.comp_time
 
             yield env.timeout(comp_time)
+            logging.info('Host %i waited %f for computation' % (self.id, comp_time))
 
             if self.problem_type != 3 or self.id != 0:
                 pkt = self.packets.get()
@@ -119,7 +121,7 @@ class AbstractHost:
                         host_destination = Host.get_hosts()[np.random.choice(self.send_to)]
 
                         comm_time = self.comm_dist(**self.comm_kwargs)
-                        logging.info('Host %i waiting for %f for computation' % (self.id, comm_time))
+                        logging.info('Host %i waiting for %f for communication' % (self.id, comm_time))
                         yield env.timeout(comm_time)
 
                         host_destination.packets.put(pkt)

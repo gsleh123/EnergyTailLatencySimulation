@@ -48,10 +48,20 @@ def show_dist_pair(config):
 
     fig, ax = plt.subplots(1)
     # check if fixed. if so, don't draw distplot
-    d1 = config['Abstract']['arrival_distribution'](size=100, **(config['Abstract']['arrival_kwargs']))
-    d2 = config['Abstract']['comm_distribution'](size=100, **(config['Abstract']['comm_kwargs']))
-    sns.distplot(d1, label='Arrival %s | %s' % (config['Abstract']['arrival_dist_str'], config['Abstract']['arrival_kwargs']))
-    sns.distplot(d2, label='Comm %s | %s' % (config['Abstract']['comm_dist_str'], config['Abstract']['comm_kwargs']))
+    if config['Abstract']['arrival_dist_str'] == 'fixed':
+        d1 = config['Abstract']['arrival_kwargs']['a']
+        plt.axvline(x=d1[0])
+    else:
+        d1 = config['Abstract']['arrival_distribution'](size=100, **(config['Abstract']['arrival_kwargs']))
+        sns.distplot(d1, label='Arrival %s | %s' %
+                               (config['Abstract']['arrival_dist_str'], config['Abstract']['arrival_kwargs']))
+    if config['Abstract']['comm_dist_str'] == 'fixed':
+        d2 = config['Abstract']['comm_kwargs']['a']
+        plt.axvline(x=d2[0])
+    else:
+        d2 = config['Abstract']['comm_distribution'](size=100, **(config['Abstract']['comm_kwargs']))
+        sns.distplot(d2, label='Comm %s | %s' %
+                               (config['Abstract']['comm_dist_str'], config['Abstract']['comm_kwargs']))
 
     ax.set_title('Arrival vs Communication Distributions')
     ax.set_xlabel('Sim Time')

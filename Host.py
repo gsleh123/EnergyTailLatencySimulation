@@ -5,6 +5,7 @@ from collections import namedtuple
 import itertools
 import MILCHost
 import AbstractHost
+import sys
 
 hosts = []
 
@@ -30,6 +31,13 @@ def init_hosts(config):
                                            isend_distributions, allreduce_distributions, service_lognormal_param,
                                            host_to_dimension[i], dimension_to_host))
         elif report_type == 'Abstract':
+
+            dimension_depth = config['Abstract']['dimension_depth']
+            dimension_children = config['Abstract']['dimension_children']
+            if dimension_depth < 1 or dimension_children < 1:
+                logging.error('Dimension less than 1')
+                sys.exit(1)
+
             arrival_distribution = config['Abstract']['arrival_distribution']
             comm_distribution = config['Abstract']['comm_distribution']
             arrival_kwargs = config['Abstract']['arrival_kwargs']

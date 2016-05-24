@@ -101,6 +101,8 @@ def create_config_dict(parser):
     if options['mpip_report_type'] == 'Abstract':
         options['Abstract'] = dict()
         options['Abstract']['problem_type'] = int(parser.get('Abstract', 'problem_type'))
+        options['Abstract']['dimension_depth'] = int(parser.get('Abstract', 'dimension_depth'))
+        options['Abstract']['dimension_children'] = int(parser.get('Abstract', 'dimension_children'))
 
         arrival_dist_str = parser.get('Abstract', 'arrival_distribution')
         arrival_kwargs = ast.literal_eval(parser.get('Abstract', 'arrival_kwargs'))
@@ -132,8 +134,9 @@ def create_config_dict(parser):
 
         # since it's not easy to get the mean of a random distribution,
         # we just sample and take the sample mean
-        samples = options['Abstract']['comm_distribution'](size=200, **(options['Abstract']['comm_kwargs']))
-        options['Abstract']['comp_time'] = np.mean(samples) * options['computation_comm_ratio']
+        samples = options['Abstract']['comm_distribution'](size=1000, **(options['Abstract']['comm_kwargs']))
+        comm_mean = np.mean(samples)
+        options['Abstract']['comp_time'] = comm_mean * options['computation_comm_ratio']
 
     return options
 
