@@ -7,6 +7,7 @@ import Host
 from simenv import get_env
 import AbstractHost
 import networkx as nx
+import pickle
 
 
 def setup():
@@ -16,10 +17,10 @@ def setup():
 
 def show_graphs(config):
 
-    show_network(config)
-    show_dist_pair(config)
+    # show_network(config)
+    # show_dist_pair(config)
     show_packet_lifetimes(config)
-    show_queuesize_history(config)
+    # show_queuesize_history(config)
 
     pass
 
@@ -83,6 +84,8 @@ def show_packet_lifetimes(config):
     lifetimes = list()
     for host in hosts:
         lifetimes += host.packet_latency
+
+    pickle.dump(lifetimes, open('data/lifetimes/lifetime.pickle', 'wb'))
 
     sns.distplot(ax=ax[0], a=lifetimes)
     problem_string = ""
