@@ -32,7 +32,7 @@ class AbstractHost:
     :type problem_type: int
     """
     def __init__(self, hostid, config, arrival_distribution, arrival_kwargs, comm_distribution, comm_kwargs,
-                 comp_time, send_to, should_generate):
+                 comp_time, send_to, should_generate, control_scheme):
         """
         :param arrival_distribution: function to generate arrival wait times from
         :param arrival_kwargs: keyword arguments to feed into the arrival distribution
@@ -53,11 +53,35 @@ class AbstractHost:
         self.should_generate = should_generate
         self.problem_type = config['Abstract']['problem_type']
 
-        self.packets = Queue()
-
         # region DVFS
-        self.freq = 1.0
+        self.freq = config['freq_lower_bound']
+        self.min_freq = config['freq_lower_bound']
+        self.max_freq = config['freq_upper_bound']
         # endregion
+
+        # region control scheme
+        self.control_scheme = control_scheme
+        # adjust_freq_on_arrival is called on packet  or arrival to change the frequency
+        if control_scheme == 'basic':
+            self.adjust_freq_on_arrival = self.arrival_basic
+        elif control_scheme == 'back_propagate':
+            self.adjust_freq_on_arrival = self.arrival_back_propagate
+        else:
+            self.adjust_freq_on_arrival = self.arrival_default_scheme
+
+        # adjust_freq_after_send is called after a packet is sent to another host
+        # takes the sent packet and host destination as arguments
+        if control_scheme == 'basic':
+            self.adjust_freq_after_send = self.after_send_default_scheme
+        elif control_scheme == 'back_propagate':
+            # note: only works from problem 3 -- gather -- right now
+            self.adjust_freq_after_send = self.after_send_back_propagate
+        else:
+            self.adjust_freq_after_send = self.after_send_default_scheme
+
+        # endregion
+
+        self.packets = Queue()
 
         # region Problem-specific variables
         if self.problem_type == 3:
@@ -76,7 +100,7 @@ class AbstractHost:
         while True:
 
             # change frequency as required
-            self.freq = np.interp(self.packets.qsize(), [1, 10], [1, 1.5])
+            self.adjust_freq_on_arrival()
 
             if self.should_generate:
                 time_till_next_packet_arrival = self.arrival_dist(**self.arrival_kwargs)
@@ -114,8 +138,8 @@ class AbstractHost:
                     yield env.timeout(1)
                     continue
 
-            # comp_time = np.interp(self.freq, [1, 1.5], [self.comp_time, self.comp_time * (1/1.5)])
-            comp_time = self.comp_time
+            comp_time = np.interp(self.freq, [self.min_freq, self.max_freq],
+                                  [self.comp_time, self.comp_time * (self.min_freq / self.max_freq)])
 
             logging.info('Host %i waiting %f for computation' % (self.id, comp_time))
             yield env.timeout(comp_time)
@@ -129,16 +153,7 @@ class AbstractHost:
 
                     pkt.last_parent = self.id
 
-                    if self.problem_type == 3:
-                        comm_time = self.comm_dist(**self.comm_kwargs)
-
-                        yield env.timeout(comm_time)
-                        logging.info("Host %i finished communication after %f time" % (self.id, comm_time))
-
-                        for host in self.send_to:
-                            host.packets.put(pkt)
-                            logging.info('Host %i sent packet to host %i' % (self.id, host.id))
-                    elif self.problem_type == 2:
+                    if self.problem_type == 2:
                         comm_time = self.comm_dist(**self.comm_kwargs)
 
                         yield env.timeout(comm_time)
@@ -175,6 +190,7 @@ class AbstractHost:
                     for host_id in self.send_to:
                         host = Host.get_hosts()[host_id]
                         host.packets.put(oldest_packet)
+                        self.adjust_freq_after_send(oldest_packet, host)  # todo: assuming len(send_to) == 1 right now
                         logging.info('Host %i sent packet to host %i' % (self.id, host.id))
 
     def process_logging(self):
@@ -188,3 +204,36 @@ class AbstractHost:
         full_processing_time = env.now - pkt.birth_tick
         self.packet_latency.append(full_processing_time)
         logging.info('Host %i finished packet. time spent: %f' % (self.id, full_processing_time))
+
+
+# region control schemes
+    def arrival_basic(self):
+        self.freq = np.interp(self.packets.qsize(), [1, 10], [self.min_freq, self.max_freq])
+
+    def arrival_back_propagate(self):
+        pass
+
+    def arrival_default_scheme(self):
+        pass
+
+    def after_send_default_scheme(self, pkt, dest):
+        logging.info('default control scheme after send')
+        pass
+
+    def after_send_back_propagate(self, pkt, dest):
+        # first calculate the total number of packets at the destination
+        total_packet_count = sum([q.qsize() for q in dest.packets_gather.values()])
+        # get the packets_gather keys sorted by their queue size
+        sorted_gather_queue_indicies =\
+            [t[0] for t in sorted(dest.packets_gather.items(), key=lambda qu: qu[1].qsize())]
+        rank = sorted_gather_queue_indicies.index(self.id)
+
+        # scale the frequency by rank. Highest rank (most in queue) is slowest
+        # lowest rank (least in queue) is fastest
+        self.freq = np.interp(rank, [0, len(dest.packets_gather)], [self.min_freq, self.max_freq])
+
+        logging.info('Host %i got back_propagate of %i/%i, setting freq to %f' % (self.id,
+                                                                                  rank,
+                                                                                  len(dest.packets_gather),
+                                                                                  self.freq))
+# endregion

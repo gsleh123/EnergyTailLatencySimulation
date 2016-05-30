@@ -103,6 +103,7 @@ def create_config_dict(parser):
         options['Abstract']['problem_type'] = int(parser.get('Abstract', 'problem_type'))
         options['Abstract']['dimension_depth'] = int(parser.get('Abstract', 'dimension_depth'))
         options['Abstract']['dimension_children'] = int(parser.get('Abstract', 'dimension_children'))
+        options['Abstract']['control_scheme'] = parser.get('Abstract', 'control_scheme')
 
         arrival_dist_str = parser.get('Abstract', 'arrival_distribution')
         arrival_kwargs = ast.literal_eval(parser.get('Abstract', 'arrival_kwargs'))

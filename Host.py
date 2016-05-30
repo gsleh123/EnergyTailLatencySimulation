@@ -46,6 +46,7 @@ def init_hosts(config):
                 logging.error('Dimension less than 1')
                 sys.exit(1)
 
+            control_scheme = config['Abstract']['control_scheme']
             arrival_distribution = config['Abstract']['arrival_distribution']
             comm_distribution = config['Abstract']['comm_distribution']
             arrival_kwargs = config['Abstract']['arrival_kwargs']
@@ -70,7 +71,8 @@ def init_hosts(config):
             else:
                 raise LookupError('Problem type %i not found' % problem_type)
             hosts.append(AbstractHost.AbstractHost(i, config, arrival_distribution, arrival_kwargs,
-                                                   comm_distribution, comm_kwargs, comp_time, send_to, should_generate))
+                                                   comm_distribution, comm_kwargs, comp_time,
+                                                   send_to, should_generate, control_scheme))
 
     if report_type == 'Abstract' and config['Abstract']['problem_type'] == 3:
         dimension_depth = config['Abstract']['dimension_depth']
