@@ -24,6 +24,13 @@ def init_hosts(config):
         host_to_dimension, dimension_to_host = __generate_rank_to_dimension_lookup(
              config['host_count'], config['MILC']['dimensions'])
 
+    # if Abstract/Problem2, we ignore the host_count parameter provided and use the problem dimensions to figure
+    # out the true dimensions http://stackoverflow.com/a/515285/495501
+    if report_type == 'Abstract' and config['Abstract']['problem_type'] == 2:
+        dimension_depth = config['Abstract']['dimension_depth']
+        dimension_children = config['Abstract']['dimension_children']
+        config['host_count'] = num_of_hosts = (dimension_children**(dimension_depth)-1) / (dimension_children - 1)
+
     for i in range(num_of_hosts):
         if report_type == 'MILC':
             isend_distributions, allreduce_distributions, service_lognormal_param, raw_data = __load_mpip_report(config)
@@ -47,10 +54,14 @@ def init_hosts(config):
 
             # use the problem type to setup configuration
             problem_type = config['Abstract']['problem_type']
-            if problem_type == 1 or problem_type == 2:
-                if i == 0:
-                    send_to += range(1, num_of_hosts)
-                should_generate = i == 0
+            if problem_type == 1:
+                print 'Scatter temporarily not supported'
+                sys.exit(1)
+            if problem_type == 2:  # Broadcast
+
+                send_to, should_generate = calculate_broadcast_setup(i, dimension_children, dimension_depth)
+                print i, send_to
+
             elif problem_type == 3:
                 if i != 0:
                     send_to.append(0)
@@ -216,3 +227,50 @@ def __load_mpip_report(config):
     service_lognormal_param = lognormal_param(avg_mean/entry_count, avg_sigma/entry_count)
 
     return isend_distributions, allreduce_distributions, service_lognormal_param, raw_data
+
+
+def calculate_broadcast_setup(i, width, depth):
+    """
+    Calulatates the parameters to setup a broadcast simulation
+    :param i: The id of the node we are calculating for. The root should be 0
+    :param width: The number of children per node
+    :param depth: The number of levels to go to
+    :return: A tuple of (send_to, should_generate)
+    """
+
+    # This algorithm requires a few steps
+
+    # Step 1: Find the range between two incrementing n-power-sums that i falls under
+    # For example, i=5 calls under n^0+n^1 and n^0+n^1+n^2 where n=width
+    lower = width**0
+    higher = width**0 + width**1
+    power = 1
+
+    while i >= higher:
+        lower += width**power
+        power += 1
+        higher += width**power
+
+    # there's a bug w/ node_id==0 here, but it doesn't affect the outcome right now
+    if i == 0:
+        lower = 0
+        higher = 1
+
+    # Step 2: We define two variables V and W to be the number of nodes in the same depth before and after
+    v = i - lower
+    w = higher - i
+
+    # Step 3: The ID of the first child for this node is w+v*width
+    child_id = i + w + v*width
+
+    send_to = list()
+
+    # if we are in the final depth, no need to add children
+    if power != depth-1:
+        for c in range(width):
+            send_to.append(child_id)
+            child_id += 1
+
+    should_generate = i == 0
+
+    return send_to, should_generate

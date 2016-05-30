@@ -17,8 +17,8 @@ def setup():
 
 def show_graphs(config):
 
-    # show_network(config)
-    # show_dist_pair(config)
+    show_network(config)
+    show_dist_pair(config)
     show_packet_lifetimes(config)
     # show_queuesize_history(config)
 
@@ -39,7 +39,9 @@ def show_network(config):
 
     fig = plt.figure(figsize=(20, 12))
 
-    nx.draw_shell(graph, with_labels=True)
+    pos = __hierarchy_pos(graph, 0)
+
+    nx.draw(graph, pos=pos, with_labels=True)
 
     plt.show()
     plt.close()
@@ -138,3 +140,34 @@ def show_queuesize_history(config):
 
     plt.show()
     plt.close()
+
+
+def __hierarchy_pos(G, root, width=1., vert_gap=0.2, vert_loc=0, xcenter=0.5,
+                    pos=None, parent=None):
+    """Calculate position of nodes for networkx graphs
+    http://stackoverflow.com/a/29597209/495501
+    If there is a cycle that is reachable from root, then this will see infinite recursion.
+    :param G: the graph
+    :param root: the root node of current branch
+    :param width: horizontal space allocated for this branch - avoids overlap with other branches
+    :param vert_gap: gap between levels of hierarchy
+    :param vert_loc: vertical location of root
+    :param xcenter: horizontal location of root
+    :param pos: a dict saying where all nodes go if they have been assigned
+    :param parent: parent of this branch."""
+    if pos is None:
+        pos = {root:(xcenter, vert_loc)}
+    else:
+        pos[root] = (xcenter, vert_loc)
+    neighbors = G.neighbors(root)
+    if parent is not None and parent in neighbors:
+        neighbors.remove(parent)
+    if len(neighbors) != 0:
+        dx = width/len(neighbors)
+        nextx = xcenter - width/2 - dx/2
+        for neighbor in neighbors:
+            nextx += dx
+            pos = __hierarchy_pos(G, neighbor, width=dx, vert_gap=vert_gap,
+                                  vert_loc=vert_loc-vert_gap, xcenter=nextx, pos=pos,
+                                  parent=root)
+    return pos
