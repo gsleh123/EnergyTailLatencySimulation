@@ -51,9 +51,9 @@ class AbstractHost:
         # region Problem-specific variables
 
         # For problem 3, gather, we keep track via a dict of queues, indexed by hostid
-        if self.problem_type == 3 and self.id == 0:
+        if self.problem_type == 3:
             self.packets_gather = dict()
-            for i in range(1, config['host_count']):
+            for i in send_to:
                 self.packets_gather[i] = Queue()
 
         # endregion Problem-specific Variables
@@ -108,7 +108,7 @@ class AbstractHost:
             yield env.timeout(comp_time)
             logging.info('Host %i waited %f for computation' % (self.id, comp_time))
 
-            if self.problem_type != 3 or self.id != 0:
+            if self.problem_type != 3:
                 pkt = self.packets.get()
                 logging.info('Host %i serviced a packet' % self.id)
 

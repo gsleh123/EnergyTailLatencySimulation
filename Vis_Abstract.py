@@ -34,14 +34,17 @@ def show_network(config):
         graph.add_node(host.id)
 
     for host in hosts:
+        print host.id, host.send_to
         for dest in host.send_to:
             graph.add_edge(host.id, dest)
 
     fig = plt.figure(figsize=(20, 12))
 
-    pos = __hierarchy_pos(graph, 0)
-
-    nx.draw(graph, pos=pos, with_labels=True)
+    if config['mpip_report_type'] == 'Abstract' and config['Abstract']['problem_type'] != 3:
+        pos = __hierarchy_pos(graph, 12)
+        nx.draw(graph, pos=pos, with_labels=True)
+    else:
+        nx.draw_shell(graph, with_labels=True)
 
     plt.show()
     plt.close()
@@ -156,7 +159,7 @@ def __hierarchy_pos(G, root, width=1., vert_gap=0.2, vert_loc=0, xcenter=0.5,
     :param pos: a dict saying where all nodes go if they have been assigned
     :param parent: parent of this branch."""
     if pos is None:
-        pos = {root:(xcenter, vert_loc)}
+        pos = {root: (xcenter, vert_loc)}
     else:
         pos[root] = (xcenter, vert_loc)
     neighbors = G.neighbors(root)

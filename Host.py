@@ -26,7 +26,7 @@ def init_hosts(config):
 
     # if Abstract/Problem2, we ignore the host_count parameter provided and use the problem dimensions to figure
     # out the true dimensions http://stackoverflow.com/a/515285/495501
-    if report_type == 'Abstract' and config['Abstract']['problem_type'] == 2:
+    if report_type == 'Abstract':
         dimension_depth = config['Abstract']['dimension_depth']
         dimension_children = config['Abstract']['dimension_children']
         config['host_count'] = num_of_hosts = (dimension_children**(dimension_depth)-1) / (dimension_children - 1)
@@ -60,18 +60,20 @@ def init_hosts(config):
             if problem_type == 2:  # Broadcast
 
                 send_to, should_generate = calculate_broadcast_setup(i, dimension_children, dimension_depth)
-                print i, send_to
 
-            elif problem_type == 3:
-                if i != 0:
-                    send_to.append(0)
-                    should_generate = True
-                else:
-                    should_generate = False
+            elif problem_type == 3:  # Gather
+                # Gather requires a post-process after all nodes have been created
+                # Easiest way is to generate a broadcast, then flip everything
+                send_to, should_generate = calculate_broadcast_setup(i, dimension_children, dimension_depth)
             else:
                 raise LookupError('Problem type %i not found' % problem_type)
             hosts.append(AbstractHost.AbstractHost(i, config, arrival_distribution, arrival_kwargs,
                                                    comm_distribution, comm_kwargs, comp_time, send_to, should_generate))
+
+    if report_type == 'Abstract' and config['Abstract']['problem_type'] == 3:
+        dimension_depth = config['Abstract']['dimension_depth']
+        dimension_children = config['Abstract']['dimension_children']
+        calculate_gather_setup(num_of_hosts, hosts, dimension_depth, dimension_children)
 
     env = get_env()
 
@@ -274,3 +276,39 @@ def calculate_broadcast_setup(i, width, depth):
     should_generate = i == 0
 
     return send_to, should_generate
+
+
+def calculate_gather_setup(host_count, hosts, width, depth):
+    """
+    Changes the hosts so the input broadcast setup is modified into a gather setup
+    :param host_count: number of hosts
+    :param hosts: list of hosts
+    :param width: children gathering from
+    :param depth: how many levels deep
+    :return:
+    """
+
+    # first make a "receiver" variable for each host
+    for host in hosts:
+        host.receivers = list()
+
+    # iterate through each host, add the sent_to as receivers
+    for host in hosts:
+        for h in host.send_to:
+            hosts[h].receivers.append(host.id)
+
+        # if the host had nothing in send_to, it was at the end of the broadcast
+        # this means they are at the start of the gather, so they need to generate
+        host.should_generate = len(host.send_to) == 0
+
+    # replace each send_to with their corresponding receiver list
+    for host in hosts:
+        host.send_to = host.receivers
+        del host.receivers
+
+    # debug
+    for host in hosts:
+        print host.id, host.should_generate, host.send_to
+
+    # done
+
