@@ -5,6 +5,8 @@ import itertools
 from Queue import Queue
 from Packet import Packet
 import Host
+import sys
+from operator import attrgetter
 
 
 def Abstract_Runner(target_timestep):
@@ -13,6 +15,15 @@ def Abstract_Runner(target_timestep):
     while env.now < target_timestep:
         yield env.timeout(1)
         logging.info('Sim Time: %i' % env.now)
+
+    logging.info('Host Queue lengths after simulation:')
+    for host in Host.get_hosts():
+        queue_size = host.packets.qsize()
+        if host.packets_gather is not None:
+            for q in host.packets_gather.values():
+                queue_size += q.qsize()
+
+        logging.info('Host %i: %i' % (host.id, queue_size))
 
 
 class AbstractHost:
@@ -49,12 +60,9 @@ class AbstractHost:
         # endregion
 
         # region Problem-specific variables
-
-        # For problem 3, gather, we keep track via a dict of queues, indexed by hostid
         if self.problem_type == 3:
+            self.receivers = list()
             self.packets_gather = dict()
-            for i in send_to:
-                self.packets_gather[i] = Queue()
 
         # endregion Problem-specific Variables
 
@@ -84,7 +92,7 @@ class AbstractHost:
 
         while True:
 
-            if self.problem_type != 3 or self.id != 0:
+            if self.problem_type != 3:
                 if self.packets.qsize() == 0:
                     yield env.timeout(0.1)
                     continue
@@ -95,6 +103,10 @@ class AbstractHost:
                 # transfer them to the queue dict
                 while self.packets.qsize() > 0:
                     p = self.packets.get()
+
+                    if p.last_parent not in self.packets_gather:
+                        pass
+
                     self.packets_gather[p.last_parent].put(p)
 
                 can_gather = not any(q.empty() for q in self.packets_gather.itervalues())
@@ -105,8 +117,8 @@ class AbstractHost:
             # comp_time = np.interp(self.freq, [1, 1.5], [self.comp_time, self.comp_time * (1/1.5)])
             comp_time = self.comp_time
 
+            logging.info('Host %i waiting %f for computation' % (self.id, comp_time))
             yield env.timeout(comp_time)
-            logging.info('Host %i waited %f for computation' % (self.id, comp_time))
 
             if self.problem_type != 3:
                 pkt = self.packets.get()
@@ -117,26 +129,28 @@ class AbstractHost:
 
                     pkt.last_parent = self.id
 
-                    if self.problem_type in [1, 3]:
-                        host_destination = Host.get_hosts()[np.random.choice(self.send_to)]
-
+                    if self.problem_type == 3:
                         comm_time = self.comm_dist(**self.comm_kwargs)
-                        logging.info('Host %i waiting for %f for communication' % (self.id, comm_time))
-                        yield env.timeout(comm_time)
 
-                        host_destination.packets.put(pkt)
-                        logging.info('Host %i sent packet to host %i' % (self.id, host_destination.id))
+                        yield env.timeout(comm_time)
+                        logging.info("Host %i finished communication after %f time" % (self.id, comm_time))
+
+                        for host in self.send_to:
+                            host.packets.put(pkt)
+                            logging.info('Host %i sent packet to host %i' % (self.id, host.id))
                     elif self.problem_type == 2:
-
                         comm_time = self.comm_dist(**self.comm_kwargs)
 
                         yield env.timeout(comm_time)
-                        logging.info("Finished communication after %f time" % comm_time)
+                        logging.info("Host %i finished communication after %f time" % (self.id, comm_time))
 
                         for hostindex in self.send_to:
                             host_destination = Host.get_hosts()[hostindex]
                             host_destination.packets.put(pkt)
                             logging.info('Host %i sent packet to host %i' % (self.id, host_destination.id))
+                    else:
+                        logging.error("Problem type currently not supported")
+                        sys.exit(1)
 
                 # if last destination, log it
                 else:
@@ -144,8 +158,24 @@ class AbstractHost:
             else:  # problem 3
                 logging.info('Host %i has gathered and serviced a set' % self.id)
                 pkts = [q.get(block=False) for q in self.packets_gather.itervalues()]
-                for pkt in pkts:
-                    self.finish_packet(env, pkt)
+
+                if len(self.send_to) == 0:  # end for packet
+                    for pkt in pkts:
+                        self.finish_packet(env, pkt)
+                else:
+                    # figure out the oldest packet, use that packet to send forward
+                    oldest_packet = min(pkts, key=lambda x: x.birth_tick)
+                    oldest_packet.last_parent = self.id
+
+                    comm_time = self.comm_dist(**self.comm_kwargs)
+
+                    yield env.timeout(comm_time)
+                    logging.info("Host %i finished communication after %f time" % (self.id, comm_time))
+
+                    for host_id in self.send_to:
+                        host = Host.get_hosts()[host_id]
+                        host.packets.put(oldest_packet)
+                        logging.info('Host %i sent packet to host %i' % (self.id, host.id))
 
     def process_logging(self):
         env = get_env()

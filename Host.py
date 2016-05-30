@@ -6,6 +6,7 @@ import itertools
 import MILCHost
 import AbstractHost
 import sys
+from Queue import Queue
 
 hosts = []
 
@@ -60,6 +61,7 @@ def init_hosts(config):
             if problem_type == 2:  # Broadcast
 
                 send_to, should_generate = calculate_broadcast_setup(i, dimension_children, dimension_depth)
+                print i, should_generate, send_to
 
             elif problem_type == 3:  # Gather
                 # Gather requires a post-process after all nodes have been created
@@ -73,7 +75,7 @@ def init_hosts(config):
     if report_type == 'Abstract' and config['Abstract']['problem_type'] == 3:
         dimension_depth = config['Abstract']['dimension_depth']
         dimension_children = config['Abstract']['dimension_children']
-        calculate_gather_setup(num_of_hosts, hosts, dimension_depth, dimension_children)
+        calculate_gather_setup(dimension_depth, dimension_children)
 
     env = get_env()
 
@@ -268,7 +270,7 @@ def calculate_broadcast_setup(i, width, depth):
     send_to = list()
 
     # if we are in the final depth, no need to add children
-    if power != depth-1:
+    if power != depth-1 or i == 0:
         for c in range(width):
             send_to.append(child_id)
             child_id += 1
@@ -278,19 +280,15 @@ def calculate_broadcast_setup(i, width, depth):
     return send_to, should_generate
 
 
-def calculate_gather_setup(host_count, hosts, width, depth):
+def calculate_gather_setup(width, depth):
     """
     Changes the hosts so the input broadcast setup is modified into a gather setup
-    :param host_count: number of hosts
-    :param hosts: list of hosts
     :param width: children gathering from
     :param depth: how many levels deep
     :return:
     """
 
-    # first make a "receiver" variable for each host
-    for host in hosts:
-        host.receivers = list()
+    global hosts
 
     # iterate through each host, add the sent_to as receivers
     for host in hosts:
@@ -303,12 +301,21 @@ def calculate_gather_setup(host_count, hosts, width, depth):
 
     # replace each send_to with their corresponding receiver list
     for host in hosts:
-        host.send_to = host.receivers
-        del host.receivers
+        host.send_to, host.receivers = host.receivers, host.send_to
+
+    # For problem 3, gather, we keep track via a dict of queues, indexed by hostid
+    for host in hosts:
+        for i in host.receivers:
+            host.packets_gather[i] = Queue()
+
+        # for those that are generating, make themselves a gather target
+        if host.should_generate:
+            host.packets_gather[host.id] = Queue()
 
     # debug
     for host in hosts:
-        print host.id, host.should_generate, host.send_to
+        print host.id, host.should_generate, host.send_to, host.receivers
 
+    pass
     # done
 

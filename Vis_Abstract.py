@@ -20,7 +20,7 @@ def show_graphs(config):
     show_network(config)
     show_dist_pair(config)
     show_packet_lifetimes(config)
-    # show_queuesize_history(config)
+    show_queuesize_history(config)
 
     pass
 
@@ -34,17 +34,16 @@ def show_network(config):
         graph.add_node(host.id)
 
     for host in hosts:
-        print host.id, host.send_to
         for dest in host.send_to:
             graph.add_edge(host.id, dest)
 
     fig = plt.figure(figsize=(20, 12))
 
     if config['mpip_report_type'] == 'Abstract' and config['Abstract']['problem_type'] != 3:
-        pos = __hierarchy_pos(graph, 12)
-        nx.draw(graph, pos=pos, with_labels=True)
+        pos = __hierarchy_pos(graph, 0)
+        nx.draw(graph, pos=pos, with_labels=True, arrows=True)
     else:
-        nx.draw_shell(graph, with_labels=True)
+        nx.draw_shell(graph, with_labels=True, arrows=True)
 
     plt.show()
     plt.close()
@@ -69,9 +68,16 @@ def show_dist_pair(config):
         sns.distplot(d2, label='Comm %s | %s' %
                                (config['Abstract']['comm_dist_str'], config['Abstract']['comm_kwargs']))
 
+    mean1 = np.mean(d1)
+    mean2 = np.mean(d2)
+
     ax.set_title('Arrival vs Communication Distributions')
     ax.set_xlabel('Sim Time')
     ax.set_ylabel('Freq')
+
+    fig.text(0.1, 0.9, 'Stability Check: %f vs %f: %s' % (
+        mean1, mean2, 'Good' if mean1 > mean2 else 'Bad'
+    ))
 
     legend = plt.legend()
 
@@ -127,13 +133,13 @@ def show_queuesize_history(config):
 
     hosts = Host.get_hosts()
 
-    colors = sns.color_palette('Set2')
+    colors = sns.color_palette('Set2', len(hosts))
 
     for host in hosts:
         ax_to_use = ax[0] if host.id == 0 else ax[1]
-        alpha = 1. if host.id == 0 else 0.7
+        alpha = 1. if host.id == 0 else 0.5
         queue_sizes = host.queue_size.values()
-        sns.tsplot(ax=ax_to_use, data=queue_sizes, err_style=None, color=colors[host.id], alpha=alpha)
+        sns.tsplot(ax=ax_to_use, data=queue_sizes, err_style=None, color=colors[host.id], alpha=alpha, n_boot=0)
 
     ax[0].set_title('Host 0 Queue Size over Time')
     ax[1].set_title('Hosts 1-%i Queue Size Over Time' % (len(hosts)-1))
