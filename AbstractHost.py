@@ -6,7 +6,6 @@ from Queue import Queue
 from Packet import Packet
 import Host
 import sys
-from operator import attrgetter
 
 
 def Abstract_Runner(target_timestep):
@@ -19,7 +18,7 @@ def Abstract_Runner(target_timestep):
     logging.info('Host Queue lengths after simulation:')
     for host in Host.get_hosts():
         queue_size = host.packets.qsize()
-        if host.packets_gather is not None:
+        if hasattr(host, 'packets_gather'):
             for q in host.packets_gather.values():
                 queue_size += q.qsize()
 
@@ -54,7 +53,7 @@ class AbstractHost:
         self.problem_type = config['Abstract']['problem_type']
 
         # region DVFS
-        self.freq = config['freq_lower_bound']
+        self.freq = config['freq_start']
         self.min_freq = config['freq_lower_bound']
         self.max_freq = config['freq_upper_bound']
         # endregion
@@ -93,6 +92,7 @@ class AbstractHost:
         # data collection
         self.packet_latency = list()
         self.queue_size = dict()
+        self.freq_history = list()
 
     def process_arrivals(self):
         env = get_env()
@@ -198,6 +198,7 @@ class AbstractHost:
 
         while True:
             self.queue_size[env.now] = self.packets.qsize()
+            self.freq_history.append(self.freq)
             yield env.timeout(1)
 
     def finish_packet(self, env, pkt):
@@ -207,17 +208,16 @@ class AbstractHost:
 
 
 # region control schemes
+    def arrival_default_scheme(self):
+        pass
+
     def arrival_basic(self):
-        self.freq = np.interp(self.packets.qsize(), [1, 10], [self.min_freq, self.max_freq])
+        self.freq = np.interp(self.packets.qsize(), [0, 4], [self.min_freq, self.max_freq])
 
     def arrival_back_propagate(self):
         pass
 
-    def arrival_default_scheme(self):
-        pass
-
     def after_send_default_scheme(self, pkt, dest):
-        logging.info('default control scheme after send')
         pass
 
     def after_send_back_propagate(self, pkt, dest):

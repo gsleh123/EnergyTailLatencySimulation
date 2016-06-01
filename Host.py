@@ -316,7 +316,7 @@ def calculate_gather_setup(width, depth):
 
     # debug
     for host in hosts:
-        print host.id, host.should_generate, host.send_to, host.receivers
+        logging.info('%i %s %s %s' % (host.id, host.should_generate, host.send_to, host.receivers))
 
     pass
     # done

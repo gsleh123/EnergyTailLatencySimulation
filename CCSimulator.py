@@ -59,11 +59,13 @@ def create_config_dict(parser):
 
     freq_lower_bound = float(parser.get('CC_Config', 'freq_lower_bound'))
     freq_upper_bound = float(parser.get('CC_Config', 'freq_upper_bound'))
+    freq_start = float(parser.get('CC_Config', 'freq_start'))
     arrival_rate = float(parser.get('CC_Config', 'arrival_rate'))
     service_rate = float(parser.get('CC_Config', 'service_rate'))
 
     options['freq_lower_bound'] = freq_lower_bound
     options['freq_upper_bound'] = freq_upper_bound
+    options['freq_start'] = freq_start
     options['arrival_rate'] = arrival_rate
     options['service_rate'] = service_rate
 

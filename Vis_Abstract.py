@@ -17,10 +17,12 @@ def setup():
 
 def show_graphs(config):
 
-    show_network(config)
-    show_dist_pair(config)
+    print 'starting graphs'
+
+    # show_network(config)
+    # show_dist_pair(config)
     show_packet_lifetimes(config)
-    show_queuesize_history(config)
+    # show_queuesize_history(config)
 
     pass
 
@@ -93,10 +95,21 @@ def show_packet_lifetimes(config):
     fig, ax = plt.subplots(2, figsize=(15, 10), sharex=True)
 
     lifetimes = list()
+
+    # calculate average freq
+    all_freq = []
+
     for host in hosts:
         lifetimes += host.packet_latency
+        all_freq.extend(host.freq_history)
 
-    pickle.dump(lifetimes, open('data/lifetimes/lifetime.pickle', 'wb'))
+    avg_freq = np.mean(all_freq)
+
+    dump_data = dict()
+    dump_data['lifetimes'] = lifetimes
+    dump_data['avg_freq'] = avg_freq
+
+    pickle.dump(dump_data, open('data/lifetimes/lifetime.pickle', 'wb'))
 
     sns.distplot(ax=ax[0], a=lifetimes)
     problem_string = ""

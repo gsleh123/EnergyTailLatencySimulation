@@ -28,20 +28,38 @@ def show_lifetimes():
     fig, ax = plt.subplots(2, sharex=True)
 
     lifetimes = dict()
+    avg_freq = dict()
+    tail_latency = dict()
 
     for file in files:
         data = pickle.load(open('data/lifetimes/' + file, 'rb'))
 
-        sns.distplot(ax=ax[0], a=data, label=file)
+        lifetimes[file] = data['lifetimes']
+        avg_freq[file] = data['avg_freq']
+        tail_latency[file] = np.percentile(data['lifetimes'], 98)
 
-        lifetimes[file] = data
+    # sort by mean
+    sorted_values = sorted(lifetimes.items(), key=lambda d: d[0][0])
 
+    # dataframe wants them all the same size, so we trim to smallest value
     least_samples = min([len(f) for f in lifetimes.values()])
-    for l in lifetimes:
-        lifetimes[l] = lifetimes[l][:least_samples]
+
+    for da in (sorted_values):
+        filename = da[0]
+        data_entry = da[1]
+
+        sns.distplot(ax=ax[0], a=data_entry, hist=False, label=filename)
+        lifetimes[filename] = lifetimes[filename][:least_samples]
 
     data = pd.DataFrame(lifetimes, columns=files)
     sns.boxplot(ax=ax[1], data=data, orient='h')
+
+    index = 0.0
+    for file in reversed(files):
+        freq = avg_freq[file]
+        tail = tail_latency[file]
+        fig.text(0.7, 0.14 + index, "avg freq %f | 98%% = %f" % (freq, tail))
+        index += 0.06
 
     plt.show()
     plt.close()
