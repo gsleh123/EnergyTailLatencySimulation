@@ -213,7 +213,6 @@ class AbstractHost:
 
     def arrival_basic(self):
         self.freq = np.interp(self.packets.qsize(), [0, 4], [self.min_freq, self.max_freq])
-        self.freq = np.interp(np.exp(self.packets.qsize()), [0, 4], [self.min_freq, self.max_freq])
 
     def arrival_back_propagate(self):
         pass
