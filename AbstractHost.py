@@ -22,7 +22,7 @@ def Abstract_Runner(target_timestep):
             for q in host.packets_gather.values():
                 queue_size += q.qsize()
 
-        logging.info('Host %i: %i' % (host.id, queue_size))
+        logging.debug('Host %i: %i' % (host.id, queue_size))
 
 
 class AbstractHost:

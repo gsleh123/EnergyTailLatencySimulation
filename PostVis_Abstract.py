@@ -29,14 +29,16 @@ def show_lifetimes():
 
     lifetimes = dict()
     avg_freq = dict()
-    tail_latency = dict()
+    tail_latency_95 = dict()
+    tail_latency_98 = dict()
 
     for file in files:
         data = pickle.load(open('data/lifetimes/' + file, 'rb'))
 
         lifetimes[file] = data['lifetimes']
         avg_freq[file] = data['avg_freq']
-        tail_latency[file] = np.percentile(data['lifetimes'], 98)
+        tail_latency_95[file] = np.percentile(data['lifetimes'], 95)
+        tail_latency_98[file] = np.percentile(data['lifetimes'], 98)
 
     # sort by mean
     sorted_values = sorted(lifetimes.items(), key=lambda d: d[0][0])
@@ -52,14 +54,16 @@ def show_lifetimes():
         lifetimes[filename] = lifetimes[filename][:least_samples]
 
     data = pd.DataFrame(lifetimes, columns=files)
-    sns.boxplot(ax=ax[1], data=data, orient='h')
+    sns.boxplot(ax=ax[1], data=data, orient='h', whis=2)
 
     index = 0.0
     for file in reversed(files):
         freq = avg_freq[file]
-        tail = tail_latency[file]
-        fig.text(0.7, 0.14 + index, "avg freq %f | 98%% = %f" % (freq, tail))
-        index += 0.06
+        tail95 = tail_latency_95[file]
+        tail98 = tail_latency_98[file]
+        # fig.text(0.7, 0.14 + index, "avg freq %f | 98%% = %f" % (freq, tail))
+        fig.text(0.7, 0.15 + index, "95%% = %f | 98%% = %f" % (tail95, tail98))
+        index += 0.075
 
     plt.show()
     plt.close()

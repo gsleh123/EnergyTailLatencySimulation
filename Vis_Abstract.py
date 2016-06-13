@@ -20,7 +20,7 @@ def show_graphs(config):
     print 'starting graphs'
 
     # show_network(config)
-    # show_dist_pair(config)
+    show_dist_pair(config)
     show_packet_lifetimes(config)
     # show_queuesize_history(config)
 
@@ -69,6 +69,9 @@ def show_dist_pair(config):
         d2 = config['Abstract']['comm_distribution'](size=100, **(config['Abstract']['comm_kwargs']))
         sns.distplot(d2, label='Comm %s | %s' %
                                (config['Abstract']['comm_dist_str'], config['Abstract']['comm_kwargs']))
+
+    # plot the computation line
+    plt.axvline(x=config['Abstract']['comp_time'], color='black')
 
     mean1 = np.mean(d1)
     mean2 = np.mean(d2)
