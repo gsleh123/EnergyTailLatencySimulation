@@ -20,7 +20,7 @@ def show_graphs(config):
     print 'starting graphs'
 
     # show_network(config)
-    show_dist_pair(config)
+    # show_dist_pair(config)
     show_packet_lifetimes(config)
     # show_queuesize_history(config)
 

@@ -32,6 +32,10 @@ def show_lifetimes():
     tail_latency_95 = dict()
     tail_latency_98 = dict()
 
+    # maps filenames to colors
+    col_map = dict()
+    col_index = 0
+
     for file in files:
         data = pickle.load(open('data/lifetimes/' + file, 'rb'))
 
@@ -39,6 +43,9 @@ def show_lifetimes():
         avg_freq[file] = data['avg_freq']
         tail_latency_95[file] = np.percentile(data['lifetimes'], 95)
         tail_latency_98[file] = np.percentile(data['lifetimes'], 98)
+
+        col_map[file] = sns.color_palette()[col_index]
+        col_index += 1
 
     # sort by mean
     sorted_values = sorted(lifetimes.items(), key=lambda d: d[0][0])
@@ -50,8 +57,14 @@ def show_lifetimes():
         filename = da[0]
         data_entry = da[1]
 
-        sns.distplot(ax=ax[0], a=data_entry, hist=False, label=filename)
+        slope = 3 / (tail_latency_98[filename] - tail_latency_95[filename])
+        ax[0].plot([tail_latency_95[filename], tail_latency_98[filename]], [95, 98],
+                   color=col_map[filename], label='%s | %f' %(filename, slope))
         lifetimes[filename] = lifetimes[filename][:least_samples]
+
+    handles, labels = ax[0].get_legend_handles_labels()
+    labels, handles = zip(*sorted(zip(labels, handles), key=lambda t: t[0]))
+    ax[0].legend(handles, labels)
 
     data = pd.DataFrame(lifetimes, columns=files)
     sns.boxplot(ax=ax[1], data=data, orient='h', whis=2)
@@ -61,9 +74,11 @@ def show_lifetimes():
         freq = avg_freq[file]
         tail95 = tail_latency_95[file]
         tail98 = tail_latency_98[file]
-        # fig.text(0.7, 0.14 + index, "avg freq %f | 98%% = %f" % (freq, tail))
-        fig.text(0.7, 0.15 + index, "95%% = %f | 98%% = %f" % (tail95, tail98))
-        index += 0.075
+        fig.text(0.6, 0.14 + index, "avg freq %.2f | 95%% = %.2f | 98%% = %.2f" % (freq, tail95, tail98))
+        index += 0.065
+
+    ax[0].set_ylabel('Percentile')
+    ax[1].set_xlabel('Packet Life Timespan')
 
     plt.show()
     plt.close()
