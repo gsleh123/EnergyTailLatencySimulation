@@ -7,7 +7,6 @@ from Packet import Packet
 import Host
 import sys
 
-
 def Abstract_Runner(target_timestep):
     env = get_env()
 
@@ -107,7 +106,7 @@ class AbstractHost:
                 yield env.timeout(time_till_next_packet_arrival)
                 pkt = Packet(env.now, self.id)
                 self.packets.put(pkt)
-                logging.info('Host %i generated a packet after %f time' % (self.id, time_till_next_packet_arrival))
+                logging.info('Host %i generated a packet %i after %f time' % (self.id, pkt.id, time_till_next_packet_arrival))
             else:
                 yield env.timeout(0.1)
 
@@ -137,17 +136,18 @@ class AbstractHost:
                 if not can_gather:
                     yield env.timeout(1)
                     continue
-
+			
+			# interp basically takes an x coordinate and looks at available x and y coordinates 
+			# to determine the y coordinate using linear fit
             comp_time = np.interp(self.freq, [self.min_freq, self.max_freq],
-                                  [self.comp_time, self.comp_time * (self.min_freq / self.max_freq)])
+                                   [self.comp_time, self.comp_time * (self.min_freq / self.max_freq) * (1.0/self.freq)])
 
             logging.info('Host %i waiting %f for computation' % (self.id, comp_time))
             yield env.timeout(comp_time)
 
             if self.problem_type != 3:
                 pkt = self.packets.get()
-                logging.info('Host %i serviced a packet' % self.id)
-
+                logging.info('Host %i serviced a packet %i' % (self.id, pkt.id))
                 # if not last destination, send onward
                 if len(self.send_to) > 0:
 
@@ -157,12 +157,12 @@ class AbstractHost:
                         comm_time = self.comm_dist(**self.comm_kwargs)
 
                         yield env.timeout(comm_time)
-                        logging.info("Host %i finished communication after %f time" % (self.id, comm_time))
+                        logging.info("Host %i finished communication for packet %i after %f time" % (self.id, pkt.id, comm_time))
 
                         for hostindex in self.send_to:
                             host_destination = Host.get_hosts()[hostindex]
                             host_destination.packets.put(pkt)
-                            logging.info('Host %i sent packet to host %i' % (self.id, host_destination.id))
+                            logging.info('Host %i sent packet %i to host %i' % (self.id, pkt.id, host_destination.id))
                     else:
                         logging.error("Problem type currently not supported")
                         sys.exit(1)
@@ -204,10 +204,10 @@ class AbstractHost:
     def finish_packet(self, env, pkt):
         full_processing_time = env.now - pkt.birth_tick
         self.packet_latency.append(full_processing_time)
-        logging.info('Host %i finished packet. time spent: %f' % (self.id, full_processing_time))
+        logging.info('Host %i finished packet %i. time spent: %f' % (self.id, pkt.id, full_processing_time))
 
 
-# region control schemes
+	# region control schemes
     def arrival_default_scheme(self):
         pass
 

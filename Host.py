@@ -20,7 +20,7 @@ def init_hosts(config):
     hosts = []
     num_of_hosts = config['host_count']
     report_type = config['mpip_report_type']
-
+    
     if report_type == 'MILC':
         host_to_dimension, dimension_to_host = __generate_rank_to_dimension_lookup(
              config['host_count'], config['MILC']['dimensions'])
@@ -63,7 +63,6 @@ def init_hosts(config):
 
                 send_to, should_generate = calculate_broadcast_setup(i, dimension_children, dimension_depth)
                 print i, should_generate, send_to
-
             elif problem_type == 3:  # Gather
                 # Gather requires a post-process after all nodes have been created
                 # Easiest way is to generate a broadcast, then flip everything

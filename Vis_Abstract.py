@@ -112,6 +112,7 @@ def show_packet_lifetimes(config):
     dump_data['lifetimes'] = lifetimes
     dump_data['avg_freq'] = avg_freq
 
+	# Does this fail if there is no lifetimes folder?
     pickle.dump(dump_data, open('data/lifetimes/lifetime.pickle', 'wb'))
 
     sns.distplot(ax=ax[0], a=lifetimes)
@@ -133,11 +134,13 @@ def show_packet_lifetimes(config):
     ax[1].set_xlabel('Lifetime (sim time)')
 
     plt.tight_layout()
-
-    fig.text(0.6, 0.8, 'Arrival Dist: %s\n  Params: %s\nService Dist: %s\n  Params: %s' % (
-        config['Abstract']['arrival_dist_str'], config['Abstract']['arrival_kwargs'],
+    
+    fig.text(0.5, 0.7, 'Freq Lower: %s\n Freq Upper: %s\n Comp Comm Ratio: %s\n Arrival Dist: %s\n  Params: %s\nService Dist: %s\n  Params: %s' % (
+        config['freq_lower_bound'], config['freq_upper_bound'], config['computation_comm_ratio'],
+		config['Abstract']['arrival_dist_str'], config['Abstract']['arrival_kwargs'],
         config['Abstract']['comm_dist_str'], config['Abstract']['comm_kwargs']))
-
+	
+	# This fails if there is no fig directory.
     plt.savefig('fig/abstract_packet_lifetimes.png')
 
     plt.show()

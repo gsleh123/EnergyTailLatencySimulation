@@ -20,7 +20,7 @@ def run(parser):
     report_type = config['mpip_report_type']
 
     proc = Host.init_hosts(config)
-
+    
     if report_type == 'MILC':
         Vis_MILC.setup(rate=1)
     elif report_type == 'Abstract':
@@ -139,7 +139,7 @@ def create_config_dict(parser):
         # we just sample and take the sample mean
         samples = options['Abstract']['comm_distribution'](size=1000, **(options['Abstract']['comm_kwargs']))
         comm_mean = np.mean(samples)
-        options['Abstract']['comp_time'] = comm_mean * options['computation_comm_ratio']
+        options['Abstract']['comp_time'] = comm_mean * options['computation_comm_ratio'] * (1.0 / freq_start)
 
     return options
 

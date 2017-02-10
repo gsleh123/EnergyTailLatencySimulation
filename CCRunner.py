@@ -7,7 +7,7 @@ import CCSimulator
 
 def main():
 
-    logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.ERROR)
+    logging.basicConfig(filename = "CCRunner_Logs.log", format="%(levelname)s:%(message)s", level=logging.DEBUG)
 
     if len(sys.argv) != 2:
         print "1 argument needed: path-to-config-file"
