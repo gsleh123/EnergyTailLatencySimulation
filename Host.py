@@ -36,7 +36,8 @@ def init_hosts(config):
 	if report_type == 'Energy':
 		# determine optimal number of servers and optimal frequency
 		dimension_depth = 2
-		dimension_children = config['host_count'] = num_of_hosts = ech.find_hosts()		
+		dimension_children = config['host_count'] = num_of_hosts = ech.find_hosts()	
+		main_host = ech.DistributionServer()
 		
     for i in range(num_of_hosts):
 		if report_type == 'Energy':
@@ -44,7 +45,7 @@ def init_hosts(config):
 			arrival_distribution = config['Abstract']['arrival_distribution']
             arrival_kwargs = config['Abstract']['arrival_kwargs']
 			comp_time = config['Abstract']['comp_time']
-			hosts.append(ech.Server(i, config, arrival_distribution, arrival_kwargs, comp_time, should_generate))
+			hosts.append(ech.ProcessServer(i, config, arrival_distribution, arrival_kwargs, comp_time, should_generate))
         elif report_type == 'MILC':
             isend_distributions, allreduce_distributions, service_lognormal_param, raw_data = __load_mpip_report(config)
             hosts.append(MILCHost.MILCHost(i, config,
@@ -90,9 +91,12 @@ def init_hosts(config):
 
     env = get_env()
 
+	if report_type == 'Energy':
+			env.process(main_host.process_arrivals())
+			
     for i in np.random.permutation(num_of_hosts):
 		if report_type == 'Energy':
-			env.process(hosts[i].process_arrivals())
+			#env.process(main_host.process_arrivals())
             env.process(hosts[i].process_service())
         elif report_type == 'MILC':
             env.process(hosts[i].process())

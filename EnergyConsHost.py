@@ -82,13 +82,34 @@ def find_hosts(req_arr_rate, req_size, d_0, e, s_b, s_c, pow_con_model, k_m, b, 
 			opt_servers = i
 			opt_freq = curr_freq
 
+class DistributionServer:
+	def __init__(self):
+	
+	def process_arrivals(self):
+		 while True:
+			# create a new packet
+			time_till_next_packet_arrival = self.arrival_dist(**self.arrival_kwargs)
+			yield env.timeout(time_till_next_packet_arrival)
+			pkt = Packet(env.now, self.id)
+			self.packets.put(pkt)
+			logging.info('New packet received by main sever')
+			
+			# distribute packet to process server
+			logging.info('Sending packet to server %i', %())
+			
+			# wake up server if it's asleep
+
+			# server is asleep, wake it up
+			if (self.state == State.SLEEP):
+				self.wake_up_server()
+				
 # enumerate state values
 class State(Enum):
 	SLEEP = 0
 	AWAKE = 1
 	
 # this assuming negligble forwarding times
-class Server:
+class ProcessServer:
 	def __init__(self, hostid, config, arrival_distribution, arrival_kwargs,
                  comp_time):
 				 
@@ -107,6 +128,7 @@ class Server:
 				self.freq_history = list()
 				
 	def process_arrivals(self):
+		# not needed anymore
         env = get_env()
 
         while True:
@@ -129,6 +151,7 @@ class Server:
 			if (self.state == state.AWAKE): 
 				# no packets in the queue
 				if self.packets.qsize() == 0:
+					sleep_sever()
                     yield env.timeout(0.1)
                     continue
 				
