@@ -5,6 +5,7 @@ from collections import namedtuple
 import itertools
 import MILCHost
 import AbstractHost
+import EnergyConsHost as ech
 import sys
 from Queue import Queue
 
@@ -32,8 +33,15 @@ def init_hosts(config):
         dimension_children = config['Abstract']['dimension_children']
         config['host_count'] = num_of_hosts = (dimension_children**(dimension_depth)-1) / (dimension_children - 1)
 
+	if report_type == 'Energy':
+		# determine optimal number of servers and optimal frequency
+		dimension_depth = 1
+		dimension_children = config['host_count'] = num_of_hosts = ech.find_hosts()		
+		
     for i in range(num_of_hosts):
-        if report_type == 'MILC':
+		if report_type == 'Energy':
+			# instantiate a new host
+        elif report_type == 'MILC':
             isend_distributions, allreduce_distributions, service_lognormal_param, raw_data = __load_mpip_report(config)
             hosts.append(MILCHost.MILCHost(i, config,
                                            isend_distributions, allreduce_distributions, service_lognormal_param,
@@ -81,7 +89,9 @@ def init_hosts(config):
     env = get_env()
 
     for i in np.random.permutation(num_of_hosts):
-        if report_type == 'MILC':
+		if report_type == 'Energy':
+			# process the packets
+        elif report_type == 'MILC':
             env.process(hosts[i].process())
         elif report_type == 'Abstract':
             env.process(hosts[i].process_arrivals())
@@ -90,7 +100,9 @@ def init_hosts(config):
 
     target_timestep = config['timesteps']
 
-    if report_type == 'MILC':
+	if report_type == 'Energy':
+		# process something
+    elif report_type == 'MILC':
         return get_env().process(MILCHost.MILC_Runner(target_timestep))
     elif report_type == 'Abstract':
         return get_env().process(AbstractHost.Abstract_Runner(target_timestep))

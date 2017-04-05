@@ -7,6 +7,34 @@ from Packet import Packet
 import Host
 import sys
 
+def find_hosts(req_arr_rate, req_size):
+	# input: request arrival rate and request size
+	# request arrival rate (requests/s)
+	# request size (cycles/request)
+	
+	min_servers = 0; 
+	min_total_power = 1000000;
+	opt_servers = 0; 
+
+	# determine min_servers to satisy tail latency
+	if d_0 * ln(1/e)... :
+		min_servers = 
+	else:
+		min_servers = 
+		
+	if (min_servers > num_of_servers):
+		# min amount of servers needed exceeds available servers
+		break; # no feasible solution
+	# determine min_servers to satisy tail latency
+
+	# find optimal servers and optimal frequencies
+	for :
+		# calculate optimal frequency
+		# calculate the power consumption of each
+		# something with min_total_power
+		
+		if something:
+			
 # we should another host that is the root node
 # added a state variable: there should be three states sleep, awake, busy
 # added a list for energy consumption in data collection
