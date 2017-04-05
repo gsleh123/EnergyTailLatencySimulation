@@ -35,12 +35,16 @@ def init_hosts(config):
 
 	if report_type == 'Energy':
 		# determine optimal number of servers and optimal frequency
-		dimension_depth = 1
+		dimension_depth = 2
 		dimension_children = config['host_count'] = num_of_hosts = ech.find_hosts()		
 		
     for i in range(num_of_hosts):
 		if report_type == 'Energy':
 			# instantiate a new host
+			arrival_distribution = config['Abstract']['arrival_distribution']
+            arrival_kwargs = config['Abstract']['arrival_kwargs']
+			comp_time = config['Abstract']['comp_time']
+			hosts.append(ech.Server(i, config, arrival_distribution, arrival_kwargs, comp_time, should_generate))
         elif report_type == 'MILC':
             isend_distributions, allreduce_distributions, service_lognormal_param, raw_data = __load_mpip_report(config)
             hosts.append(MILCHost.MILCHost(i, config,
@@ -68,9 +72,7 @@ def init_hosts(config):
                 print 'Scatter temporarily not supported'
                 sys.exit(1)
             if problem_type == 2:  # Broadcast
-
                 send_to, should_generate = calculate_broadcast_setup(i, dimension_children, dimension_depth)
-                print i, should_generate, send_to
             elif problem_type == 3:  # Gather
                 # Gather requires a post-process after all nodes have been created
                 # Easiest way is to generate a broadcast, then flip everything
@@ -90,7 +92,8 @@ def init_hosts(config):
 
     for i in np.random.permutation(num_of_hosts):
 		if report_type == 'Energy':
-			# process the packets
+			env.process(hosts[i].process_arrivals())
+            env.process(hosts[i].process_service())
         elif report_type == 'MILC':
             env.process(hosts[i].process())
         elif report_type == 'Abstract':
@@ -101,7 +104,8 @@ def init_hosts(config):
     target_timestep = config['timesteps']
 
 	if report_type == 'Energy':
-		# process something
+		# process something, maybe not needed
+		return get_env().timeout(1)
     elif report_type == 'MILC':
         return get_env().process(MILCHost.MILC_Runner(target_timestep))
     elif report_type == 'Abstract':
