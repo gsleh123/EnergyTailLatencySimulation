@@ -100,7 +100,7 @@ def create_config_dict(parser):
         dimensions = parser.get('MILC', 'problem_dimensions')
         options['MILC']['dimensions'] = [int(i) for i in dimensions.split()]
 
-    if options['mpip_report_type'] == 'Abstract':
+    if options['mpip_report_type'] == 'Abstract' or options['mpip_report_type'] == 'Energy':
         options['Abstract'] = dict()
         options['Abstract']['problem_type'] = int(parser.get('Abstract', 'problem_type'))
         options['Abstract']['dimension_depth'] = int(parser.get('Abstract', 'dimension_depth'))
