@@ -33,10 +33,22 @@ def init_hosts(config):
 		config['host_count'] = num_of_hosts = (dimension_children**(dimension_depth)-1) / (dimension_children - 1)
 
 	if report_type == 'Energy':
+		req_arr_rate = 5
+		req_size = 1
+		d_0 = 0.001
+		s_b = 1.2
+		s_c = 3
+		pow_con_model = 1
+		k_m = 1
+		b = 1
+		P_s = 50
+		alpha = 1
+		num_of_servers = 20
+		e = 0.1
 		# determine optimal number of servers and optimal frequency
 		dimension_depth = 2
-		#dimension_children = config['host_count'] = num_of_hosts = ech.find_hosts()
-		dimension_children = config['host_count'] = num_of_hosts = 2
+		dimension_children = config['host_count'] = num_of_hosts = ech.find_hosts(req_arr_rate, req_size, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers)
+		#dimension_children = config['host_count'] = num_of_hosts = 5
 		servers = PriorityQueue()
 		arrival_distribution = config['Abstract']['arrival_distribution']
 		arrival_kwargs = config['Abstract']['arrival_kwargs']

@@ -202,10 +202,9 @@ class AbstractHost:
             yield env.timeout(1)
 
     def finish_packet(self, env, pkt):
-        full_processing_time = env.now - pkt.birth_tick
-        self.packet_latency.append(full_processing_time)
-        logging.info('Host %i finished packet %i. time spent: %f' % (self.id, pkt.id, full_processing_time))
-
+		full_processing_time = env.now - pkt.birth_tick
+		self.packet_latency.append(full_processing_time)
+		logging.info('Host %i finished packet %i. time spent: %f' % (self.id, pkt.id, full_processing_time))
 
 	# region control schemes
     def arrival_default_scheme(self):
