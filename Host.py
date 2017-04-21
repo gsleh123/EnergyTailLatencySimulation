@@ -7,7 +7,7 @@ import MILCHost
 import AbstractHost
 import EnergyConsHost as ech
 import sys
-from Queue import Queue, PriorityQueue
+from Queue import Queue
 
 hosts = []
 
@@ -35,34 +35,35 @@ def init_hosts(config):
 	if report_type == 'Energy':
 		req_arr_rate = 5
 		req_size = 1
-		d_0 = 0.001
+		d_0 = 10
+		P_s = 50
+		alpha = 0.25
+		num_of_servers = 20
+		e = 0.1
 		s_b = 1.2
 		s_c = 3
 		pow_con_model = 1
-		k_m = 1
-		b = 1
-		P_s = 50
-		alpha = 1
-		num_of_servers = 20
-		e = 0.1
+		
+		if pow_con_model == 1:
+			k_m = 0.03
+			b = 180
+		elif pow_con_model == 2:
+			k_m = 0.018
+			b = 150
+			
 		# determine optimal number of servers and optimal frequency
 		dimension_depth = 2
-		dimension_children = config['host_count'] = num_of_hosts = ech.find_hosts(req_arr_rate, req_size, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers)
-		#dimension_children = config['host_count'] = num_of_hosts = 5
-		servers = PriorityQueue()
+		dimension_children = config['host_count'] = num_of_hosts = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers)
 		arrival_distribution = config['Abstract']['arrival_distribution']
 		arrival_kwargs = config['Abstract']['arrival_kwargs']
-		main_host = ech.DistributionHost(servers, arrival_distribution, arrival_kwargs)
+		main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs)
 		
 	for i in range(num_of_hosts):
 		if report_type == 'Energy':
 			# instantiate a new host
-			arrival_distribution = config['Abstract']['arrival_distribution']
-			arrival_kwargs = config['Abstract']['arrival_kwargs']
 			comp_time = config['Abstract']['comp_time']
-			host = ech.ProcessHost(i, config, arrival_distribution, arrival_kwargs, comp_time)
+			host = ech.ProcessHost(i, config, comp_time, P_s)
 			hosts.append(host)
-			servers.put(host)
 		elif report_type == 'MILC':
 			isend_distributions, allreduce_distributions, service_lognormal_param, raw_data = __load_mpip_report(config)
 			hosts.append(MILCHost.MILCHost(i, config,
@@ -123,7 +124,7 @@ def init_hosts(config):
 			env.process(hosts[i].process_logging())
 
 	target_timestep = config['timesteps']
-	
+		
 	if report_type == 'Energy':
 		return get_env().process(AbstractHost.Abstract_Runner(target_timestep))
 	elif report_type == 'MILC':
@@ -132,8 +133,7 @@ def init_hosts(config):
 		return get_env().process(AbstractHost.Abstract_Runner(target_timestep))
 	else:
 		return get_env().timeout(1)
-
-
+		
 def get_hosts():
 	global hosts
 	return hosts
