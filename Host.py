@@ -16,7 +16,8 @@ lognormal_param = namedtuple('lognormal_param', 'mean sigma')
 def init_hosts(config):
 	global hosts
 	global num_of_hosts
-	
+	global main_host
+
 	hosts = []
 	num_of_hosts = config['host_count']
 	report_type = config['mpip_report_type']
@@ -32,36 +33,43 @@ def init_hosts(config):
 		dimension_children = config['Abstract']['dimension_children']
 		config['host_count'] = num_of_hosts = (dimension_children**(dimension_depth)-1) / (dimension_children - 1)
 
+	arrival_distribution = config['Abstract']['arrival_distribution']
+	arrival_kwargs = config['Abstract']['arrival_kwargs']
+	main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs)
+
 	if report_type == 'Energy':
-		req_arr_rate = 5
+		#req_arr_rate = 1 / arrival_kwargs['lam']
+		req_arr_rate = 1 * 10**7
 		req_size = 1
-		d_0 = 10
+		d_0 = 0.01
 		P_s = 50
-		alpha = 0.25
+		alpha = 250
 		num_of_servers = 20
 		e = 0.1
-		s_b = 1.2
-		s_c = 3
+		s_b = 1.2 * 10**9
+		s_c = 3 * 10**9
 		pow_con_model = 1
 		
 		if pow_con_model == 1:
-			k_m = 0.03
+			k_m = 0.03 * 10**9
 			b = 180
 		elif pow_con_model == 2:
-			k_m = 0.018
+			k_m = 0.18 * 10**9
 			b = 150
 			
 		# determine optimal number of servers and optimal frequency
 		dimension_depth = 2
-		dimension_children = config['host_count'] = num_of_hosts = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers)
-		arrival_distribution = config['Abstract']['arrival_distribution']
-		arrival_kwargs = config['Abstract']['arrival_kwargs']
-		main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs)
+		#dimension_children = config['host_count'] = num_of_hosts = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers)
+		dimension_children = config['host_count'] = num_of_hosts = 4
+		
+		if (num_of_hosts == -1):
+			print "error"
 		
 	for i in range(num_of_hosts):
 		if report_type == 'Energy':
 			# instantiate a new host
-			comp_time = config['Abstract']['comp_time']
+			#comp_time = config['Abstract']['comp_time']
+			comp_time = 1000000 / (2.5 * 10**9)
 			host = ech.ProcessHost(i, config, comp_time, P_s)
 			hosts.append(host)
 		elif report_type == 'MILC':
@@ -126,7 +134,7 @@ def init_hosts(config):
 	target_timestep = config['timesteps']
 		
 	if report_type == 'Energy':
-		return get_env().process(AbstractHost.Abstract_Runner(target_timestep))
+		return get_env().process(ech.Energy_Runner(target_timestep))
 	elif report_type == 'MILC':
 		return get_env().process(MILCHost.MILC_Runner(target_timestep))
 	elif report_type == 'Abstract':

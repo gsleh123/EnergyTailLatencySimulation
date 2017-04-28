@@ -40,6 +40,7 @@ def run(parser):
 		print host.id
 		print host.wake_up_times
 		print host.wake_up_powers
+		print host.process_powers
 		
 	if report_type == 'MILC':
 		Vis_MILC.show_graphs(config)
