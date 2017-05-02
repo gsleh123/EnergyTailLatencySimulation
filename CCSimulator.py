@@ -12,13 +12,17 @@ import Vis_Abstract
 import Vis_Energy
 
 def run(parser):
-	env = get_env()
+	#env = get_env()
 
 	config = create_config_dict(parser)
 
 	config['timescalar'] = 1/1.
 	report_type = config['mpip_report_type']
 
+	arrival_rate = config['Abstract']['arrival_rate']
+	#print arrival_rate
+	#for i in arrival_rate:
+	env = get_env()
 	proc = Host.init_hosts(config)
 	
 	if report_type == 'MILC':
@@ -48,6 +52,8 @@ def run(parser):
 		Vis_Abstract.show_graphs(config)
 	elif report_type == 'Energy':
 		Vis_Energy.show_graphs(config)
+	
+	#env.reset()
 
 def create_config_dict(parser):
 	# we use a dict to pass the options around
@@ -115,12 +121,13 @@ def create_config_dict(parser):
 		options['Abstract']['dimension_depth'] = int(parser.get('Abstract', 'dimension_depth'))
 		options['Abstract']['dimension_children'] = int(parser.get('Abstract', 'dimension_children'))
 		options['Abstract']['control_scheme'] = parser.get('Abstract', 'control_scheme')
-
+		options['Abstract']['arrival_rate'] = parser.get('Abstract', 'arrival_rate')
+		
 		arrival_dist_str = parser.get('Abstract', 'arrival_distribution')
 		arrival_kwargs = ast.literal_eval(parser.get('Abstract', 'arrival_kwargs'))
 		comm_dist_str = parser.get('Abstract', 'comm_distribution')
 		comm_kwargs = ast.literal_eval(parser.get('Abstract', 'comm_kwargs'))
-
+		
 		if arrival_dist_str == 'exponential':
 			options['Abstract']['arrival_distribution'] = np.random.exponential
 		elif arrival_dist_str == 'pareto':

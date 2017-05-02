@@ -141,6 +141,7 @@ class DistributionHost:
 		
 		while True:
 			# create a new packet
+			#time_till_next_packet_arrival = self.arrival_dist(0.1)
 			time_till_next_packet_arrival = self.arrival_dist(**self.arrival_kwargs)
 			yield env.timeout(time_till_next_packet_arrival)
 			pkt = Packet(env.now, 1)
@@ -211,7 +212,7 @@ class ProcessHost:
 				# no packets in the queue
 				if self.packets.qsize() == 0:
 					# this lets the simulator check if there are really no more packets in the queue
-					yield env.timeout(1)
+					#yield env.timeout(1)
 					
 					if self.packets.qsize() == 0:
 						self.end_timer = env.now

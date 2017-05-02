@@ -39,7 +39,7 @@ def init_hosts(config):
 
 	if report_type == 'Energy':
 		#req_arr_rate = 1 / arrival_kwargs['lam']
-		req_arr_rate = 1 * 10**7
+		req_arr_rate = 10 * 10**9
 		req_size = 1
 		d_0 = 0.01
 		P_s = 50
@@ -59,8 +59,8 @@ def init_hosts(config):
 			
 		# determine optimal number of servers and optimal frequency
 		dimension_depth = 2
-		#dimension_children = config['host_count'] = num_of_hosts = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers)
-		dimension_children = config['host_count'] = num_of_hosts = 4
+		dimension_children = config['host_count'] = num_of_hosts = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers)
+		#dimension_children = config['host_count'] = num_of_hosts = 4
 		
 		if (num_of_hosts == -1):
 			print "error"
