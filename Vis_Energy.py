@@ -72,7 +72,7 @@ def show_packet_lifetimes(config):
 	
 	temp = 0
 	for lifetime in lifetimes:
-		if lifetime > 10000:
+		if lifetime > 10000000:
 			temp+=1
 	
 	print temp

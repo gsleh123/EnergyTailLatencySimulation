@@ -29,7 +29,10 @@ def Energy_Runner(target_timestep):
 				queue_size += q.qsize()
 
 		logging.debug('Host %i: %i' % (host.id, queue_size))
-		
+	
+	for host in Host.get_hosts():
+		host.sleep_server(env)
+
 def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers):
 	# input: request arrival rate, request size
 	# input: power consumption model (1 or 2)
@@ -144,9 +147,14 @@ class DistributionHost:
 			#time_till_next_packet_arrival = self.arrival_dist(0.1)
 			time_till_next_packet_arrival = self.arrival_dist(**self.arrival_kwargs)
 			yield env.timeout(time_till_next_packet_arrival)
-			pkt = Packet(env.now, 1)
-			self.packets.put(pkt)
-			logging.info('New packet received by main sever')
+			
+			if self.packets.qsize() < 1000:
+				pkt = Packet(env.now, 1)
+				self.packets.put(pkt)
+				logging.info('New packet received by main sever')
+			else:
+				logging.info('Packet Dropped')
+				yield env.timeout(1)
 	
 	def process_service(self):
 		env = get_env()
@@ -163,29 +171,18 @@ class DistributionHost:
 				logging.info('Sending packet %i to host %i' %(p.id, Host.hosts[i].id))
 				time_to_send = self.arrival_dist(**self.arrival_kwargs)
 				#print "sending packet"
-				
-				# host is asleep, wake it up
-				#time_to_wake_up = 0
-				#if (Host.hosts[i].state == State.SLEEP):
-				#	print "server is asleep, wake up"
-				#	Host.hosts[i].state = State.BOOTING
-				#	Host.hosts[i].wake_up_server()
-					#time_to_wake_up = Host.hosts[i].wake_up_server()
-					#print time
-					#yield env.timeout(time_to_wake_up)
-					#Host.hosts[i].finish_booting_server(time_to_wake_up)
-					#yield env.timeout(Host.hosts[i].wake_up_server())
-				#else:
-					#self.wake_up_server()
+
 				yield env.timeout(time_to_send)
 				
 # this assuming negligble forwarding times
 class ProcessHost:
-	def __init__(self, hostid, config, comp_time, power_setup):
+	def __init__(self, hostid, config, comp_time, wake_up_dist, wake_up_kwargs, power_setup):
 				 
 				# class variables
 				self.id = hostid
 				self.comp_time = comp_time
+				self.wake_up_dist = wake_up_dist
+				self.wake_up_kwargs = wake_up_kwargs
 				self.power_setup = power_setup
 				self.state = State.SLEEP
 				self.packets = Queue()
@@ -193,9 +190,9 @@ class ProcessHost:
 				self.end_timer = 0
 				
 				# data collection
-				self.wake_up_powers = list()
-				self.process_powers = list()
+				self.computing_times = list()
 				self.wake_up_times = list()
+				self.sleep_times = list()
 				self.packet_latency = list()
 				self.queue_size = dict()
 				self.freq_history = list()
@@ -215,10 +212,7 @@ class ProcessHost:
 					#yield env.timeout(1)
 					
 					if self.packets.qsize() == 0:
-						self.end_timer = env.now
-						diff = self.end_timer - self.start_timer
-						self.process_powers.append(diff)
-						self.sleep_server()
+						self.sleep_server(env)
 						
 					continue
 				else:
@@ -232,14 +226,16 @@ class ProcessHost:
 					# log the packet
 					self.finish_packet(env, pkt)
 			elif (self.state == State.SLEEP and self.packets.qsize() != 0):
-				#print "server is asleep, wake up"
-				time_to_wake_up = np.random.exponential(4000)
-		
-				# append power consumption and wake up times to list
-				self.wake_up_powers.append(self.power_setup)
+				time_to_wake_up = self.wake_up_dist(**self.wake_up_kwargs)
+				
+				# calculate sleep times
+				self.end_timer = env.now
+				diff = self.end_timer - self.start_timer
+				self.sleep_times.append(diff)
+				
+				# append wake up times to list
 				self.wake_up_times.append(time_to_wake_up)
 				self.state = State.BOOTING
-				#print "booting"
 				logging.info('Host %i is booting up' %(self.id))
 				
 				yield env.timeout(time_to_wake_up)
@@ -251,43 +247,17 @@ class ProcessHost:
 	def finish_packet(self, env, pkt):
 		full_processing_time = env.now - pkt.birth_tick
 		self.packet_latency.append(full_processing_time)
-		# add power consumption
-		
 		logging.info('Host %i finished packet %i. time spent: %f' % (self.id, pkt.id, full_processing_time))
-		#print "finished processing packet"
-	
-	def wake_up_server(self):
-		# calculate time to wake up
-		time_to_wake_up = np.random.exponential(4000)
-		
-		# append power consumption and wake up times to list
-		self.wake_up_powers.append(self.power_setup)
-		self.wake_up_times.append(time_to_wake_up)
-		self.state = State.BOOTING
-		#print "booting"
-		logging.info('Host %i is booting up' %(self.id))
-		
-		yield env.timeout(time_to_wake_up)
-		
-		self.finish_booting_server(time_to_wake_up)
-		#print "hello"
-		# log info
-		#logging.info('Host %i took %f time to wake up' %(self.id, time_to_wake_up))
-		#logging.info('Host %i consumed %f power to wake up' %(self.id, self.power_setup))
-		
-		# boot up server
-		#self.state = State.AWAKE
-		
-		#return time_to_wake_up
 	
 	def finish_booting_server(self, env, time_to_wake_up):
 		self.start_timer = env.now
 		logging.info('Host %i took %f time to wake up' %(self.id, time_to_wake_up))
-		logging.info('Host %i consumed %f power to wake up' %(self.id, self.power_setup))
 		self.state = State.AWAKE
-		#print "server is now wake"
 		
-	def sleep_server(self):
+	def sleep_server(self, env):
+		self.end_timer = env.now
+		diff = self.end_timer - self.start_timer
+		self.start_timer = env.now
+		self.computing_times.append(diff)
 		self.state = State.SLEEP
 		logging.info('Host %i is now going to sleep' %(self.id))
-		#print "server is now sleeping"

@@ -39,6 +39,9 @@ def init_hosts(config):
 
 	if report_type == 'Energy':
 		#req_arr_rate = 1 / arrival_kwargs['lam']
+		freq = config['freq_start']
+		wake_up_dist = config['Abstract']['wake_up_distribution']
+		wake_up_kwargs = config['Abstract']['wake_up_kwargs']
 		req_arr_rate = 10 * 10**9
 		req_size = 1
 		d_0 = 0.01
@@ -49,6 +52,8 @@ def init_hosts(config):
 		s_b = 1.2 * 10**9
 		s_c = 3 * 10**9
 		pow_con_model = 1
+		l = 1000
+		comp_time = (1000000000 * l) / (freq * 10**9)
 		
 		if pow_con_model == 1:
 			k_m = 0.03 * 10**9
@@ -69,8 +74,7 @@ def init_hosts(config):
 		if report_type == 'Energy':
 			# instantiate a new host
 			#comp_time = config['Abstract']['comp_time']
-			comp_time = 1000000 / (2.5 * 10**9)
-			host = ech.ProcessHost(i, config, comp_time, P_s)
+			host = ech.ProcessHost(i, config, comp_time, wake_up_dist, wake_up_kwargs, P_s)
 			hosts.append(host)
 		elif report_type == 'MILC':
 			isend_distributions, allreduce_distributions, service_lognormal_param, raw_data = __load_mpip_report(config)
@@ -249,7 +253,7 @@ def __load_mpip_report(config):
 		sigma = (min - mean) / -3
 		# sigma = np.exp(sigma)
 
-		# logging.info('%i %f %f %f %f', rank, min, mean, max, sigma)
+		# #logging.info('%i %f %f %f %f', rank, min, mean, max, sigma)
 
 		# scaling by 1/100
 		min *= config['timescalar']
@@ -358,9 +362,8 @@ def calculate_gather_setup(width, depth):
 			host.packets_gather[host.id] = Queue()
 
 	# debug
-	for host in hosts:
-		logging.info('%i %s %s %s' % (host.id, host.should_generate, host.send_to, host.receivers))
-
+	#for host in hosts:
+		#logging.info('%i %s %s %s' % (host.id, host.should_generate, host.send_to, host.receivers))
 	pass
 	# done
 

@@ -42,9 +42,9 @@ def run(parser):
 
 	for host in Host.hosts:
 		print host.id
+		print host.computing_times
 		print host.wake_up_times
-		print host.wake_up_powers
-		print host.process_powers
+		print host.sleep_times
 		
 	if report_type == 'MILC':
 		Vis_MILC.show_graphs(config)
@@ -115,7 +115,7 @@ def create_config_dict(parser):
 		dimensions = parser.get('MILC', 'problem_dimensions')
 		options['MILC']['dimensions'] = [int(i) for i in dimensions.split()]
 
-	if options['mpip_report_type'] == 'Abstract' or options['mpip_report_type'] == 'Energy':
+	if options['mpip_report_type'] == 'Abstract':
 		options['Abstract'] = dict()
 		options['Abstract']['problem_type'] = int(parser.get('Abstract', 'problem_type'))
 		options['Abstract']['dimension_depth'] = int(parser.get('Abstract', 'dimension_depth'))
@@ -158,6 +158,64 @@ def create_config_dict(parser):
 		samples = options['Abstract']['comm_distribution'](size=1000, **(options['Abstract']['comm_kwargs']))
 		comm_mean = np.mean(samples)
 		options['Abstract']['comp_time'] = comm_mean * options['computation_comm_ratio'] * (1.0 / freq_start)
+	elif options['mpip_report_type'] == 'Energy':
+		options['Abstract'] = dict()
+		options['Abstract']['problem_type'] = int(parser.get('Abstract', 'problem_type'))
+		options['Abstract']['dimension_depth'] = int(parser.get('Abstract', 'dimension_depth'))
+		options['Abstract']['dimension_children'] = int(parser.get('Abstract', 'dimension_children'))
+		options['Abstract']['control_scheme'] = parser.get('Abstract', 'control_scheme')
+		options['Abstract']['arrival_rate'] = parser.get('Abstract', 'arrival_rate')
+		
+		wake_up_dist_str = parser.get('Abstract', 'wake_up_distribution')
+		wake_up_kwargs = ast.literal_eval(parser.get('Abstract', 'wake_up_kwargs'))
+		arrival_dist_str = parser.get('Abstract', 'arrival_distribution')
+		arrival_kwargs = ast.literal_eval(parser.get('Abstract', 'arrival_kwargs'))
+		comm_dist_str = parser.get('Abstract', 'comm_distribution')
+		comm_kwargs = ast.literal_eval(parser.get('Abstract', 'comm_kwargs'))
+		
+		if arrival_dist_str == 'exponential':
+			options['Abstract']['arrival_distribution'] = np.random.exponential
+		elif arrival_dist_str == 'pareto':
+			options['Abstract']['arrival_distribution'] = scipy.stats.pareto.rvs
+		elif arrival_dist_str == 'lognormal':
+			options['Abstract']['arrival_distribution'] = np.random.lognormal
+		elif arrival_dist_str == 'fixed':
+			options['Abstract']['arrival_distribution'] = np.random.choice
+		elif arrival_dist_str == 'poisson':
+			options['Abstract']['arrival_distribution'] = np.random.poisson
+			
+		if comm_dist_str == 'exponential':
+			options['Abstract']['comm_distribution'] = np.random.exponential
+		elif comm_dist_str == 'pareto':
+			options['Abstract']['comm_distribution'] = scipy.stats.pareto.rvs
+		elif comm_dist_str == 'lognormal':
+			options['Abstract']['comm_distribution'] = np.random.lognormal
+		elif comm_dist_str == 'fixed':
+			options['Abstract']['comm_distribution'] = np.random.choice
 
+		if wake_up_dist_str == 'exponential':
+			options['Abstract']['wake_up_distribution'] = np.random.exponential
+		elif wake_up_dist_str == 'pareto':
+			options['Abstract']['wake_up_distribution'] = scipy.stats.pareto.rvs
+		elif wake_up_dist_str == 'lognormal':
+			options['Abstract']['wake_up_distribution'] = np.random.lognormal
+		elif wake_up_dist_str == 'fixed':
+			options['Abstract']['wake_up_distribution'] = np.random.choice
+		elif wake_up_dist_str == 'poisson':
+			options['Abstract']['wake_up_distribution'] = np.random.poisson
+			
+		options['Abstract']['arrival_dist_str'] = arrival_dist_str
+		options['Abstract']['comm_dist_str'] = comm_dist_str
+		options['Abstract']['arrival_kwargs'] = arrival_kwargs
+		options['Abstract']['comm_kwargs'] = comm_kwargs
+		options['Abstract']['wake_up_dist_str'] = wake_up_dist_str
+		options['Abstract']['wake_up_kwargs'] = wake_up_kwargs
+		
+		# since it's not easy to get the mean of a random distribution,
+		# we just sample and take the sample mean
+		samples = options['Abstract']['comm_distribution'](size=1000, **(options['Abstract']['comm_kwargs']))
+		comm_mean = np.mean(samples)
+		options['Abstract']['comp_time'] = comm_mean * options['computation_comm_ratio'] * (1.0 / freq_start)
+		
 	return options
 
