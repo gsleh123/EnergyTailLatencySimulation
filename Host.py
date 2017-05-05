@@ -39,11 +39,11 @@ def init_hosts(config):
 
 	if report_type == 'Energy':
 		#req_arr_rate = 1 / arrival_kwargs['lam']
-		freq = config['freq_start']
+		#freq = config['freq_start']
 		wake_up_dist = config['Abstract']['wake_up_distribution']
 		wake_up_kwargs = config['Abstract']['wake_up_kwargs']
-		req_arr_rate = 10 * 10**9
-		req_size = 1
+		req_arr_rate = 10 * 10**6
+		req_size = 1000
 		d_0 = 0.01
 		P_s = 50
 		alpha = 250
@@ -51,9 +51,7 @@ def init_hosts(config):
 		e = 0.1
 		s_b = 1.2 * 10**9
 		s_c = 3 * 10**9
-		pow_con_model = 1
-		l = 1000
-		comp_time = (1000000000 * l) / (freq * 10**9)
+		pow_con_model = 2
 		
 		if pow_con_model == 1:
 			k_m = 0.03 * 10**9
@@ -64,7 +62,9 @@ def init_hosts(config):
 			
 		# determine optimal number of servers and optimal frequency
 		dimension_depth = 2
-		dimension_children = config['host_count'] = num_of_hosts = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers)
+		[num_of_hosts, freq] = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers)
+		comp_time = (1000000000 * req_size) / (freq)
+		#dimension_children = config['host_count'] = num_of_hosts = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers)
 		#dimension_children = config['host_count'] = num_of_hosts = 4
 		
 		if (num_of_hosts == -1):

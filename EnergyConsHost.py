@@ -45,18 +45,14 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 	opt_freq = 0
 	flag = 0	
 	gamma = (alpha * d_0) / (math.exp(-(alpha * d_0)) - e)
-	print alpha
+
 	# determine min_servers to satisfy tail latency
 	w = lambertw(-(e / math.exp(1)), -1).real
 	#print (1 / d_0) * math.log(1 / e) 
 	#print w
 	#print ((1 / d_0) * (-w - 1))
 	if (1 / d_0) * math.log(1 / e) < alpha and alpha < ((1 / d_0) * (-w - 1)):
-		w = lambertw(gamma * math.exp(e * gamma)).real
-		#w = lambertw(gamma * math.exp(e * gamma), -1).real
-		print s_c
-		print gamma * math.exp(e * gamma)
-		print ((1 / d_0) * (w - (e * gamma)))		
+		w = lambertw(gamma * math.exp(e * gamma)).real		
 		min_servers = (req_arr_rate / ((s_c / req_size) - ((1 / d_0) * (w - (e * gamma)))))
 		flag = 1
 	else:
@@ -70,13 +66,14 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 	if min_servers > num_of_servers:
 		# min amount of servers needed exceeds available servers
 		return -1 # no feasible solution
-	print "hi"
+
 	# find optimal servers and optimal frequencies
 	for i in range (min_servers, num_of_servers + 1):
 		# calculate optimal frequency
 		if pow_con_model == 1: 
 			if b - (s_b / k_m) >= P_s:
 					curr_freq = s_c
+					print "do"
 			else:		
 				if flag:
 					w = lambertw(gamma * math.exp(e * gamma)).real
@@ -85,7 +82,7 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 					w = lambertw(gamma * math.exp(e * gamma), -1).real
 					curr_freq = max(s_b, (((req_arr_rate / i)+ (1 / d_0) * (w - gamma*e)) * req_size))
 		elif pow_con_model == 2:
-			s_e = math.sqrt((b - P_s)*((k_m ** 2) + (s_b ** 2)))
+			s_e = math.sqrt(((b - P_s)*(k_m ** 2)) + (s_b ** 2))
 			
 			if s_e > s_c:
 				curr_freq = s_c
@@ -117,15 +114,15 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 			opt_servers = i
 			opt_freq = curr_freq
 	
-	print "min_servers "
-	print min_servers
-	print "min_total_power "
-	print min_total_power
-	print "opt_servers "
-	print opt_servers
-	print "opt_freq "
-	print opt_freq
-	return opt_servers
+	#print "min_servers "
+	#print min_servers
+	#print "min_total_power "
+	#print min_total_power
+	#print "opt_servers "
+	#print opt_servers
+	#print "opt_freq "
+	#print opt_freq
+	return opt_servers, opt_freq
 
 # enumerate state values
 class State(Enum):
@@ -148,13 +145,9 @@ class DistributionHost:
 			time_till_next_packet_arrival = self.arrival_dist(**self.arrival_kwargs)
 			yield env.timeout(time_till_next_packet_arrival)
 			
-			if self.packets.qsize() < 1000:
-				pkt = Packet(env.now, 1)
-				self.packets.put(pkt)
-				logging.info('New packet received by main sever')
-			else:
-				logging.info('Packet Dropped')
-				yield env.timeout(1)
+			pkt = Packet(env.now, 1)
+			self.packets.put(pkt)
+			logging.info('New packet received by main sever')
 	
 	def process_service(self):
 		env = get_env()

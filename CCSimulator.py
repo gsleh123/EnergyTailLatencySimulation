@@ -40,12 +40,23 @@ def run(parser):
 
 	logging.info('Simulation Complete')
 
+	total_computing_time = 0
+	total_wake_up_time = 0
+	total_sleep_time = 0
 	for host in Host.hosts:
 		print host.id
 		print host.computing_times
 		print host.wake_up_times
 		print host.sleep_times
-		
+		total_computing_time += sum(host.computing_times)
+		total_wake_up_time += sum(host.wake_up_times)
+		total_sleep_time += sum(host.sleep_times)
+	
+	total_time = total_computing_time + total_wake_up_time + total_sleep_time
+	print total_computing_time / total_time
+	print total_wake_up_time / total_time
+	print total_sleep_time / total_time
+	
 	if report_type == 'MILC':
 		Vis_MILC.show_graphs(config)
 	elif report_type == 'Abstract':
