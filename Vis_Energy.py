@@ -75,9 +75,8 @@ def show_packet_lifetimes(config):
 		if lifetime > 10000000:
 			temp+=1
 	
-	print temp
-	print len(lifetimes)
 	prob_lifetimes = temp / len(lifetimes)
+	logging.info('Probability of lifetimes over 10ms: %f' %f(prob_lifetimes))
 	fig.text(0.5, 0.7, 'average lifetime: %f\nmax lifetimes: %f\nmin lifetimes: %f\nprob_lifetimes: %f\n' %(avg_lifetimes, max_lifetimes, min_lifetimes, prob_lifetimes))
 	#fig.text(0.5, 0.7, 'Freq Lower: %s\n Freq Upper: %s\n Comp Comm Ratio: %s\n Arrival Dist: %s\n  Params: %s\nService Dist: %s\n  Params: %s' % (
 	#	config['freq_lower_bound'], config['freq_upper_bound'], config['computation_comm_ratio'],
@@ -85,9 +84,9 @@ def show_packet_lifetimes(config):
 	#	config['Abstract']['comm_dist_str'], config['Abstract']['comm_kwargs']))
 	
 	# This fails if there is no fig directory.
-	#plt.savefig('fig/abstract_packet_lifetimes.png')
+	plt.savefig('fig/abstract_packet_lifetimes.png')
 
-	plt.show()
+	#plt.show()
 	plt.close()
 	
 def show_wake_up_servers(config):
