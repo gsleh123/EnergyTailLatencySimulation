@@ -4,7 +4,7 @@ import logging
 
 import CCSimulator
 
-
+@profile
 def main():
 	with open('CCRunner_Logs.log', 'w'):
 		pass
@@ -19,7 +19,7 @@ def main():
 	config_filename = sys.argv[1]
 	parser = ConfigParser.SafeConfigParser()
 	parser.read(config_filename)
-
+	
 	CCSimulator.run(parser)
 
 
