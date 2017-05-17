@@ -12,23 +12,23 @@ import sys
 import math
 import random
 
-# using microseconds 
+# using nanoseconds 
 
 def Energy_Runner(target_timestep):
 	env = get_env()
 	while env.now < target_timestep:
 		yield env.timeout(1)
-		logging.info('Sim Time: %i' % env.now)
+		#logging.info('Sim Time: %i' % env.now)
 
-	logging.info('Host Queue lengths after simulation:')
-	logging.debug('Distribution Host: %i' %(Host.main_host.packets.qsize()))
+	#logging.info('Host Queue lengths after simulation:')
+	#logging.debug('Distribution Host: %i' %(Host.main_host.packets.qsize()))
 	for host in Host.get_hosts():
 		queue_size = host.packets.qsize()
 		if hasattr(host, 'packets_gather'):
 			for q in host.packets_gather.values():
 				queue_size += q.qsize()
 
-		logging.debug('Host %i: %i' % (host.id, queue_size))
+		#logging.debug('Host %i: %i' % (host.id, queue_size))
 	
 	for host in Host.get_hosts():
 		host.sleep_server(env)
@@ -60,7 +60,7 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 		min_servers = (req_arr_rate / ((s_c / req_size) - (1 / d_0) * (w - e * gamma)))
 		flag = 0
 	
-	print min_servers
+	#print min_servers
 	min_servers = int(math.ceil(min_servers))
 	
 	if min_servers > num_of_servers:
@@ -122,6 +122,11 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 	#print opt_servers
 	#print "opt_freq "
 	#print opt_freq
+	logging.info("Arrival rate: %i" %(req_arr_rate))
+	logging.info("Minimum Servers: %i" %(min_servers))
+	logging.info("Optimal Servers: %i" %(opt_servers))
+	logging.info("Optimal Frequency: %f" %(opt_freq))
+	
 	return opt_servers, opt_freq
 
 # enumerate state values
@@ -147,7 +152,7 @@ class DistributionHost:
 			
 			pkt = Packet(env.now, 1)
 			self.packets.put(pkt)
-			logging.info('New packet received by main sever')
+			#logging.info('New packet received by main sever')
 	
 	def process_service(self):
 		env = get_env()
@@ -161,8 +166,9 @@ class DistributionHost:
 				i = random.randint(0, Host.num_of_hosts - 1)
 				p = self.packets.get()
 				Host.hosts[i].packets.put(p)
-				logging.info('Sending packet %i to host %i' %(p.id, Host.hosts[i].id))
-				time_to_send = self.arrival_dist(**self.arrival_kwargs)
+				#logging.info('Sending packet %i to host %i' %(p.id, Host.hosts[i].id))
+				#time_to_send = self.arrival_dist(**self.arrival_kwargs)
+				time_to_send = 0.1
 				#print "sending packet"
 
 				yield env.timeout(time_to_send)
@@ -229,7 +235,7 @@ class ProcessHost:
 				# append wake up times to list
 				self.wake_up_times.append(time_to_wake_up)
 				self.state = State.BOOTING
-				logging.info('Host %i is booting up' %(self.id))
+				#logging.info('Host %i is booting up' %(self.id))
 				
 				yield env.timeout(time_to_wake_up)
 				
@@ -240,11 +246,11 @@ class ProcessHost:
 	def finish_packet(self, env, pkt):
 		full_processing_time = env.now - pkt.birth_tick
 		self.packet_latency.append(full_processing_time)
-		logging.info('Host %i finished packet %i. time spent: %f' % (self.id, pkt.id, full_processing_time))
+		#logging.info('Host %i finished packet %i. time spent: %f' % (self.id, pkt.id, full_processing_time))
 	
 	def finish_booting_server(self, env, time_to_wake_up):
 		self.start_timer = env.now
-		logging.info('Host %i took %f time to wake up' %(self.id, time_to_wake_up))
+		#logging.info('Host %i took %f time to wake up' %(self.id, time_to_wake_up))
 		self.state = State.AWAKE
 		
 	def sleep_server(self, env):
@@ -253,4 +259,4 @@ class ProcessHost:
 		self.start_timer = env.now
 		self.computing_times.append(diff)
 		self.state = State.SLEEP
-		logging.info('Host %i is now going to sleep' %(self.id))
+		#logging.info('Host %i is now going to sleep' %(self.id))

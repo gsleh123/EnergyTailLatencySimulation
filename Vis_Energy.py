@@ -16,7 +16,7 @@ def setup():
 	
 def show_graphs(config):
 
-	print 'starting graphs'
+	#print 'starting graphs'
 
 	show_packet_lifetimes(config)
 	#show_wake_up_servers(config)
@@ -26,7 +26,7 @@ def show_graphs(config):
 def show_packet_lifetimes(config):
 	hosts = Host.get_hosts()
 
-	fig, ax = plt.subplots(2, figsize=(15, 10), sharex=True)
+	#fig, ax = plt.subplots(2, figsize=(15, 10), sharex=True)
 
 	lifetimes = list()
 
@@ -37,16 +37,16 @@ def show_packet_lifetimes(config):
 		lifetimes += host.packet_latency
 		all_freq.extend(host.freq_history)
 
-	avg_freq = np.mean(all_freq)
+	#avg_freq = np.mean(all_freq)
 
 	dump_data = dict()
 	dump_data['lifetimes'] = lifetimes
-	dump_data['avg_freq'] = avg_freq
+	#dump_data['avg_freq'] = avg_freq
 
 	# Does this fail if there is no lifetimes folder?
-	pickle.dump(dump_data, open('data/lifetimes/lifetime.pickle', 'wb'))
+	#pickle.dump(dump_data, open('data/lifetimes/lifetime.pickle', 'wb'))
 
-	sns.distplot(ax=ax[0], a=lifetimes)
+	#sns.distplot(ax=ax[0], a=lifetimes)
 	#problem_string = ""
 	#problem_type = config['Abstract']['problem_type']
 
@@ -57,28 +57,27 @@ def show_packet_lifetimes(config):
 	#elif problem_type == 3:
 	#	problem_string = 'Gather'
 
-	ax[0].set_title('Packet Lifetime distribution')
-	ax[0].set_ylabel('Freq')
+	#ax[0].set_title('Packet Lifetime distribution')
+	#ax[0].set_ylabel('Freq')
 
-	sns.boxplot(ax=ax[1], data=lifetimes, orient='h')
-	ax[1].set_title('Packet Lifetime Boxplot')
-	ax[1].set_xlabel('Lifetime (sim time)')
+	#sns.boxplot(ax=ax[1], data=lifetimes, orient='h')
+	#ax[1].set_title('Packet Lifetime Boxplot')
+	#ax[1].set_xlabel('Lifetime (sim time)')
 
-	plt.tight_layout()
+	#plt.tight_layout()
 	
-	avg_lifetimes = np.mean(lifetimes)
-	max_lifetimes = max(lifetimes)
-	min_lifetimes = min(lifetimes)
+	#avg_lifetimes = np.mean(lifetimes)
+	#max_lifetimes = max(lifetimes)
+	#min_lifetimes = min(lifetimes)
 	
 	temp = 0
 	for lifetime in lifetimes:
 		if lifetime > 10000000:
 			temp+=1
 	
-	print temp
-	print len(lifetimes)
 	prob_lifetimes = temp / len(lifetimes)
-	fig.text(0.5, 0.7, 'average lifetime: %f\nmax lifetimes: %f\nmin lifetimes: %f\nprob_lifetimes: %f\n' %(avg_lifetimes, max_lifetimes, min_lifetimes, prob_lifetimes))
+	logging.info('Probability of lifetimes over 10ms: %f' %(prob_lifetimes))
+	#fig.text(0.5, 0.7, 'average lifetime: %f\nmax lifetimes: %f\nmin lifetimes: %f\nprob_lifetimes: %f\n' %(avg_lifetimes, max_lifetimes, min_lifetimes, prob_lifetimes))
 	#fig.text(0.5, 0.7, 'Freq Lower: %s\n Freq Upper: %s\n Comp Comm Ratio: %s\n Arrival Dist: %s\n  Params: %s\nService Dist: %s\n  Params: %s' % (
 	#	config['freq_lower_bound'], config['freq_upper_bound'], config['computation_comm_ratio'],
 	#	config['Abstract']['arrival_dist_str'], config['Abstract']['arrival_kwargs'],
@@ -87,8 +86,8 @@ def show_packet_lifetimes(config):
 	# This fails if there is no fig directory.
 	#plt.savefig('fig/abstract_packet_lifetimes.png')
 
-	plt.show()
-	plt.close()
+	#plt.show()
+	#plt.close()
 	
 def show_wake_up_servers(config):
 	hosts = Host.get_hosts()

@@ -10,6 +10,7 @@ from simenv import get_env
 import Vis_MILC
 import Vis_Abstract
 import Vis_Energy
+from sys import getsizeof
 
 def run(parser):
 	#env = get_env()
@@ -35,27 +36,31 @@ def run(parser):
 	time.sleep(1)
 
 	logging.info('Simulation Started')
-
 	env.run(proc)
 
 	logging.info('Simulation Complete')
+
+	#print(Host.main_host)
+	#print(getsizeof(Host.main_host))
+	#print(getsizeof(Host.main_host.packets))
+
+	#for host in Host.hosts:
+	#	print(host.id) 
+	#	print(getsizeof(host))
+	#	print(getsizeof(host.packets))
 
 	total_computing_time = 0
 	total_wake_up_time = 0
 	total_sleep_time = 0
 	for host in Host.hosts:
-		print host.id
-		print host.computing_times
-		print host.wake_up_times
-		print host.sleep_times
 		total_computing_time += sum(host.computing_times)
 		total_wake_up_time += sum(host.wake_up_times)
 		total_sleep_time += sum(host.sleep_times)
 	
 	total_time = total_computing_time + total_wake_up_time + total_sleep_time
-	print total_computing_time / total_time
-	print total_wake_up_time / total_time
-	print total_sleep_time / total_time
+	logging.info('Computing time: %f' %(total_computing_time / total_time))
+	logging.info('Wake up time: %f' %(total_wake_up_time / total_time))
+	logging.info('Sleep time: %f' %(total_sleep_time / total_time))
 	
 	if report_type == 'MILC':
 		Vis_MILC.show_graphs(config)
@@ -88,12 +93,14 @@ def create_config_dict(parser):
 	freq_start = float(parser.get('CC_Config', 'freq_start'))
 	arrival_rate = float(parser.get('CC_Config', 'arrival_rate'))
 	service_rate = float(parser.get('CC_Config', 'service_rate'))
+	req_size = int(parser.get('CC_Config', 'req_size'))
 
 	options['freq_lower_bound'] = freq_lower_bound
 	options['freq_upper_bound'] = freq_upper_bound
 	options['freq_start'] = freq_start
-	options['arrival_rate'] = arrival_rate
+	#options['arrival_rate'] = arrival_rate
 	options['service_rate'] = service_rate
+	options['req_size'] = req_size
 
 	sleep_alpha = 0
 	if parser.has_option('CC_Config', 'sleep_alpha'):
@@ -176,7 +183,7 @@ def create_config_dict(parser):
 		options['Abstract']['dimension_children'] = int(parser.get('Abstract', 'dimension_children'))
 		options['Abstract']['control_scheme'] = parser.get('Abstract', 'control_scheme')
 		options['Abstract']['arrival_rate'] = parser.get('Abstract', 'arrival_rate')
-		
+
 		wake_up_dist_str = parser.get('Abstract', 'wake_up_distribution')
 		wake_up_kwargs = ast.literal_eval(parser.get('Abstract', 'wake_up_kwargs'))
 		arrival_dist_str = parser.get('Abstract', 'arrival_distribution')
@@ -194,6 +201,7 @@ def create_config_dict(parser):
 			options['Abstract']['arrival_distribution'] = np.random.choice
 		elif arrival_dist_str == 'poisson':
 			options['Abstract']['arrival_distribution'] = np.random.poisson
+			options['arrival_rate'] = ((1 * 10**9) / arrival_kwargs['lam'])
 			
 		if comm_dist_str == 'exponential':
 			options['Abstract']['comm_distribution'] = np.random.exponential
