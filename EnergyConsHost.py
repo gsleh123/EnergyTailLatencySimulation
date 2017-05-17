@@ -122,11 +122,12 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 	#print opt_servers
 	#print "opt_freq "
 	#print opt_freq
+
 	logging.info("Arrival rate: %i" %(req_arr_rate))
 	logging.info("Minimum Servers: %i" %(min_servers))
 	logging.info("Optimal Servers: %i" %(opt_servers))
 	logging.info("Optimal Frequency: %f" %(opt_freq))
-	
+
 	return opt_servers, opt_freq
 
 # enumerate state values
@@ -150,7 +151,7 @@ class DistributionHost:
 			time_till_next_packet_arrival = self.arrival_dist(**self.arrival_kwargs)
 			yield env.timeout(time_till_next_packet_arrival)
 			
-			pkt = Packet(env.now, 1)
+			pkt = Packet(env.now)
 			self.packets.put(pkt)
 			#logging.info('New packet received by main sever')
 	
@@ -246,7 +247,8 @@ class ProcessHost:
 	def finish_packet(self, env, pkt):
 		full_processing_time = env.now - pkt.birth_tick
 		self.packet_latency.append(full_processing_time)
-		#logging.info('Host %i finished packet %i. time spent: %f' % (self.id, pkt.id, full_processing_time))
+
+		#logging.info('Host %i finished a packet. time spent: %f' % (self.id, full_processing_time))
 	
 	def finish_booting_server(self, env, time_to_wake_up):
 		self.start_timer = env.now
@@ -259,4 +261,5 @@ class ProcessHost:
 		self.start_timer = env.now
 		self.computing_times.append(diff)
 		self.state = State.SLEEP
+
 		#logging.info('Host %i is now going to sleep' %(self.id))

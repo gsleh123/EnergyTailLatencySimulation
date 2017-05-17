@@ -36,6 +36,7 @@ def run(parser):
 	time.sleep(1)
 
 	logging.info('Simulation Started')
+
 	env.run(proc)
 
 	logging.info('Simulation Complete')
