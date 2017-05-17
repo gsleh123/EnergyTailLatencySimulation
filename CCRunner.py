@@ -1,9 +1,7 @@
 import sys
 import ConfigParser
 import logging
-
 import CCSimulator
-
 
 def main():
 	with open('CCRunner_Logs1.log', 'w'):
