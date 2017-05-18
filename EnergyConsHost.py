@@ -169,10 +169,10 @@ class DistributionHost:
 				Host.hosts[i].packets.put(p)
 				#logging.info('Sending packet %i to host %i' %(p.id, Host.hosts[i].id))
 				#time_to_send = self.arrival_dist(**self.arrival_kwargs)
-				time_to_send = 0.1
+				#time_to_send = 0.1
 				#print "sending packet"
 
-				yield env.timeout(time_to_send)
+				#yield env.timeout(time_to_send)
 				
 # this assuming negligble forwarding times
 class ProcessHost:
