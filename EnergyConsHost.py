@@ -12,7 +12,7 @@ import sys
 import math
 import random
 
-# using nanoseconds 
+# using ms 
 
 def Energy_Runner(target_timestep):
 	env = get_env()
