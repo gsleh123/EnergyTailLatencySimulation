@@ -1,130 +1,170 @@
-INFO:Arrival rate: 26001
-INFO:Minimum Servers: 17
-INFO:Optimal Servers: 17
+INFO:Arrival rate: 1000
+INFO:Minimum Servers: 1
+INFO:Optimal Servers: 1
 INFO:Optimal Frequency: 2163330765.278394
 INFO:Simulation Started
 INFO:Simulation Complete
-INFO:Computing time: 0.704516
-INFO:Wake up time: 0.230946
-INFO:Sleep time: 0.064537
-INFO:Probability of lifetimes over 10ms: 0.207339
-INFO:Arrival rate: 23998
-INFO:Minimum Servers: 15
-INFO:Optimal Servers: 15
-INFO:Optimal Frequency: 2163330765.278394
-INFO:Simulation Started
-INFO:Simulation Complete
-INFO:Computing time: 0.741213
-INFO:Wake up time: 0.203871
-INFO:Sleep time: 0.054916
-INFO:Probability of lifetimes over 10ms: 0.238102
-INFO:Arrival rate: 22002
-INFO:Minimum Servers: 14
-INFO:Optimal Servers: 14
-INFO:Optimal Frequency: 2163330765.278394
-INFO:Simulation Started
-INFO:Simulation Complete
-INFO:Computing time: 0.724576
-INFO:Wake up time: 0.216257
-INFO:Sleep time: 0.059167
-INFO:Probability of lifetimes over 10ms: 0.224529
-INFO:Arrival rate: 20000
-INFO:Minimum Servers: 13
-INFO:Optimal Servers: 13
-INFO:Optimal Frequency: 2163330765.278394
-INFO:Simulation Started
-INFO:Simulation Complete
-INFO:Computing time: 0.711457
-INFO:Wake up time: 0.226031
-INFO:Sleep time: 0.062512
-INFO:Probability of lifetimes over 10ms: 0.213830
-INFO:Arrival rate: 17998
-INFO:Minimum Servers: 12
-INFO:Optimal Servers: 12
-INFO:Optimal Frequency: 2163330765.278394
-INFO:Simulation Started
-INFO:Simulation Complete
-INFO:Computing time: 0.694393
-INFO:Wake up time: 0.238995
-INFO:Sleep time: 0.066612
-INFO:Probability of lifetimes over 10ms: 0.201447
-INFO:Arrival rate: 16000
-INFO:Minimum Servers: 10
-INFO:Optimal Servers: 10
-INFO:Optimal Frequency: 2163330765.278394
-INFO:Simulation Started
-INFO:Simulation Complete
-INFO:Computing time: 0.740561
-INFO:Wake up time: 0.204675
-INFO:Sleep time: 0.054764
-INFO:Probability of lifetimes over 10ms: 0.235389
-INFO:Arrival rate: 13999
-INFO:Minimum Servers: 9
-INFO:Optimal Servers: 9
-INFO:Optimal Frequency: 2163330765.278394
-INFO:Simulation Started
-INFO:Simulation Complete
-INFO:Computing time: 0.718875
-INFO:Wake up time: 0.221459
-INFO:Sleep time: 0.059666
-INFO:Probability of lifetimes over 10ms: 0.215595
-INFO:Arrival rate: 12000
-INFO:Minimum Servers: 8
-INFO:Optimal Servers: 8
-INFO:Optimal Frequency: 2163330765.278394
-INFO:Simulation Started
-INFO:Simulation Complete
-INFO:Computing time: 0.691294
-INFO:Wake up time: 0.241883
-INFO:Sleep time: 0.066822
-INFO:Probability of lifetimes over 10ms: 0.197033
-INFO:Arrival rate: 10000
-INFO:Minimum Servers: 7
-INFO:Optimal Servers: 7
-INFO:Optimal Frequency: 2163330765.278394
-INFO:Simulation Started
-INFO:Simulation Complete
-INFO:Computing time: 0.660929
-INFO:Wake up time: 0.264154
-INFO:Sleep time: 0.074918
-INFO:Probability of lifetimes over 10ms: 0.176258
-INFO:Arrival rate: 8000
-INFO:Minimum Servers: 5
-INFO:Optimal Servers: 5
-INFO:Optimal Frequency: 2163330765.278394
-INFO:Simulation Started
-INFO:Simulation Complete
-INFO:Computing time: 0.739062
-INFO:Wake up time: 0.207013
-INFO:Sleep time: 0.053925
-INFO:Probability of lifetimes over 10ms: 0.227961
-INFO:Arrival rate: 5998
-INFO:Minimum Servers: 4
-INFO:Optimal Servers: 4
-INFO:Optimal Frequency: 2163330765.278394
-INFO:Simulation Started
-INFO:Simulation Complete
-INFO:Computing time: 0.692561
-INFO:Wake up time: 0.242881
-INFO:Sleep time: 0.064558
-INFO:Probability of lifetimes over 10ms: 0.190614
-INFO:Arrival rate: 4000
-INFO:Minimum Servers: 3
-INFO:Optimal Servers: 3
-INFO:Optimal Frequency: 2163330765.278394
-INFO:Simulation Started
-INFO:Simulation Complete
-INFO:Computing time: 0.617560
-INFO:Wake up time: 0.299820
-INFO:Sleep time: 0.082620
-INFO:Probability of lifetimes over 10ms: 0.154550
+INFO:Computing time: 0.459106
+INFO:Wake up time: 0.436113
+INFO:Sleep time: 0.104781
+INFO:Probability of lifetimes over 10ms: 0.105939
 INFO:Arrival rate: 2000
 INFO:Minimum Servers: 2
 INFO:Optimal Servers: 2
 INFO:Optimal Frequency: 2163330765.278394
 INFO:Simulation Started
 INFO:Simulation Complete
-INFO:Computing time: 0.463132
-INFO:Wake up time: 0.411165
-INFO:Sleep time: 0.125703
-INFO:Probability of lifetimes over 10ms: 0.118991
+INFO:Computing time: 0.463602
+INFO:Wake up time: 0.410203
+INFO:Sleep time: 0.126195
+INFO:Probability of lifetimes over 10ms: 0.118449
+INFO:Arrival rate: 4000
+INFO:Minimum Servers: 3
+INFO:Optimal Servers: 3
+INFO:Optimal Frequency: 2163330765.278394
+INFO:Simulation Started
+INFO:Simulation Complete
+INFO:Computing time: 0.617298
+INFO:Wake up time: 0.299807
+INFO:Sleep time: 0.082895
+INFO:Probability of lifetimes over 10ms: 0.150684
+INFO:Arrival rate: 5998
+INFO:Minimum Servers: 4
+INFO:Optimal Servers: 4
+INFO:Optimal Frequency: 2163330765.278394
+INFO:Simulation Started
+INFO:Simulation Complete
+INFO:Computing time: 0.693716
+INFO:Wake up time: 0.242397
+INFO:Sleep time: 0.063887
+INFO:Probability of lifetimes over 10ms: 0.191203
+INFO:Arrival rate: 8000
+INFO:Minimum Servers: 5
+INFO:Optimal Servers: 5
+INFO:Optimal Frequency: 2163330765.278394
+INFO:Simulation Started
+INFO:Simulation Complete
+INFO:Computing time: 0.737926
+INFO:Wake up time: 0.208372
+INFO:Sleep time: 0.053702
+INFO:Probability of lifetimes over 10ms: 0.230283
+INFO:Arrival rate: 10000
+INFO:Minimum Servers: 7
+INFO:Optimal Servers: 7
+INFO:Optimal Frequency: 2163330765.278394
+INFO:Simulation Started
+INFO:Simulation Complete
+INFO:Computing time: 0.660848
+INFO:Wake up time: 0.264377
+INFO:Sleep time: 0.074775
+INFO:Probability of lifetimes over 10ms: 0.177676
+INFO:Arrival rate: 12000
+INFO:Minimum Servers: 8
+INFO:Optimal Servers: 8
+INFO:Optimal Frequency: 2163330765.278394
+INFO:Simulation Started
+INFO:Simulation Complete
+INFO:Computing time: 0.694256
+INFO:Wake up time: 0.239518
+INFO:Sleep time: 0.066226
+INFO:Probability of lifetimes over 10ms: 0.197819
+INFO:Arrival rate: 13999
+INFO:Minimum Servers: 9
+INFO:Optimal Servers: 9
+INFO:Optimal Frequency: 2163330765.278394
+INFO:Simulation Started
+INFO:Simulation Complete
+INFO:Computing time: 0.719277
+INFO:Wake up time: 0.220725
+INFO:Sleep time: 0.059998
+INFO:Probability of lifetimes over 10ms: 0.217358
+INFO:Arrival rate: 16000
+INFO:Minimum Servers: 10
+INFO:Optimal Servers: 10
+INFO:Optimal Frequency: 2163330765.278394
+INFO:Simulation Started
+INFO:Simulation Complete
+INFO:Computing time: 0.738872
+INFO:Wake up time: 0.205954
+INFO:Sleep time: 0.055174
+INFO:Probability of lifetimes over 10ms: 0.233655
+INFO:Arrival rate: 17998
+INFO:Minimum Servers: 12
+INFO:Optimal Servers: 12
+INFO:Optimal Frequency: 2163330765.278394
+INFO:Simulation Started
+INFO:Simulation Complete
+INFO:Computing time: 0.693695
+INFO:Wake up time: 0.239170
+INFO:Sleep time: 0.067135
+INFO:Probability of lifetimes over 10ms: 0.202015
+INFO:Arrival rate: 20000
+INFO:Minimum Servers: 13
+INFO:Optimal Servers: 13
+INFO:Optimal Frequency: 2163330765.278394
+INFO:Simulation Started
+INFO:Simulation Complete
+INFO:Computing time: 0.712065
+INFO:Wake up time: 0.225774
+INFO:Sleep time: 0.062161
+INFO:Probability of lifetimes over 10ms: 0.213293
+INFO:Arrival rate: 22002
+INFO:Minimum Servers: 14
+INFO:Optimal Servers: 14
+INFO:Optimal Frequency: 2163330765.278394
+INFO:Simulation Started
+INFO:Simulation Complete
+INFO:Computing time: 0.725073
+INFO:Wake up time: 0.215886
+INFO:Sleep time: 0.059040
+INFO:Probability of lifetimes over 10ms: 0.223630
+INFO:Arrival rate: 23998
+INFO:Minimum Servers: 15
+INFO:Optimal Servers: 15
+INFO:Optimal Frequency: 2163330765.278394
+INFO:Simulation Started
+INFO:Simulation Complete
+INFO:Computing time: 0.741044
+INFO:Wake up time: 0.203903
+INFO:Sleep time: 0.055053
+INFO:Probability of lifetimes over 10ms: 0.238726
+INFO:Arrival rate: 26001
+INFO:Minimum Servers: 17
+INFO:Optimal Servers: 17
+INFO:Optimal Frequency: 2163330765.278394
+INFO:Simulation Started
+INFO:Simulation Complete
+INFO:Computing time: 0.708147
+INFO:Wake up time: 0.228129
+INFO:Sleep time: 0.063724
+INFO:Probability of lifetimes over 10ms: 0.211637
+INFO:Arrival rate: 28003
+INFO:Minimum Servers: 18
+INFO:Optimal Servers: 18
+INFO:Optimal Frequency: 2163330765.278394
+INFO:Simulation Started
+INFO:Simulation Complete
+INFO:Computing time: 0.719791
+INFO:Wake up time: 0.219687
+INFO:Sleep time: 0.060523
+INFO:Probability of lifetimes over 10ms: 0.218117
+INFO:Arrival rate: 30003
+INFO:Minimum Servers: 19
+INFO:Optimal Servers: 19
+INFO:Optimal Frequency: 2163330765.278394
+INFO:Simulation Started
+INFO:Simulation Complete
+INFO:Computing time: 0.729476
+INFO:Wake up time: 0.212387
+INFO:Sleep time: 0.058137
+INFO:Probability of lifetimes over 10ms: 0.228540
+INFO:Arrival rate: 32000
+INFO:Minimum Servers: 20
+INFO:Optimal Servers: 20
+INFO:Optimal Frequency: 2163330765.278394
+INFO:Simulation Started
+INFO:Simulation Complete
+INFO:Computing time: 0.739704
+INFO:Wake up time: 0.204590
+INFO:Sleep time: 0.055706
+INFO:Probability of lifetimes over 10ms: 0.239143
