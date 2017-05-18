@@ -202,7 +202,7 @@ def create_config_dict(parser):
 			options['Abstract']['arrival_distribution'] = np.random.choice
 		elif arrival_dist_str == 'poisson':
 			options['Abstract']['arrival_distribution'] = np.random.poisson
-			options['arrival_rate'] = ((1 * 10**9) / arrival_kwargs['lam'])
+			options['arrival_rate'] = ((1 * 10**3) / arrival_kwargs['lam'])
 			
 		if comm_dist_str == 'exponential':
 			options['Abstract']['comm_distribution'] = np.random.exponential

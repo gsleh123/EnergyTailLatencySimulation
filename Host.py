@@ -61,7 +61,7 @@ def init_hosts(config):
 		# determine optimal number of servers and optimal frequency
 		dimension_depth = 2
 		[num_of_hosts, freq] = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers)
-		comp_time = (1000000000 * req_size) / (freq)
+		comp_time = (1000 * req_size) / (freq)
 		#dimension_children = config['host_count'] = num_of_hosts = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers)
 		#dimension_children = config['host_count'] = num_of_hosts = 4
 		

@@ -4,10 +4,10 @@ import logging
 import CCSimulator
 
 def main():
-	with open('CCRunner_Logs1.log', 'w'):
-		pass
+	#with open('CCRunner_Logs1.log', 'w'):
+	#	pass
 	
-	logging.basicConfig(filename = "CCRunner_Logs1.log", format="%(levelname)s:%(message)s", level=logging.DEBUG)
+	logging.basicConfig(filename = "CCRunner_Logs.log", format="%(levelname)s:%(message)s", level=logging.DEBUG)
 	
 
 	if len(sys.argv) != 2:
