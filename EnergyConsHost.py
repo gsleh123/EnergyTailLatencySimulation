@@ -68,6 +68,7 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 		return -1 # no feasible solution
 
 	# find optimal servers and optimal frequencies
+	#for i in range(32, 33):
 	for i in range (min_servers, num_of_servers + 1):
 		# calculate optimal frequency
 		if pow_con_model == 1: 
@@ -89,15 +90,15 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 			else:
 				if flag:
 					w = lambertw(gamma * math.exp(e * gamma)).real
-					temp = (req_arr_rate / i) + ((1 / d_0) * (w - gamma*e) * req_size)
-					
+					temp = ((req_arr_rate / i) + (1 / d_0) * (w - gamma*e)) * req_size
+	
 					if temp <= s_e and s_e <= s_c:
 						curr_freq = s_e
 					else:
 						curr_freq = temp
 				else:
 					w = lambertw(gamma * math.exp(e * gamma), -1).real
-					temp = (req_arr_rate / i) + ((1 / d_0) * (w - gamma*e) * req_size)
+					temp = ((req_arr_rate / i) + ((1 / d_0) * (w - gamma*e))) * req_size
 					
 					if temp <= s_e and s_e <= s_c:
 						curr_freq = s_e
