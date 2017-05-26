@@ -68,13 +68,13 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 		return -1 # no feasible solution
 
 	# find optimal servers and optimal frequencies
-	#for i in range(32, 33):
+	#for i in range(20, 21):
 	for i in range (min_servers, num_of_servers + 1):
 		# calculate optimal frequency
 		if pow_con_model == 1: 
 			if b - (s_b / k_m) >= P_s:
 					curr_freq = s_c
-					print "do"
+					#print "do"
 			else:		
 				if flag:
 					w = lambertw(gamma * math.exp(e * gamma)).real
@@ -108,7 +108,8 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 		# calculate the power consumption of each server
 		curr_total_power = (((1 / i) * req_arr_rate * req_size / curr_freq) * (b + ((curr_freq - s_b) / k_m)**pow_con_model)) + ((1 - ((1 / i) * req_arr_rate * req_size / curr_freq)) * P_s)
 		curr_total_power = i * curr_total_power
-		
+		#print curr_total_power;
+		#print min_total_power;		
 		# update the optimal servers if we found a new min_total_power
 		if curr_total_power < min_total_power:
 			min_total_power = curr_total_power
@@ -155,14 +156,15 @@ class DistributionHost:
 			pkt = Packet(env.now)
 			self.packets.put(pkt)
 			#logging.info('New packet received by main sever')
-	
+
 	def process_service(self):
 		env = get_env()
 		
 		while True:
 			# distribute packet to process host
 			if self.packets.qsize() == 0:
-					yield env.timeout(0.1)
+					time_to_wait = self.arrival_dist(**self.arrival_kwargs) / 10;
+					yield env.timeout(time_to_wait)
 					continue
 			else:
 				i = random.randint(0, Host.num_of_hosts - 1)
@@ -243,7 +245,7 @@ class ProcessHost:
 				
 				self.finish_booting_server(env, time_to_wake_up)
 			else:
-				yield env.timeout(0.1)
+				yield env.timeout(0.0025)
 					
 	def finish_packet(self, env, pkt):
 		full_processing_time = env.now - pkt.birth_tick
