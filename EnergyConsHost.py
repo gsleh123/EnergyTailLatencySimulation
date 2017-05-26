@@ -44,6 +44,7 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 	opt_servers = 0
 	opt_freq = 0
 	flag = 0	
+	servers = num_of_servers
 	gamma = (alpha * d_0) / (math.exp(-(alpha * d_0)) - e)
 
 	# determine min_servers to satisfy tail latency
@@ -65,7 +66,7 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 	
 	if min_servers > num_of_servers:
 		# min amount of servers needed exceeds available servers
-		return -1 # no feasible solution
+		return -1, -1 # no feasible solution
 
 	# find optimal servers and optimal frequencies
 	#for i in range(20, 21):
@@ -125,10 +126,14 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 	#print "opt_freq "
 	#print opt_freq
 
-	logging.info("Arrival rate: %i" %(req_arr_rate))
-	logging.info("Minimum Servers: %i" %(min_servers))
-	logging.info("Optimal Servers: %i" %(opt_servers))
-	logging.info("Optimal Frequency: %f" %(opt_freq))
+	Host.csv_temp_list.append(req_arr_rate)
+	Host.csv_temp_list.append(opt_servers)
+	Host.csv_temp_list.append(opt_freq / 10**9)
+	
+	#logging.info("Arrival rate: %i" %(req_arr_rate))
+	#logging.info("Minimum Servers: %i" %(min_servers))
+	#logging.info("Optimal Servers: %i" %(opt_servers))
+	#logging.info("Optimal Frequency: %f" %(opt_freq))
 
 	return opt_servers, opt_freq
 

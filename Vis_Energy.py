@@ -9,6 +9,7 @@ from simenv import get_env
 import AbstractHost
 import networkx as nx
 import pickle
+import csv
 
 def setup():
 	sns.set_context('poster')
@@ -75,9 +76,35 @@ def show_packet_lifetimes(config):
 		if lifetime > 10:
 			temp+=1
 	
-	prob_lifetimes = temp / len(lifetimes)
+	if len(lifetimes) > 0:
+		prob_lifetimes = temp / len(lifetimes)
+	else:
+		prob_lifetimes = 0
+		
+	Host.csv_temp_list.append(prob_lifetimes)
 	logging.info('Probability of lifetimes over 10ms: %f' %(prob_lifetimes))
-
+	
+	num_of_servers = config['Abstract']['num_of_servers']
+	pow_con_model = config['Abstract']['pow_con_model']
+	b = config['Abstract']['b']
+	P_s = config['Abstract']['P_s']
+	
+	freq = Host.csv_temp_list[2]
+	comp_ratio = Host.csv_temp_list[3]
+	wake_up_ratio = Host.csv_temp_list[4]
+	sleep_ratio = Host.csv_temp_list[5]
+	
+	if pow_con_model == 1:
+		power_usage = 1;
+	elif pow_con_model == 2:
+		comp_power = ((freq - 1.2) / 0.18)**2 + b
+		power_usage = (comp_power * comp_ratio + wake_up_ratio * P_s + sleep_ratio * P_s) * num_of_servers
+		Host.csv_temp_list.append(power_usage)
+		
+	with open('simdataN=%sk=%s.csv' %(num_of_servers, pow_con_model), 'ab') as csvfile:
+		simdata = csv.writer(csvfile, delimiter=',')
+		simdata.writerow(Host.csv_temp_list)
+		
 	#fig.text(0.5, 0.7, 'average lifetime: %f\nmax lifetimes: %f\nmin lifetimes: %f\nprob_lifetimes: %f\n' %(avg_lifetimes, max_lifetimes, min_lifetimes, prob_lifetimes))
 
 	#fig.text(0.5, 0.7, 'Freq Lower: %s\n Freq Upper: %s\n Comp Comm Ratio: %s\n Arrival Dist: %s\n  Params: %s\nService Dist: %s\n  Params: %s' % (

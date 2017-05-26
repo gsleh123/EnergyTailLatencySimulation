@@ -12,17 +12,12 @@ import Vis_Abstract
 import Vis_Energy
 from sys import getsizeof
 
-def run(parser):
-	#env = get_env()
-
+def run(parser):	
 	config = create_config_dict(parser)
-
+	
 	config['timescalar'] = 1/1.
 	report_type = config['mpip_report_type']
 
-	arrival_rate = config['Abstract']['arrival_rate']
-	#print arrival_rate
-	#for i in arrival_rate:
 	env = get_env()
 	proc = Host.init_hosts(config)
 	
@@ -35,20 +30,11 @@ def run(parser):
 		
 	time.sleep(1)
 
-	logging.info('Simulation Started')
+	#logging.info('Simulation Started')
 
 	env.run(proc)
 
-	logging.info('Simulation Complete')
-
-	#print(Host.main_host)
-	#print(getsizeof(Host.main_host))
-	#print(getsizeof(Host.main_host.packets))
-
-	#for host in Host.hosts:
-	#	print(host.id) 
-	#	print(getsizeof(host))
-	#	print(getsizeof(host.packets))
+	#logging.info('Simulation Complete')
 
 	total_computing_time = 0
 	total_wake_up_time = 0
@@ -59,6 +45,13 @@ def run(parser):
 		total_sleep_time += sum(host.sleep_times)
 	
 	total_time = total_computing_time + total_wake_up_time + total_sleep_time
+	comp_ratio = total_computing_time / total_time
+	wake_up_ratio = total_wake_up_time / total_time
+	sleep_ratio = total_sleep_time / total_time
+	Host.csv_temp_list.append(comp_ratio)
+	Host.csv_temp_list.append(wake_up_ratio)
+	Host.csv_temp_list.append(sleep_ratio)
+	
 	logging.info('Computing time: %f' %(total_computing_time / total_time))
 	logging.info('Wake up time: %f' %(total_wake_up_time / total_time))
 	logging.info('Sleep time: %f' %(total_sleep_time / total_time))
@@ -70,8 +63,6 @@ def run(parser):
 	elif report_type == 'Energy':
 		Vis_Energy.show_graphs(config)
 	
-	#env.reset()
-
 def create_config_dict(parser):
 	# we use a dict to pass the options around
 	options = dict()
@@ -183,8 +174,18 @@ def create_config_dict(parser):
 		options['Abstract']['dimension_depth'] = int(parser.get('Abstract', 'dimension_depth'))
 		options['Abstract']['dimension_children'] = int(parser.get('Abstract', 'dimension_children'))
 		options['Abstract']['control_scheme'] = parser.get('Abstract', 'control_scheme')
-		options['Abstract']['arrival_rate'] = parser.get('Abstract', 'arrival_rate')
 
+		options['Abstract']['d_0'] = float(parser.get('CC_Config', 'd_0'));
+		options['Abstract']['P_s'] = int(parser.get('CC_Config', 'P_s'));
+		options['Abstract']['alpha'] = int(parser.get('CC_Config', 'alpha'));
+		options['Abstract']['num_of_servers'] = int(parser.get('CC_Config', 'num_of_servers'));
+		options['Abstract']['e'] = float(parser.get('CC_Config', 'e'));
+		options['Abstract']['s_b'] = float(parser.get('CC_Config', 's_b')) * 10**9;
+		options['Abstract']['s_c'] = float(parser.get('CC_Config', 's_c')) * 10**9;
+		options['Abstract']['pow_con_model'] = int(parser.get('CC_Config', 'pow_con_model'));
+		options['Abstract']['k_m'] = float(parser.get('CC_Config', 'k_m')) * 10**9;
+		options['Abstract']['b'] = int(parser.get('CC_Config', 'b'));
+		
 		wake_up_dist_str = parser.get('Abstract', 'wake_up_distribution')
 		wake_up_kwargs = ast.literal_eval(parser.get('Abstract', 'wake_up_kwargs'))
 		arrival_dist_str = parser.get('Abstract', 'arrival_distribution')

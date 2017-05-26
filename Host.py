@@ -17,10 +17,12 @@ def init_hosts(config):
 	global hosts
 	global num_of_hosts
 	global main_host
-
+	global csv_temp_list
+	
 	hosts = []
 	num_of_hosts = config['host_count']
 	report_type = config['mpip_report_type']
+	csv_temp_list = list()
 	
 	if report_type == 'MILC':
 		host_to_dimension, dimension_to_host = __generate_rank_to_dimension_lookup(
@@ -42,22 +44,17 @@ def init_hosts(config):
 		wake_up_kwargs = config['Abstract']['wake_up_kwargs']
 		req_arr_rate = config['arrival_rate']
 		req_size = config['req_size']
-		d_0 = 0.01
-		P_s = 50
-		alpha = 250
-		num_of_servers = 64
-		e = 0.1
-		s_b = 1.2 * 10**9
-		s_c = 3 * 10**9
-		pow_con_model = 2
-		
-		if pow_con_model == 1:
-			k_m = 0.03 * 10**9
-			b = 180
-		elif pow_con_model == 2:
-			k_m = 0.18 * 10**9
-			b = 150
-			
+		d_0 = config['Abstract']['d_0']
+		P_s = config['Abstract']['P_s']
+		alpha = config['Abstract']['alpha']
+		num_of_servers = config['Abstract']['num_of_servers']
+		e = config['Abstract']['e']
+		s_b = config['Abstract']['s_b']
+		s_c = config['Abstract']['s_c']
+		pow_con_model = config['Abstract']['pow_con_model']
+		k_m = config['Abstract']['k_m']
+		b = config['Abstract']['b']
+				
 		# determine optimal number of servers and optimal frequency
 		dimension_depth = 2
 		[num_of_hosts, freq] = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers)
