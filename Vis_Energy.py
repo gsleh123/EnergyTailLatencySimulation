@@ -88,7 +88,10 @@ def show_packet_lifetimes(config):
 	pow_con_model = config['Abstract']['pow_con_model']
 	b = config['Abstract']['b']
 	P_s = config['Abstract']['P_s']
+	k_m = config['Abstract']['k_m'] / 10**9
+	s_b = config['Abstract']['s_b'] / 10**9
 	
+	servers_used = Host.csv_temp_list[1]
 	freq = Host.csv_temp_list[2]
 	comp_ratio = Host.csv_temp_list[3]
 	wake_up_ratio = Host.csv_temp_list[4]
@@ -97,8 +100,8 @@ def show_packet_lifetimes(config):
 	if pow_con_model == 1:
 		power_usage = 1;
 	elif pow_con_model == 2:
-		comp_power = ((freq - 1.2) / 0.18)**2 + b
-		power_usage = (comp_power * comp_ratio + wake_up_ratio * P_s + sleep_ratio * P_s) * num_of_servers
+		comp_power = ((freq - s_b) / k_m)**2 + b
+		power_usage = (comp_power * comp_ratio + wake_up_ratio * P_s + sleep_ratio * P_s) * servers_used
 		Host.csv_temp_list.append(power_usage)
 		
 	with open('simdataN=%sk=%s.csv' %(num_of_servers, pow_con_model), 'ab') as csvfile:
