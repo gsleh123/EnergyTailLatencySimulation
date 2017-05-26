@@ -184,11 +184,13 @@ class DistributionHost:
 				
 # this assuming negligble forwarding times
 class ProcessHost:
-	def __init__(self, hostid, config, comp_time, wake_up_dist, wake_up_kwargs, power_setup):
+	def __init__(self, hostid, config, comp_time, arrival_dist, arrival_kwargs, wake_up_dist, wake_up_kwargs, power_setup):
 				 
 				# class variables
 				self.id = hostid
 				self.comp_time = comp_time
+				self.arrival_dist = arrival_dist
+				self.arrival_kwargs = arrival_kwargs
 				self.wake_up_dist = wake_up_dist
 				self.wake_up_kwargs = wake_up_kwargs
 				self.power_setup = power_setup
@@ -250,7 +252,8 @@ class ProcessHost:
 				
 				self.finish_booting_server(env, time_to_wake_up)
 			else:
-				yield env.timeout(0.0025)
+				time_to_wait = self.arrival_dist(**self.arrival_kwargs) / 10
+				yield env.timeout(time_to_wait)
 					
 	def finish_packet(self, env, pkt):
 		full_processing_time = env.now - pkt.birth_tick

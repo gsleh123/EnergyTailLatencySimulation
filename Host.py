@@ -69,7 +69,7 @@ def init_hosts(config):
 		if report_type == 'Energy':
 			# instantiate a new host
 			#comp_time = config['Abstract']['comp_time']
-			host = ech.ProcessHost(i, config, comp_time, wake_up_dist, wake_up_kwargs, P_s)
+			host = ech.ProcessHost(i, config, comp_time, arrival_distribution, arrival_kwargs, wake_up_dist, wake_up_kwargs, P_s)
 			hosts.append(host)
 		elif report_type == 'MILC':
 			isend_distributions, allreduce_distributions, service_lognormal_param, raw_data = __load_mpip_report(config)
@@ -119,11 +119,11 @@ def init_hosts(config):
 			env.process(main_host.process_arrivals())
 			env.process(main_host.process_service())
 			
+			for i in np.random.permutation(num_of_hosts):
+				env.process(hosts[i].process_service())
+				
 	for i in np.random.permutation(num_of_hosts):
-		if report_type == 'Energy':
-			#env.process(main_host.process_arrivals())
-			env.process(hosts[i].process_service())
-		elif report_type == 'MILC':
+		if report_type == 'MILC':
 			env.process(hosts[i].process())
 		elif report_type == 'Abstract':
 			env.process(hosts[i].process_arrivals())
