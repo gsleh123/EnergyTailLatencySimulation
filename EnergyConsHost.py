@@ -154,7 +154,6 @@ class DistributionHost:
 		
 		while True:
 			# create a new packet
-			#time_till_next_packet_arrival = self.arrival_dist(0.1)
 			time_till_next_packet_arrival = self.arrival_dist(**self.arrival_kwargs)
 			yield env.timeout(time_till_next_packet_arrival)
 			
@@ -172,14 +171,18 @@ class DistributionHost:
 					yield env.timeout(time_to_wait)
 					continue
 			else:
+				# randomly pick a host to distribute the packet 
 				i = random.randint(0, Host.num_of_hosts - 1)
 				p = self.packets.get()
+				
+				if Host.hosts[i].state == State.SLEEP:
+					Host.host[i].wake_up_server(env)
+					
 				Host.hosts[i].packets.put(p)
+				
 				#logging.info('Sending packet %i to host %i' %(p.id, Host.hosts[i].id))
 				#time_to_send = self.arrival_dist(**self.arrival_kwargs)
 				#time_to_send = 0.1
-				#print "sending packet"
-
 				#yield env.timeout(time_to_send)
 				
 # this assuming negligble forwarding times
@@ -227,33 +230,31 @@ class ProcessHost:
 					continue
 				else:
 					# determine computation time
-					# should be req size / freq
-					#comp_time = np.random.exponential(0.000333)
 					comp_time = np.random.exponential(self.comp_time)
 					pkt = self.packets.get()
 					yield env.timeout(comp_time)
 					
 					# log the packet
 					self.finish_packet(env, pkt)
-			elif (self.state == State.SLEEP and self.packets.qsize() != 0):
-				time_to_wake_up = self.wake_up_dist(**self.wake_up_kwargs)
+			#elif (self.state == State.SLEEP and self.packets.qsize() != 0):
+			#	time_to_wake_up = self.wake_up_dist(**self.wake_up_kwargs)
 				
 				# calculate sleep times
-				self.end_timer = env.now
-				diff = self.end_timer - self.start_timer
-				self.sleep_times.append(diff)
+			#	self.end_timer = env.now
+			#	diff = self.end_timer - self.start_timer
+			#	self.sleep_times.append(diff)
 				
 				# append wake up times to list
-				self.wake_up_times.append(time_to_wake_up)
-				self.state = State.BOOTING
+			#	self.wake_up_times.append(time_to_wake_up)
+			#	self.state = State.BOOTING
 				#logging.info('Host %i is booting up' %(self.id))
 				
-				yield env.timeout(time_to_wake_up)
+			#	yield env.timeout(time_to_wake_up)
 				
-				self.finish_booting_server(env, time_to_wake_up)
-			else:
-				time_to_wait = self.arrival_dist(**self.arrival_kwargs) / 10
-				yield env.timeout(time_to_wait)
+			#	self.finish_booting_server(env, time_to_wake_up)
+			#else:
+				#time_to_wait = self.arrival_dist(**self.arrival_kwargs) / 10
+				#yield env.timeout(time_to_wait)
 					
 	def finish_packet(self, env, pkt):
 		full_processing_time = env.now - pkt.birth_tick
@@ -261,6 +262,23 @@ class ProcessHost:
 
 		#logging.info('Host %i finished a packet. time spent: %f' % (self.id, full_processing_time))
 	
+	def wake_up_server(self, env):
+		time_to_wake_up = self.wake_up_dist(**self.wake_up_kwargs)
+				
+		# calculate sleep times
+		self.end_timer = env.now
+		diff = self.end_timer - self.start_timer
+		self.sleep_times.append(diff)
+		
+		# append wake up times to list
+		self.wake_up_times.append(time_to_wake_up)
+		self.state = State.BOOTING
+		#logging.info('Host %i is booting up' %(self.id))
+		
+		yield env.timeout(time_to_wake_up)
+		
+		self.finish_booting_server(env, time_to_wake_up)
+				
 	def finish_booting_server(self, env, time_to_wake_up):
 		self.start_timer = env.now
 		#logging.info('Host %i took %f time to wake up' %(self.id, time_to_wake_up))
