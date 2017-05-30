@@ -119,7 +119,7 @@ def init_hosts(config):
 
 	if report_type == 'Energy':
 			env.process(main_host.process_arrivals())
-			env.process(main_host.process_service())
+			#env.process(main_host.process_service())
 			
 			for i in np.random.permutation(num_of_hosts):
 				env.process(hosts[i].process_service())

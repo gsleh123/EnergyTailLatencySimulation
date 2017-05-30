@@ -160,9 +160,16 @@ class DistributionHost:
 			yield env.timeout(time_till_next_packet_arrival)
 			
 			pkt = Packet(env.now)
-			self.packets.put(pkt)
-			logging.info('New packet received by main sever')
-
+			#self.packets.put(pkt)
+			#logging.info('New packet received by main sever')
+			
+			i = random.randint(0, Host.num_of_hosts - 1)
+			#p = self.packets.get()
+			Host.hosts[i].packets.put(pkt)
+			
+			if Host.hosts[i].state == State.SLEEP:
+				Host.hosts[i].wake_up_server(env)
+				
 	def process_service(self):
 		env = get_env()
 		
@@ -177,7 +184,7 @@ class DistributionHost:
 				i = random.randint(0, Host.num_of_hosts - 1)
 				p = self.packets.get()
 				Host.hosts[i].packets.put(p)
-				#print "hello"	
+				
 				if Host.hosts[i].state == State.SLEEP:
 					Host.hosts[i].wake_up_server(env)
 				
