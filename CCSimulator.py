@@ -52,9 +52,9 @@ def run(parser):
 	Host.csv_temp_list.append(wake_up_ratio)
 	Host.csv_temp_list.append(sleep_ratio)
 	
-	logging.info('Computing time: %f' %(total_computing_time / total_time))
-	logging.info('Wake up time: %f' %(total_wake_up_time / total_time))
-	logging.info('Sleep time: %f' %(total_sleep_time / total_time))
+	#logging.info('Computing time: %f' %(total_computing_time / total_time))
+	#logging.info('Wake up time: %f' %(total_wake_up_time / total_time))
+	#logging.info('Sleep time: %f' %(total_sleep_time / total_time))
 	
 	if report_type == 'MILC':
 		Vis_MILC.show_graphs(config)
@@ -171,10 +171,11 @@ def create_config_dict(parser):
 	elif options['mpip_report_type'] == 'Energy':
 		options['Abstract'] = dict()
 		options['Abstract']['problem_type'] = int(parser.get('Abstract', 'problem_type'))
+		options['Abstract']['freq_setting'] = int(parser.get('Abstract', 'freq_setting'))
 		options['Abstract']['dimension_depth'] = int(parser.get('Abstract', 'dimension_depth'))
 		options['Abstract']['dimension_children'] = int(parser.get('Abstract', 'dimension_children'))
 		options['Abstract']['control_scheme'] = parser.get('Abstract', 'control_scheme')
-
+		
 		options['Abstract']['d_0'] = float(parser.get('CC_Config', 'd_0'));
 		options['Abstract']['P_s'] = int(parser.get('CC_Config', 'P_s'));
 		options['Abstract']['alpha'] = int(parser.get('CC_Config', 'alpha'));

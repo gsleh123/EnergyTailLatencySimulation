@@ -54,10 +54,12 @@ def init_hosts(config):
 		pow_con_model = config['Abstract']['pow_con_model']
 		k_m = config['Abstract']['k_m']
 		b = config['Abstract']['b']
-				
+		problem_type = config['Abstract']['problem_type']
+		freq_setting = config['Abstract']['freq_setting']
+		
 		# determine optimal number of servers and optimal frequency
 		dimension_depth = 2
-		[num_of_hosts, freq] = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers)
+		[num_of_hosts, freq] = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting)
 		comp_time = (1000 * req_size) / (freq)
 		#dimension_children = config['host_count'] = num_of_hosts = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers)
 		#dimension_children = config['host_count'] = num_of_hosts = 4

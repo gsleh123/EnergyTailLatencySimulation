@@ -33,12 +33,7 @@ def Energy_Runner(target_timestep):
 	for host in Host.get_hosts():
 		host.sleep_server(env)
 
-def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers):
-	# input: request arrival rate, request size
-	# input: power consumption model (1 or 2)
-	# request arrival rate (requests/s)
-	# request size (cycles/request)
-		
+def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting):
 	min_servers = 0
 	min_total_power = 1000000
 	opt_servers = 0
@@ -68,8 +63,20 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 		# min amount of servers needed exceeds available servers
 		return -1, -1 # no feasible solution
 
+	# depending on the problem type figure out the number of servers to use
+	if problem_type == 1: 
+		# optimal servers
+		min_servers = min_servers
+		num_of_servers = num_of_servers
+	elif problem_type == 2: 
+		# min servers 
+		min_servers = min_servers
+		num_of_servers = num_of_servers
+	elif problem_type == 3:
+		min_servers = num_of_servers
+		num_of_servers = num_of_servers
+		
 	# find optimal servers and optimal frequencies
-	#for i in range(20, 21):
 	for i in range (min_servers, num_of_servers + 1):
 		# calculate optimal frequency
 		if pow_con_model == 1: 
@@ -117,14 +124,9 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 			opt_servers = i
 			opt_freq = curr_freq
 	
-	#print "min_servers "
-	#print min_servers
-	#print "min_total_power "
-	#print min_total_power
-	#print "opt_servers "
-	#print opt_servers
-	#print "opt_freq "
-	#print opt_freq
+	if freq_setting == 2:
+		# we want the max freq which is S_c
+		opt_freq = s_c * 10**9 
 
 	Host.csv_temp_list.append(req_arr_rate)
 	Host.csv_temp_list.append(opt_servers)
@@ -167,7 +169,7 @@ class DistributionHost:
 		while True:
 			# distribute packet to process host
 			if self.packets.qsize() == 0:
-					time_to_wait = self.arrival_dist(**self.arrival_kwargs) / 10;
+					time_to_wait = self.arrival_dist(**self.arrival_kwargs) / 2;
 					yield env.timeout(time_to_wait)
 					continue
 			else:
@@ -264,7 +266,7 @@ class ProcessHost:
 				
 			#	self.finish_booting_server(env, time_to_wake_up)
 			else:
-				time_to_wait = self.arrival_dist(**self.arrival_kwargs) / 10
+				time_to_wait = self.arrival_dist(**self.arrival_kwargs) / 2
 				yield env.timeout(time_to_wait)
 					
 	def finish_packet(self, env, pkt):
