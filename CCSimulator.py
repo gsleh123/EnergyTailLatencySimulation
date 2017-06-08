@@ -7,9 +7,9 @@ import ast
 
 import Host
 from simenv import get_env
+import Vis_Energy
 import Vis_MILC
 import Vis_Abstract
-import Vis_Energy
 from sys import getsizeof
 
 def run(parser):	
@@ -196,12 +196,14 @@ def create_config_dict(parser):
 		
 		if arrival_dist_str == 'exponential':
 			options['Abstract']['arrival_distribution'] = np.random.exponential
+			options['arrival_rate'] = ((1 * 10**3) / arrival_kwargs['scale'])
 		elif arrival_dist_str == 'pareto':
 			options['Abstract']['arrival_distribution'] = scipy.stats.pareto.rvs
 		elif arrival_dist_str == 'lognormal':
 			options['Abstract']['arrival_distribution'] = np.random.lognormal
 		elif arrival_dist_str == 'fixed':
 			options['Abstract']['arrival_distribution'] = np.random.choice
+			options['arrival_rate'] = ((1 * 10**3) / arrival_kwargs['a'])
 		elif arrival_dist_str == 'poisson':
 			options['Abstract']['arrival_distribution'] = np.random.poisson
 			options['arrival_rate'] = ((1 * 10**3) / arrival_kwargs['lam'])

@@ -48,7 +48,7 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 	#print w
 	#print ((1 / d_0) * (-w - 1))
 	if (1 / d_0) * math.log(1 / e) < alpha and alpha < ((1 / d_0) * (-w - 1)):
-		w = lambertw(gamma * math.exp(e * gamma)).real		
+		w = lambertw(gamma * math.exp(e * gamma)).real	
 		min_servers = (req_arr_rate / ((s_c / req_size) - ((1 / d_0) * (w - (e * gamma)))))
 		flag = 1
 	else:
@@ -71,7 +71,7 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 	elif problem_type == 2: 
 		# min servers 
 		min_servers = min_servers
-		num_of_servers = num_of_servers
+		num_of_servers = min_servers
 	elif problem_type == 3:
 		min_servers = num_of_servers
 		num_of_servers = num_of_servers

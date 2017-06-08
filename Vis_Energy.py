@@ -1,5 +1,7 @@
 from __future__ import division
 import logging
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -82,7 +84,8 @@ def show_packet_lifetimes(config):
 		prob_lifetimes = 0
 		
 	Host.csv_temp_list.append(prob_lifetimes)
-	logging.info('Probability of lifetimes over 10ms: %f' %(prob_lifetimes))
+	#print lifetimes
+	#logging.info('Probability of lifetimes over 10ms: %f' %(prob_lifetimes))
 	
 	num_of_servers = config['Abstract']['num_of_servers']
 	pow_con_model = config['Abstract']['pow_con_model']
