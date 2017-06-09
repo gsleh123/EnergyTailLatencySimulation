@@ -126,7 +126,7 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 	
 	if freq_setting == 2:
 		# we want the max freq which is S_c
-		opt_freq = s_c * 10**9 
+		opt_freq = s_c 
 
 	Host.csv_temp_list.append(req_arr_rate)
 	Host.csv_temp_list.append(opt_servers)
