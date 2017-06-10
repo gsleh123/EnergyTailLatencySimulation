@@ -146,17 +146,42 @@ class State(Enum):
 	AWAKE = 2
 	
 class DistributionHost:
-	def __init__(self, arrival_distribution, arrival_kwargs):
+	def __init__(self, arrival_distribution, arrival_kwargs, arrival_rate):
 		self.packets = Queue()
 		self.arrival_dist = arrival_distribution
 		self.arrival_kwargs = arrival_kwargs
+		self.arrival_rate = arrival_rate 
 		
 	def process_arrivals(self):
 		env = get_env()
-		
+		arrival_rate = self.arrival_rate
+		state = 1
+		constOffset = 0.1
+		alphaThresh = 1
+		betaThresh = 0
+
 		while True:
+			if state == 0:
+				time_till_next_packet_arrival = constOffset
+				beta = np.random.uniform(0, 1)
+				
+				if beta < betaThresh:
+					state = 0
+				else:
+					state = 1
+			else:
+				time_till_next_packet_arrival = self.arrival_dist(arrival_rate * (1 + betaThresh/alphaThresh) - constOffset)
+				alpha = np.random.uniform(0, 1)
+				
+				if alpha < alphaThresh:
+					state = 1
+				else:
+					state = 0
+					
 			# create a new packet
-			time_till_next_packet_arrival = self.arrival_dist(**self.arrival_kwargs)
+			time_till_next_packet_arrival = 1000 / time_till_next_packet_arrival
+			print time_till_next_packet_arrival
+			#time_till_next_packet_arrival = self.arrival_dist(**self.arrival_kwargs)
 			yield env.timeout(time_till_next_packet_arrival)
 			
 			pkt = Packet(env.now)

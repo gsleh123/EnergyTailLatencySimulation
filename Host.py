@@ -37,7 +37,8 @@ def init_hosts(config):
 
 	arrival_distribution = config['Abstract']['arrival_distribution']
 	arrival_kwargs = config['Abstract']['arrival_kwargs']
-	main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs)
+	arrival_rate = config['arrival_rate']
+	main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs, arrival_rate)
 
 	if report_type == 'Energy':
 		wake_up_dist = config['Abstract']['wake_up_distribution']
