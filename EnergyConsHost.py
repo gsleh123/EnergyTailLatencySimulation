@@ -156,42 +156,43 @@ class DistributionHost:
 		env = get_env()
 		arrival_rate = self.arrival_rate
 		state = 1
-		constOffset = 0.1
-		alphaThresh = 1
-		betaThresh = 0
+		constOffset = 1000 / arrival_rate / 1000;
+		alphaThresh = 0.9
+		betaThresh = 0.1
 
 		while True:
 			if state == 0:
-				time_till_next_packet_arrival = constOffset
+				time_till_next_packet_arrival = np.random.exponential(constOffset)
 				beta = np.random.uniform(0, 1)
 				
-				if beta < betaThresh:
+				if beta <= betaThresh:
 					state = 0
 				else:
 					state = 1
 			else:
-				time_till_next_packet_arrival = self.arrival_dist(arrival_rate * (1 + betaThresh/alphaThresh) - constOffset)
+				time_till_next_packet_arrival = np.random.exponential((1000 / arrival_rate) * (1 + betaThresh/alphaThresh))
 				alpha = np.random.uniform(0, 1)
-				
-				if alpha < alphaThresh:
+					
+				if alpha <= alphaThresh:
 					state = 1
 				else:
 					state = 0
-					
+			
 			# create a new packet
-			time_till_next_packet_arrival = 1000 / time_till_next_packet_arrival
-			print time_till_next_packet_arrival
+			#time_till_next_packet_arrival = 1000 / time_till_next_packet_arrival
+			
+			#print time_till_next_packet_arrival
 			#time_till_next_packet_arrival = self.arrival_dist(**self.arrival_kwargs)
 			yield env.timeout(time_till_next_packet_arrival)
 			
 			pkt = Packet(env.now)
 			#self.packets.put(pkt)
 			#logging.info('New packet received by main sever')
-			
+		
 			i = random.randint(0, Host.num_of_hosts - 1)
 			#p = self.packets.get()
 			Host.hosts[i].packets.put(pkt)
-			
+
 			if Host.hosts[i].state == State.SLEEP:
 				Host.hosts[i].wake_up_server(env)
 				

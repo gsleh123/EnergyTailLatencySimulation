@@ -29,7 +29,7 @@ def show_graphs(config):
 def show_packet_lifetimes(config):
 	hosts = Host.get_hosts()
 
-	#fig, ax = plt.subplots(2, figsize=(15, 10), sharex=True)
+	fig, ax = plt.subplots(2, figsize=(15, 10), sharex=True)
 
 	lifetimes = list()
 
@@ -47,27 +47,27 @@ def show_packet_lifetimes(config):
 	#dump_data['avg_freq'] = avg_freq
 
 	# Does this fail if there is no lifetimes folder?
-	#pickle.dump(dump_data, open('data/lifetimes/lifetime.pickle', 'wb'))
+	pickle.dump(dump_data, open('data/lifetimes/lifetime.pickle', 'wb'))
 
-	#sns.distplot(ax=ax[0], a=lifetimes)
-	#problem_string = ""
-	#problem_type = config['Abstract']['problem_type']
+	sns.distplot(ax=ax[0], a=lifetimes)
+	problem_string = ""
+	problem_type = config['Abstract']['problem_type']
 
-	#if problem_type == 1:
-	#	problem_string = 'Scatter'
-	#elif problem_type == 2:
-	#	problem_string = 'Broadcast'
-	#elif problem_type == 3:
-	#	problem_string = 'Gather'
+	if problem_type == 1:
+		problem_string = 'Scatter'
+	elif problem_type == 2:
+		problem_string = 'Broadcast'
+	elif problem_type == 3:
+		problem_string = 'Gather'
 
-	#ax[0].set_title('Packet Lifetime distribution')
-	#ax[0].set_ylabel('Freq')
+	ax[0].set_title('Packet Lifetime distribution')
+	ax[0].set_ylabel('Freq')
 
-	#sns.boxplot(ax=ax[1], data=lifetimes, orient='h')
-	#ax[1].set_title('Packet Lifetime Boxplot')
-	#ax[1].set_xlabel('Lifetime (sim time)')
+	sns.boxplot(ax=ax[1], data=lifetimes, orient='h')
+	ax[1].set_title('Packet Lifetime Boxplot')
+	ax[1].set_xlabel('Lifetime (sim time)')
 
-	#plt.tight_layout()
+	plt.tight_layout()
 	
 	#avg_lifetimes = np.mean(lifetimes)
 	#max_lifetimes = max(lifetimes)
@@ -121,10 +121,10 @@ def show_packet_lifetimes(config):
 	#	config['Abstract']['comm_dist_str'], config['Abstract']['comm_kwargs']))
 	
 	# This fails if there is no fig directory.
-	#plt.savefig('fig/abstract_packet_lifetimes.png')
+	plt.savefig('fig/abstract_packet_lifetimes.png')
 
 	#plt.show()
-	#plt.close()
+	plt.close()
 	
 def show_wake_up_servers(config):
 	hosts = Host.get_hosts()
