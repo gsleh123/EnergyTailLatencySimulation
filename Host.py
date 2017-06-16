@@ -4,167 +4,74 @@ import numpy as np
 from collections import namedtuple
 import itertools
 import MILCHost
+import AbstractHost
+import EnergyConsHost as ech
+import sys
+from Queue import Queue
 
 hosts = []
 
 lognormal_param = namedtuple('lognormal_param', 'mean sigma')
 
-
 def init_hosts(config):
-    global hosts
-    global num_of_hosts
+	global hosts
+	global num_of_hosts
+	global main_host
+	global csv_temp_list
+	
+	hosts = []
+	num_of_hosts = config['host_count']
+	report_type = config['mpip_report_type']
+	csv_temp_list = list()
 
-    hosts = []
-    num_of_hosts = config['host_count']
+	# set up the distribution host
+	arrival_distribution = config['Abstract']['arrival_distribution']
+	arrival_kwargs = config['Abstract']['arrival_kwargs']
+	arrival_rate = config['arrival_rate']
+	main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs, arrival_rate)
 
-    host_to_dimension, dimension_to_host = __generate_rank_to_dimension_lookup(
-         config['host_count'], config['MILC']['dimensions'])
+	# retrieve all the settings
+	wake_up_dist = config['Abstract']['wake_up_distribution']
+	wake_up_kwargs = config['Abstract']['wake_up_kwargs']
+	req_arr_rate = config['arrival_rate']
+	req_size = config['req_size']
+	d_0 = config['Abstract']['d_0']
+	P_s = config['Abstract']['P_s']
+	alpha = config['Abstract']['alpha']
+	num_of_servers = config['Abstract']['num_of_servers']
+	e = config['Abstract']['e']
+	s_b = config['Abstract']['s_b']
+	s_c = config['Abstract']['s_c']
+	pow_con_model = config['Abstract']['pow_con_model']
+	k_m = config['Abstract']['k_m']
+	b = config['Abstract']['b']
+	problem_type = config['Abstract']['problem_type']
+	freq_setting = config['Abstract']['freq_setting']
 
-    for i in range(num_of_hosts):
-        if config['mpip_report_type'] == 'MILC':
-            isend_distributions, allreduce_distributions, service_lognormal_param, raw_data = __load_mpip_report(config)
-            hosts.append(MILCHost.MILCHost(i, config,
-                                           isend_distributions, allreduce_distributions, service_lognormal_param,
-                                           host_to_dimension[i], dimension_to_host))
+	# determine optimal number of servers and optimal frequency
+	dimension_depth = 2
+	[num_of_hosts, freq] = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting)
+	comp_time = (1000 * req_size) / (freq)
+	
+	# error
+	if (num_of_hosts == -1):
+		return 0
+		
+	for i in range(num_of_hosts):
+		# instantiate a new host
+		host = ech.ProcessHost(i, config, comp_time, arrival_distribution, arrival_kwargs, wake_up_dist, wake_up_kwargs, P_s)
+		hosts.append(host)
 
-    for i in np.random.permutation(num_of_hosts):
-        get_env().process(hosts[i].process())
+	env = get_env()
+	env.process(main_host.process_arrivals())
+	
+	for i in np.random.permutation(num_of_hosts):
+		env.process(hosts[i].process_service())
 
-    target_timestep = config['timesteps']
-    return get_env().process(MILCHost.MILC_Runner(target_timestep))
-
+	target_timestep = config['timesteps']
+		
+	return get_env().process(ech.Energy_Runner(target_timestep))
 
 def get_hosts():
-    global hosts
-    return hosts
-
-
-def __generate_rank_to_dimension_lookup(host_count, problem_dimensions):
-    """
-    create a lookup (and reverse lookup) table between rank and dimension
-    """
-    # Note, since itertools.product starts with the last iterable,
-    # We reverse the order of the variables to match MILC
-    # todo: check that problem dimensions* and host count match in size
-    host_to_dimension = [None] * host_count
-    dimension_to_host = dict()
-    host_id = 0
-    for t, z, y, x in itertools.product(range(problem_dimensions[3]), range(problem_dimensions[2]),
-                                        range(problem_dimensions[1]), range(problem_dimensions[0])):
-        host_to_dimension[host_id] = [x, y, z, t]
-        dimension_to_host[x, y, z, t] = host_id
-        host_id += 1
-
-    return host_to_dimension, dimension_to_host
-
-
-def __load_mpip_report(config):
-
-    # todo: read milc filepath from config file
-    # for now just hardcode the sample
-
-    filename = 'data/node4_sample/su3_rmd.128.9161.1.mpiP'
-    # filename = 'data/node4_sample/su3_rmd.128.16720.1.mpiP'
-
-    with open(filename) as mpip_file:
-        lines = [line.rstrip('\n') for line in mpip_file]
-
-    avg_mean = 0.
-    avg_sigma = 0.
-    entry_count = 0
-
-    # to return
-    allreduce_distributions = dict()
-    isend_distributions = dict()
-    raw_data = dict()
-
-    line_number = 0
-    line = lines[line_number]
-    while not line.startswith('@--- Callsite Time statistics'):
-        line_number += 1
-        line = lines[line_number]
-
-    # now we are at the callsite stats. finish skipping the header
-    line_number += 3
-    line = lines[line_number]  # this is the first callsite line
-    while not line.startswith('-'):
-
-        split = line.split()  # whitespace is default
-
-        if len(line) < 2 or len(split) < 8:
-            line_number += 1
-            line = lines[line_number]
-            continue
-
-        mpi_call_type = split[0]
-        site = int(split[1])
-        if split[2].startswith('*'):  # the "all" line
-            line_number += 1
-            line = lines[line_number]
-            continue
-        rank = int(split[2])
-        count = int(split[3])
-        max = float(split[4])
-        mean = float(split[5])
-        min = float(split[6])
-        app_percent = float(split[7])
-        mpi_percent = float(split[8])
-
-        # we want the mean of the underlying normal, not of the lognormal
-        # mean = np.exp(mean)
-
-        # milliseconds -> microseconds
-        # this also makes taking the log for values < 1 work
-        max *= 1000
-        mean *= 1000
-        min *= 1000
-
-        # we are focusing on call site 2 for MPI_Isend and call site 11 for MPI_Allreduce
-        if site not in [2, 11]:
-            line_number += 1
-            line = lines[line_number]
-            continue
-
-        line_number += 1
-        line = lines[line_number]
-
-        # try to estimate the lognormal distribution's sigma, given the max, min as 95%.
-        # we use a naive approach: apply log to the min, mean max,
-        # presume normal distribution,
-        # take the exponential of the calculated sigma
-        # log_min = np.log(min)
-        # log_mean = np.log(mean)
-        # log_max = np.log(max)
-
-        # sigma = np.mean([(log_min - log_mean) / -2.5, (log_max - log_mean) / 3.5])
-        # sigma = (log_min - log_mean) / -3
-        sigma = (min - mean) / -3
-        # sigma = np.exp(sigma)
-
-        # logging.info('%i %f %f %f %f', rank, min, mean, max, sigma)
-
-        # scaling by 1/100
-        min *= config['timescalar']
-        mean *= config['timescalar']
-        max *= config['timescalar']
-        sigma *= config['timescalar']
-
-        avg_mean += mean
-        avg_sigma += sigma
-        entry_count += 1
-
-        if rank not in raw_data:
-            raw_data[rank] = dict()
-
-        if site == 2:  # MPI_ISend
-            isend_distributions[rank] = lognormal_param(mean, sigma)
-            raw_data[rank]['isend'] = [min, mean, max]
-        elif site == 11:  # MPI_Allreduce
-            allreduce_distributions[rank] = lognormal_param(mean, sigma)
-            raw_data[rank]['allreduce'] = [min, mean, max]
-
-    # we need to calculate the average mean and sigma to use for computation time
-    # todo: use the ini file variable
-    service_lognormal_param = lognormal_param(avg_mean/entry_count, avg_sigma/entry_count)
-
-    return isend_distributions, allreduce_distributions, service_lognormal_param, raw_data
+	global hosts
+	return hosts
