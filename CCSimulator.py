@@ -4,13 +4,8 @@ import numpy as np
 import time
 import scipy.stats
 import ast
-
 import Host
 from simenv import get_env
-import Vis_Energy
-import Vis_MILC
-import Vis_Abstract
-from sys import getsizeof
 
 def run(parser):	
 	config = create_config_dict(parser)
@@ -56,12 +51,7 @@ def run(parser):
 	#logging.info('Wake up time: %f' %(total_wake_up_time / total_time))
 	#logging.info('Sleep time: %f' %(total_sleep_time / total_time))
 	
-	if report_type == 'MILC':
-		Vis_MILC.show_graphs(config)
-	elif report_type == 'Abstract':
-		Vis_Abstract.show_graphs(config)
-	elif report_type == 'Energy':
-		Vis_Energy.show_graphs(config)
+	Vis_Energy.show_graphs(config)
 	
 def create_config_dict(parser):
 	# we use a dict to pass the options around
@@ -119,127 +109,77 @@ def create_config_dict(parser):
 		mpip_report_type = parser.get('CC_Config', 'mpip_report_type')
 	options['mpip_report_type'] = mpip_report_type
 
-	if options['mpip_report_type'] == 'MILC':
-		options['MILC'] = dict()
-		# todo: check entry exists
-		dimensions = parser.get('MILC', 'problem_dimensions')
-		options['MILC']['dimensions'] = [int(i) for i in dimensions.split()]
+	options['Abstract'] = dict()
+	options['Abstract']['problem_type'] = int(parser.get('Abstract', 'problem_type'))
+	options['Abstract']['freq_setting'] = int(parser.get('Abstract', 'freq_setting'))
+	options['Abstract']['dimension_depth'] = int(parser.get('Abstract', 'dimension_depth'))
+	options['Abstract']['dimension_children'] = int(parser.get('Abstract', 'dimension_children'))
+	options['Abstract']['control_scheme'] = parser.get('Abstract', 'control_scheme')
 
-	if options['mpip_report_type'] == 'Abstract':
-		options['Abstract'] = dict()
-		options['Abstract']['problem_type'] = int(parser.get('Abstract', 'problem_type'))
-		options['Abstract']['dimension_depth'] = int(parser.get('Abstract', 'dimension_depth'))
-		options['Abstract']['dimension_children'] = int(parser.get('Abstract', 'dimension_children'))
-		options['Abstract']['control_scheme'] = parser.get('Abstract', 'control_scheme')
-		options['Abstract']['arrival_rate'] = parser.get('Abstract', 'arrival_rate')
-		
-		arrival_dist_str = parser.get('Abstract', 'arrival_distribution')
-		arrival_kwargs = ast.literal_eval(parser.get('Abstract', 'arrival_kwargs'))
-		comm_dist_str = parser.get('Abstract', 'comm_distribution')
-		comm_kwargs = ast.literal_eval(parser.get('Abstract', 'comm_kwargs'))
-		
-		if arrival_dist_str == 'exponential':
-			options['Abstract']['arrival_distribution'] = np.random.exponential
-		elif arrival_dist_str == 'pareto':
-			options['Abstract']['arrival_distribution'] = scipy.stats.pareto.rvs
-		elif arrival_dist_str == 'lognormal':
-			options['Abstract']['arrival_distribution'] = np.random.lognormal
-		elif arrival_dist_str == 'fixed':
-			options['Abstract']['arrival_distribution'] = np.random.choice
-		elif arrival_dist_str == 'poisson':
-			options['Abstract']['arrival_distribution'] = np.random.poisson
-			
-		if comm_dist_str == 'exponential':
-			options['Abstract']['comm_distribution'] = np.random.exponential
-		elif comm_dist_str == 'pareto':
-			options['Abstract']['comm_distribution'] = scipy.stats.pareto.rvs
-		elif comm_dist_str == 'lognormal':
-			options['Abstract']['comm_distribution'] = np.random.lognormal
-		elif comm_dist_str == 'fixed':
-			options['Abstract']['comm_distribution'] = np.random.choice
+	options['Abstract']['d_0'] = float(parser.get('CC_Config', 'd_0'));
+	options['Abstract']['P_s'] = int(parser.get('CC_Config', 'P_s'));
+	options['Abstract']['alpha'] = int(parser.get('CC_Config', 'alpha'));
+	options['Abstract']['num_of_servers'] = int(parser.get('CC_Config', 'num_of_servers'));
+	options['Abstract']['e'] = float(parser.get('CC_Config', 'e'));
+	options['Abstract']['s_b'] = float(parser.get('CC_Config', 's_b')) * 10**9;
+	options['Abstract']['s_c'] = float(parser.get('CC_Config', 's_c')) * 10**9;
+	options['Abstract']['pow_con_model'] = int(parser.get('CC_Config', 'pow_con_model'));
+	options['Abstract']['k_m'] = float(parser.get('CC_Config', 'k_m')) * 10**9;
+	options['Abstract']['b'] = int(parser.get('CC_Config', 'b'));
 
-		options['Abstract']['arrival_dist_str'] = arrival_dist_str
-		options['Abstract']['comm_dist_str'] = comm_dist_str
-		options['Abstract']['arrival_kwargs'] = arrival_kwargs
-		options['Abstract']['comm_kwargs'] = comm_kwargs
+	wake_up_dist_str = parser.get('Abstract', 'wake_up_distribution')
+	wake_up_kwargs = ast.literal_eval(parser.get('Abstract', 'wake_up_kwargs'))
+	arrival_dist_str = parser.get('Abstract', 'arrival_distribution')
+	arrival_kwargs = ast.literal_eval(parser.get('Abstract', 'arrival_kwargs'))
+	comm_dist_str = parser.get('Abstract', 'comm_distribution')
+	comm_kwargs = ast.literal_eval(parser.get('Abstract', 'comm_kwargs'))
 
-		# since it's not easy to get the mean of a random distribution,
-		# we just sample and take the sample mean
-		samples = options['Abstract']['comm_distribution'](size=1000, **(options['Abstract']['comm_kwargs']))
-		comm_mean = np.mean(samples)
-		options['Abstract']['comp_time'] = comm_mean * options['computation_comm_ratio'] * (1.0 / freq_start)
-	elif options['mpip_report_type'] == 'Energy':
-		options['Abstract'] = dict()
-		options['Abstract']['problem_type'] = int(parser.get('Abstract', 'problem_type'))
-		options['Abstract']['freq_setting'] = int(parser.get('Abstract', 'freq_setting'))
-		options['Abstract']['dimension_depth'] = int(parser.get('Abstract', 'dimension_depth'))
-		options['Abstract']['dimension_children'] = int(parser.get('Abstract', 'dimension_children'))
-		options['Abstract']['control_scheme'] = parser.get('Abstract', 'control_scheme')
-		
-		options['Abstract']['d_0'] = float(parser.get('CC_Config', 'd_0'));
-		options['Abstract']['P_s'] = int(parser.get('CC_Config', 'P_s'));
-		options['Abstract']['alpha'] = int(parser.get('CC_Config', 'alpha'));
-		options['Abstract']['num_of_servers'] = int(parser.get('CC_Config', 'num_of_servers'));
-		options['Abstract']['e'] = float(parser.get('CC_Config', 'e'));
-		options['Abstract']['s_b'] = float(parser.get('CC_Config', 's_b')) * 10**9;
-		options['Abstract']['s_c'] = float(parser.get('CC_Config', 's_c')) * 10**9;
-		options['Abstract']['pow_con_model'] = int(parser.get('CC_Config', 'pow_con_model'));
-		options['Abstract']['k_m'] = float(parser.get('CC_Config', 'k_m')) * 10**9;
-		options['Abstract']['b'] = int(parser.get('CC_Config', 'b'));
-		
-		wake_up_dist_str = parser.get('Abstract', 'wake_up_distribution')
-		wake_up_kwargs = ast.literal_eval(parser.get('Abstract', 'wake_up_kwargs'))
-		arrival_dist_str = parser.get('Abstract', 'arrival_distribution')
-		arrival_kwargs = ast.literal_eval(parser.get('Abstract', 'arrival_kwargs'))
-		comm_dist_str = parser.get('Abstract', 'comm_distribution')
-		comm_kwargs = ast.literal_eval(parser.get('Abstract', 'comm_kwargs'))
-		
-		if arrival_dist_str == 'exponential':
-			options['Abstract']['arrival_distribution'] = np.random.exponential
-			options['arrival_rate'] = ((1 * 10**3) / arrival_kwargs['scale'])
-		elif arrival_dist_str == 'pareto':
-			options['Abstract']['arrival_distribution'] = scipy.stats.pareto.rvs
-		elif arrival_dist_str == 'lognormal':
-			options['Abstract']['arrival_distribution'] = np.random.lognormal
-		elif arrival_dist_str == 'fixed':
-			options['Abstract']['arrival_distribution'] = np.random.choice
-			options['arrival_rate'] = ((1 * 10**3) / arrival_kwargs['a'])
-		elif arrival_dist_str == 'poisson':
-			options['Abstract']['arrival_distribution'] = np.random.poisson
-			options['arrival_rate'] = ((1 * 10**3) / arrival_kwargs['lam'])
-			
-		if comm_dist_str == 'exponential':
-			options['Abstract']['comm_distribution'] = np.random.exponential
-		elif comm_dist_str == 'pareto':
-			options['Abstract']['comm_distribution'] = scipy.stats.pareto.rvs
-		elif comm_dist_str == 'lognormal':
-			options['Abstract']['comm_distribution'] = np.random.lognormal
-		elif comm_dist_str == 'fixed':
-			options['Abstract']['comm_distribution'] = np.random.choice
+	if arrival_dist_str == 'exponential':
+		options['Abstract']['arrival_distribution'] = np.random.exponential
+		options['arrival_rate'] = ((1 * 10**3) / arrival_kwargs['scale'])
+	elif arrival_dist_str == 'pareto':
+		options['Abstract']['arrival_distribution'] = scipy.stats.pareto.rvs
+	elif arrival_dist_str == 'lognormal':
+		options['Abstract']['arrival_distribution'] = np.random.lognormal
+	elif arrival_dist_str == 'fixed':
+		options['Abstract']['arrival_distribution'] = np.random.choice
+		options['arrival_rate'] = ((1 * 10**3) / arrival_kwargs['a'])
+	elif arrival_dist_str == 'poisson':
+		options['Abstract']['arrival_distribution'] = np.random.poisson
+		options['arrival_rate'] = ((1 * 10**3) / arrival_kwargs['lam'])
 
-		if wake_up_dist_str == 'exponential':
-			options['Abstract']['wake_up_distribution'] = np.random.exponential
-		elif wake_up_dist_str == 'pareto':
-			options['Abstract']['wake_up_distribution'] = scipy.stats.pareto.rvs
-		elif wake_up_dist_str == 'lognormal':
-			options['Abstract']['wake_up_distribution'] = np.random.lognormal
-		elif wake_up_dist_str == 'fixed':
-			options['Abstract']['wake_up_distribution'] = np.random.choice
-		elif wake_up_dist_str == 'poisson':
-			options['Abstract']['wake_up_distribution'] = np.random.poisson
-			
-		options['Abstract']['arrival_dist_str'] = arrival_dist_str
-		options['Abstract']['comm_dist_str'] = comm_dist_str
-		options['Abstract']['arrival_kwargs'] = arrival_kwargs
-		options['Abstract']['comm_kwargs'] = comm_kwargs
-		options['Abstract']['wake_up_dist_str'] = wake_up_dist_str
-		options['Abstract']['wake_up_kwargs'] = wake_up_kwargs
-		
-		# since it's not easy to get the mean of a random distribution,
-		# we just sample and take the sample mean
-		samples = options['Abstract']['comm_distribution'](size=1000, **(options['Abstract']['comm_kwargs']))
-		comm_mean = np.mean(samples)
-		options['Abstract']['comp_time'] = comm_mean * options['computation_comm_ratio'] * (1.0 / freq_start)
+	if comm_dist_str == 'exponential':
+		options['Abstract']['comm_distribution'] = np.random.exponential
+	elif comm_dist_str == 'pareto':
+		options['Abstract']['comm_distribution'] = scipy.stats.pareto.rvs
+	elif comm_dist_str == 'lognormal':
+		options['Abstract']['comm_distribution'] = np.random.lognormal
+	elif comm_dist_str == 'fixed':
+		options['Abstract']['comm_distribution'] = np.random.choice
+
+	if wake_up_dist_str == 'exponential':
+		options['Abstract']['wake_up_distribution'] = np.random.exponential
+	elif wake_up_dist_str == 'pareto':
+		options['Abstract']['wake_up_distribution'] = scipy.stats.pareto.rvs
+	elif wake_up_dist_str == 'lognormal':
+		options['Abstract']['wake_up_distribution'] = np.random.lognormal
+	elif wake_up_dist_str == 'fixed':
+		options['Abstract']['wake_up_distribution'] = np.random.choice
+	elif wake_up_dist_str == 'poisson':
+		options['Abstract']['wake_up_distribution'] = np.random.poisson
+
+	options['Abstract']['arrival_dist_str'] = arrival_dist_str
+	options['Abstract']['comm_dist_str'] = comm_dist_str
+	options['Abstract']['arrival_kwargs'] = arrival_kwargs
+	options['Abstract']['comm_kwargs'] = comm_kwargs
+	options['Abstract']['wake_up_dist_str'] = wake_up_dist_str
+	options['Abstract']['wake_up_kwargs'] = wake_up_kwargs
+
+	# since it's not easy to get the mean of a random distribution,
+	# we just sample and take the sample mean
+	samples = options['Abstract']['comm_distribution'](size=1000, **(options['Abstract']['comm_kwargs']))
+	comm_mean = np.mean(samples)
+	options['Abstract']['comp_time'] = comm_mean * options['computation_comm_ratio'] * (1.0 / freq_start)
 		
 	return options
 
