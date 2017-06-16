@@ -49,7 +49,7 @@ arr_rate[39]=0.012658
 
 . ~/.bashrc
 source activate py2_ghosal
-python CCRunner.py Abstract.ini
+python CCRunner.py Energy.ini
 echo Done
 
 for run in {1..39}
@@ -59,7 +59,7 @@ textToSearch="$arrival_kwargs"' = {'"$arg1"': '"$arg2}"
 arg2=${arr_rate[$run]}
 textToReplace="$arrival_kwargs"' = {'"$arg1"': '"$arg2}"
 python editFile.py "$textToSearch" "$textToReplace"
-python CCRunner.py Abstract.ini
+python CCRunner.py Energy.ini
 echo Done
 done
 

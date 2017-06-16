@@ -3,8 +3,6 @@ from simenv import get_env
 import numpy as np
 from collections import namedtuple
 import itertools
-import MILCHost
-import AbstractHost
 import EnergyConsHost as ech
 import sys
 from Queue import Queue

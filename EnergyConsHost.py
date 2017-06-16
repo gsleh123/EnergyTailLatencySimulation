@@ -157,8 +157,8 @@ class DistributionHost:
 		arrival_rate = self.arrival_rate
 		state = 1
 		constOffset = 1000 / arrival_rate / 1000;
-		alphaThresh = 0.9
-		betaThresh = 0.1
+		alphaThresh = 1
+		betaThresh = 0
 
 		while True:
 			if state == 0:

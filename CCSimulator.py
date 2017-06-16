@@ -6,6 +6,7 @@ import scipy.stats
 import ast
 import Host
 from simenv import get_env
+import Vis_Energy
 
 def run(parser):	
 	config = create_config_dict(parser)
