@@ -23,29 +23,31 @@ def init_hosts(config):
 	csv_temp_list = list()
 
 	# set up the distribution host
-	arrival_distribution = config['Abstract']['arrival_distribution']
-	arrival_kwargs = config['Abstract']['arrival_kwargs']
+	arrival_distribution = config['Energy']['arrival_distribution']
+	arrival_kwargs = config['Energy']['arrival_kwargs']
 	arrival_rate = config['arrival_rate']
-	main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs, arrival_rate)
+	alphaThresh = config['Energy']['alphaThresh']
+	betaThresh = config['Energy']['betaThresh']
+	main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh)
 
 	# retrieve all the settings
-	wake_up_dist = config['Abstract']['wake_up_distribution']
-	wake_up_kwargs = config['Abstract']['wake_up_kwargs']
+	wake_up_dist = config['Energy']['wake_up_distribution']
+	wake_up_kwargs = config['Energy']['wake_up_kwargs']
 	req_arr_rate = config['arrival_rate']
 	req_size = config['req_size']
-	d_0 = config['Abstract']['d_0']
-	P_s = config['Abstract']['P_s']
-	alpha = config['Abstract']['alpha']
-	num_of_servers = config['Abstract']['num_of_servers']
-	e = config['Abstract']['e']
-	s_b = config['Abstract']['s_b']
-	s_c = config['Abstract']['s_c']
-	pow_con_model = config['Abstract']['pow_con_model']
-	k_m = config['Abstract']['k_m']
-	b = config['Abstract']['b']
-	problem_type = config['Abstract']['problem_type']
-	freq_setting = config['Abstract']['freq_setting']
-
+	d_0 = config['Energy']['d_0']
+	P_s = config['Energy']['P_s']
+	alpha = config['Energy']['alpha']
+	num_of_servers = config['Energy']['num_of_servers']
+	e = config['Energy']['e']
+	s_b = config['Energy']['s_b']
+	s_c = config['Energy']['s_c']
+	pow_con_model = config['Energy']['pow_con_model']
+	k_m = config['Energy']['k_m']
+	b = config['Energy']['b']
+	problem_type = config['Energy']['problem_type']
+	freq_setting = config['Energy']['freq_setting']
+	
 	# determine optimal number of servers and optimal frequency
 	dimension_depth = 2
 	[num_of_hosts, freq] = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting)
