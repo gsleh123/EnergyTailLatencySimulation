@@ -124,9 +124,9 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 		# we want the max freq which is S_c
 		opt_freq = s_c 
 
-	Host.csv_temp_list.append(req_arr_rate)
-	Host.csv_temp_list.append(opt_servers)
-	Host.csv_temp_list.append(opt_freq / 10**9)
+	#Host.csv_temp_list.append(req_arr_rate)
+	#Host.csv_temp_list.append(opt_servers)
+	#Host.csv_temp_list.append(opt_freq / 10**9)
 	
 	#logging.info("Arrival rate: %i" %(req_arr_rate))
 	#logging.info("Minimum Servers: %i" %(min_servers))
@@ -191,7 +191,75 @@ class DistributionHost:
 			# wake up server if we found it to be sleeping
 			if Host.hosts[i].state == State.SLEEP:
 				Host.hosts[i].wake_up_server(env)
+				
+	
+	 def refresh_system(self):
+                env = get_env()
 
+                while True:
+                        #wait for the system to generate packets
+                        yield env.timeout(1000)
+
+                        #find exponentially weighted moving average
+                        curr_mean = np.mean(self.arr_times)
+                        self.arr_times[:] = []
+                        ewma = self.a * curr_mean + (1 - self.a) * self.est_mean
+                        self.est_mean = ewma
+                        self.arrival_rate = req_arr_rate = 1000 / ewma
+
+                        ew_burst = 1
+
+                        req_size = self.config['req_size']
+                        d_0 = self.config['Abstract']['d_0']
+                        P_s = self.config['Abstract']['P_s']
+                        alpha = self.config['Abstract']['alpha']
+                        num_of_servers = self.config['Abstract']['num_of_servers']
+                        e = self.config['Abstract']['e']
+                        s_b = self.config['Abstract']['s_b']
+                        s_c = self.config['Abstract']['s_c']
+                        pow_con_model = self.config['Abstract']['pow_con_model']
+                        k_m = self.config['Abstract']['k_m']
+                        b = self.config['Abstract']['b']
+                        problem_type = self.config['Abstract']['problem_type']
+                        freq_setting = self.config['Abstract']['freq_setting']
+
+                        #servers needed for the run
+                        servers_needed, freq = servers_needed, freq = find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting)
+                        comp_time = (1000 * req_size) / (freq)
+
+                        # number of additional servers needed
+                        servers_needed = servers_needed + 1
+
+                        total_computing_time = 0
+                        total_wake_up_time = 0
+                        total_sleep_time = 0
+                        for i in range(Host.num_of_hosts):
+                                total_computing_time += sum(Host.hosts[i].computing_times)
+                                total_wake_up_time += sum(Host.hosts[i].wake_up_times)
+                                total_sleep_time += sum(Host.hosts[i].sleep_times)
+                                Host.hosts[i].turn_off()
+
+                        total_time = total_computing_time + total_wake_up_time + total_sleep_time
+
+			if total_time != 0:
+                                comp_ratio = total_computing_time / total_time
+                                wake_up_ratio = total_wake_up_time / total_time
+                                sleep_ratio = total_sleep_time / total_time
+
+                                comp_power = ((self.freq - s_b) / k_m)**2 + b
+                                power_usage = (comp_power * comp_ratio + wake_up_ratio * P_s + sleep_ratio * P_s) * Host.num_of_hosts
+                                self.freq = freq
+                        else:
+                                power_usage = 0
+
+                        self.powers.append(power_usage)
+
+                        for i in range(servers_needed):
+                                Host.hosts[i].turn_on()
+                                Host.hosts[i].comp_time = comp_time
+
+                        Host.num_of_hosts = servers_needed
+			
 class ProcessHost:
 	def __init__(self, hostid, config, comp_time, arrival_dist, arrival_kwargs, wake_up_dist, wake_up_kwargs, power_setup):
 				 
@@ -215,6 +283,8 @@ class ProcessHost:
 				self.packet_latency = list()
 				self.queue_size = dict()
 				self.freq_history = list()
+				
+				self.activate = 0
 	
 	def __cmp__(self, other):
 		# I don't think we use this anymore
@@ -282,3 +352,12 @@ class ProcessHost:
 		self.start_timer = env.now
 		self.computing_times.append(diff)
 		self.state = State.SLEEP
+		
+	def turn_on(self):
+                self.activate = 1
+                self.computing_times[:] = []
+                self.wake_up_times[:] = []
+                self.sleep_times[:] = []
+
+        def turn_off(self):
+                self.activate = 0
