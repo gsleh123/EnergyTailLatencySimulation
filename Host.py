@@ -18,7 +18,7 @@ def init_hosts(config):
 	global csv_temp_list
 	
 	hosts = []
-	num_of_hosts = config['host_count']
+	num_of_hosts = 0
 	report_type = config['mpip_report_type']
 	csv_temp_list = list()
 
