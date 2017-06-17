@@ -1,0 +1,13 @@
+This folder contains the MATLAB scripts to create the graphs from the csv files.
+
+plotBurst.m 
+  plot the tail latency and power usage of low, med, and high arrival rates 
+  
+plotBurstServers.m 
+  Plots the number of extra servers needed for our chosen policy. 
+  
+plotCompareBurstMethods.m
+  Plots the power usage and tail latency of the different methods used to satify the tail latency constraint. 
+  
+plotEnergy.m
+  Plots the power usage and tail latency of the simulation model following the theoretical analysis. 
