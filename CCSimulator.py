@@ -76,17 +76,19 @@ def create_config_dict(parser):
 	options['Energy']['problem_type'] = int(parser.get('Energy', 'problem_type'))
 	options['Energy']['freq_setting'] = int(parser.get('Energy', 'freq_setting'))
 
-	options['Energy']['d_0'] = float(parser.get('CC_Config', 'd_0'));
-	options['Energy']['P_s'] = int(parser.get('CC_Config', 'P_s'));
-	options['Energy']['alpha'] = int(parser.get('CC_Config', 'alpha'));
-	options['Energy']['num_of_servers'] = int(parser.get('CC_Config', 'num_of_servers'));
-	options['Energy']['e'] = float(parser.get('CC_Config', 'e'));
-	options['Energy']['s_b'] = float(parser.get('CC_Config', 's_b')) * 10**9;
-	options['Energy']['s_c'] = float(parser.get('CC_Config', 's_c')) * 10**9;
-	options['Energy']['pow_con_model'] = int(parser.get('CC_Config', 'pow_con_model'));
-	options['Energy']['k_m'] = float(parser.get('CC_Config', 'k_m')) * 10**9;
-	options['Energy']['b'] = int(parser.get('CC_Config', 'b'));
-
+	options['Energy']['d_0'] = float(parser.get('Energy', 'd_0'));
+	options['Energy']['P_s'] = int(parser.get('Energy', 'P_s'));
+	options['Energy']['alpha'] = int(parser.get('Energy', 'alpha'));
+	options['Energy']['num_of_servers'] = int(parser.get('Energy', 'num_of_servers'));
+	options['Energy']['e'] = float(parser.get('Energy', 'e'));
+	options['Energy']['s_b'] = float(parser.get('Energy', 's_b')) * 10**9;
+	options['Energy']['s_c'] = float(parser.get('Energy', 's_c')) * 10**9;
+	options['Energy']['pow_con_model'] = int(parser.get('Energy', 'pow_con_model'));
+	options['Energy']['k_m'] = float(parser.get('Energy', 'k_m')) * 10**9;
+	options['Energy']['b'] = int(parser.get('Energy', 'b'));
+	options['Energy']['alphaThresh'] = float(parser.get('Energy', 'alphaThresh'));
+	options['Energy']['betaThresh'] = float(parser.get('Energy', 'betaThresh'));
+	
 	wake_up_dist_str = parser.get('Energy', 'wake_up_distribution')
 	wake_up_kwargs = ast.literal_eval(parser.get('Energy', 'wake_up_kwargs'))
 	arrival_dist_str = parser.get('Energy', 'arrival_distribution')
