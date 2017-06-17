@@ -16,13 +16,8 @@ def run(parser):
 
 	env = get_env()
 	proc = Host.init_hosts(config)
-	
-	if report_type == 'MILC':
-		Vis_MILC.setup(rate=1)
-	elif report_type == 'Abstract':
-		Vis_Abstract.setup()
-	elif report_type == 'Energy':
-		Vis_Energy.setup()
+
+	Vis_Energy.setup()
 		
 	time.sleep(1)
 
@@ -77,55 +72,54 @@ def create_config_dict(parser):
 		mpip_report_type = parser.get('CC_Config', 'mpip_report_type')
 	options['mpip_report_type'] = mpip_report_type
 
-	options['Abstract'] = dict()
-	options['Abstract']['problem_type'] = int(parser.get('Abstract', 'problem_type'))
-	options['Abstract']['freq_setting'] = int(parser.get('Abstract', 'freq_setting'))
+	options['Energy'] = dict()
+	options['Energy']['problem_type'] = int(parser.get('Energy', 'problem_type'))
+	options['Energy']['freq_setting'] = int(parser.get('Energy', 'freq_setting'))
 
-	options['Abstract']['d_0'] = float(parser.get('CC_Config', 'd_0'));
-	options['Abstract']['P_s'] = int(parser.get('CC_Config', 'P_s'));
-	options['Abstract']['alpha'] = int(parser.get('CC_Config', 'alpha'));
-	options['Abstract']['num_of_servers'] = int(parser.get('CC_Config', 'num_of_servers'));
-	options['Abstract']['e'] = float(parser.get('CC_Config', 'e'));
-	options['Abstract']['s_b'] = float(parser.get('CC_Config', 's_b')) * 10**9;
-	options['Abstract']['s_c'] = float(parser.get('CC_Config', 's_c')) * 10**9;
-	options['Abstract']['pow_con_model'] = int(parser.get('CC_Config', 'pow_con_model'));
-	options['Abstract']['k_m'] = float(parser.get('CC_Config', 'k_m')) * 10**9;
-	options['Abstract']['b'] = int(parser.get('CC_Config', 'b'));
+	options['Energy']['d_0'] = float(parser.get('CC_Config', 'd_0'));
+	options['Energy']['P_s'] = int(parser.get('CC_Config', 'P_s'));
+	options['Energy']['alpha'] = int(parser.get('CC_Config', 'alpha'));
+	options['Energy']['num_of_servers'] = int(parser.get('CC_Config', 'num_of_servers'));
+	options['Energy']['e'] = float(parser.get('CC_Config', 'e'));
+	options['Energy']['s_b'] = float(parser.get('CC_Config', 's_b')) * 10**9;
+	options['Energy']['s_c'] = float(parser.get('CC_Config', 's_c')) * 10**9;
+	options['Energy']['pow_con_model'] = int(parser.get('CC_Config', 'pow_con_model'));
+	options['Energy']['k_m'] = float(parser.get('CC_Config', 'k_m')) * 10**9;
+	options['Energy']['b'] = int(parser.get('CC_Config', 'b'));
 
-	wake_up_dist_str = parser.get('Abstract', 'wake_up_distribution')
-	wake_up_kwargs = ast.literal_eval(parser.get('Abstract', 'wake_up_kwargs'))
-	arrival_dist_str = parser.get('Abstract', 'arrival_distribution')
-	arrival_kwargs = ast.literal_eval(parser.get('Abstract', 'arrival_kwargs'))
+	wake_up_dist_str = parser.get('Energy', 'wake_up_distribution')
+	wake_up_kwargs = ast.literal_eval(parser.get('Energy', 'wake_up_kwargs'))
+	arrival_dist_str = parser.get('Energy', 'arrival_distribution')
+	arrival_kwargs = ast.literal_eval(parser.get('Energy', 'arrival_kwargs'))
 
 	if arrival_dist_str == 'exponential':
-		options['Abstract']['arrival_distribution'] = np.random.exponential
+		options['Energy']['arrival_distribution'] = np.random.exponential
 		options['arrival_rate'] = ((1 * 10**3) / arrival_kwargs['scale'])
 	elif arrival_dist_str == 'pareto':
-		options['Abstract']['arrival_distribution'] = scipy.stats.pareto.rvs
+		options['Energy']['arrival_distribution'] = scipy.stats.pareto.rvs
 	elif arrival_dist_str == 'lognormal':
-		options['Abstract']['arrival_distribution'] = np.random.lognormal
+		options['Energy']['arrival_distribution'] = np.random.lognormal
 	elif arrival_dist_str == 'fixed':
-		options['Abstract']['arrival_distribution'] = np.random.choice
+		options['Energy']['arrival_distribution'] = np.random.choice
 		options['arrival_rate'] = ((1 * 10**3) / arrival_kwargs['a'])
 	elif arrival_dist_str == 'poisson':
-		options['Abstract']['arrival_distribution'] = np.random.poisson
+		options['Energy']['arrival_distribution'] = np.random.poisson
 		options['arrival_rate'] = ((1 * 10**3) / arrival_kwargs['lam'])
 
 	if wake_up_dist_str == 'exponential':
-		options['Abstract']['wake_up_distribution'] = np.random.exponential
+		options['Energy']['wake_up_distribution'] = np.random.exponential
 	elif wake_up_dist_str == 'pareto':
-		options['Abstract']['wake_up_distribution'] = scipy.stats.pareto.rvs
+		options['Energy']['wake_up_distribution'] = scipy.stats.pareto.rvs
 	elif wake_up_dist_str == 'lognormal':
-		options['Abstract']['wake_up_distribution'] = np.random.lognormal
+		options['Energy']['wake_up_distribution'] = np.random.lognormal
 	elif wake_up_dist_str == 'fixed':
-		options['Abstract']['wake_up_distribution'] = np.random.choice
+		options['Energy']['wake_up_distribution'] = np.random.choice
 	elif wake_up_dist_str == 'poisson':
-		options['Abstract']['wake_up_distribution'] = np.random.poisson
+		options['Energy']['wake_up_distribution'] = np.random.poisson
 
-	options['Abstract']['arrival_dist_str'] = arrival_dist_str
-	options['Abstract']['arrival_kwargs'] = arrival_kwargs
-	options['Abstract']['wake_up_dist_str'] = wake_up_dist_str
-	options['Abstract']['wake_up_kwargs'] = wake_up_kwargs
+	options['Energy']['arrival_dist_str'] = arrival_dist_str
+	options['Energy']['arrival_kwargs'] = arrival_kwargs
+	options['Energy']['wake_up_dist_str'] = wake_up_dist_str
+	options['Energy']['wake_up_kwargs'] = wake_up_kwargs
 		
 	return options
-
