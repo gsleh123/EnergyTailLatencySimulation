@@ -3,6 +3,8 @@ EnergyTailLatency Simulator
 
 The EnergyTailLatency Simulator is a python-based simulation of to determine the tail latency and energy consumption of a given system. As of now, the system only consists of 1 Distribution Server and N Leaf Servers. The Distribution Server distributes the packets to the Leaf Servers. The EnergyTailLatency is built on top of the CoreClock Simulator making the code very bloated. There are settings that may not be necessary, but are still in the code. I will slowly clean the code up, so the EnergyTailLatency Simulator stands alone. 
 
+Important Note: The simulation runs in ms. All the numbers seen have been converted to be in ms.
+
 Running CoreClock Simulator
 ---------------------------
 
@@ -75,38 +77,49 @@ This outputs a csv file with raw data. The csv file format is listed below. The 
 Energy.ini Overview
 -----------------
 
-All configuration options should be under a section titled 'CC_Config'
+The following configurations are listed under CC_Config. 
 
-host_count
-  The number of hosts for the simulation, not used
-
-seed
-  Random seed, commenting this out will let the OS pick the seed
-
-freq_lower_bound
-  The minimum frequency possible by the simulated CPU, not used
-
-freq_upper_bound
-  The maximum frequency possible by the simulated CPU, not used 
-
-arrival_rate
-  The rate of the arrival stream. The inter-arrival rate is by default poisson. This rate sets the "scale" argument of the exponential distribution., not used
-
-service_rate
-  The rate of the service stream (per host). The default distribution is exponential., not used
-
-sleep_alpha
-  Modifies the time spent sleeping to "wake up" a core. Currently unused.
-
-computation_communication_ratio
-  The ratio of communication and computation time. A value of 1 means there is a 1:1 ratio of communication vs computation. Values greater than 1 mean more time is spent in communication. not used 
+timesteps
+  This determines how long the simulation should run. In this particular simulation, the units are in milliseconds, so 300,000 is 5     minutes.
 
 mpip_report_type
   Leave it at Energy.
+  
+req_size
+  This was agreed upon to be 1,000,000 bytes or 1MB. 
 
+d_0
+  Some number for the theoretical algorithm. It was set to 0.01. 
 
-Energy Overview
------------------
+P_s
+  This is the power consumption during sleep and booting stages. This is 50W. 
+
+alpha
+  Some factor for the theoretical algorithm. It's 1000 right now. 
+
+num_of_servers
+  Control the total amount of servers available to the simulation. 
+
+e
+  This is the tail latency contrainst. 0.1 means a 10ms tail latency constraint.
+
+s_b 
+  Base frequency - 1.2
+
+s_c
+  Max frequency - 3
+
+pow_con_model
+  This can either be 1 or 2 depending on the mode. 
+
+k_m
+  This is the power coefficient and depends on the power conservation model. 
+
+b
+  This is some offset for the power when calculating the power usage.
+
+The following configurations are listed under Energy. 
+
 The problem_type and freq_setting is only useful for running the theoretical simulation to verify the results. Almost all other cases where we are going to extend the theoretical model will involve using optimal number of servers and optimal frequency, so we should just leave the problem_type and freq_setting to 1. 
 
 problem_type
@@ -117,3 +130,15 @@ problem_type
 freq_setting
   1: Optimal Frequency
   2: Max Frequency
+
+wake_up_distribution
+  The distribution for waking up a server. 
+
+wake_up_kwargs
+  The time to wake up a server.
+  
+arrival_distribution
+  The distribution for the next packet. 
+  
+arrival_kwargs
+  The interarrival times of the packets. This is the inverse of the arrival rate.
