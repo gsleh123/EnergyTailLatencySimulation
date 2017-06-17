@@ -44,9 +44,7 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 
 	# determine min_servers to satisfy tail latency
 	w = lambertw(-(e / math.exp(1)), -1).real
-	#print (1 / d_0) * math.log(1 / e) 
-	#print w
-	#print ((1 / d_0) * (-w - 1))
+	
 	if (1 / d_0) * math.log(1 / e) < alpha and alpha < ((1 / d_0) * (-w - 1)):
 		w = lambertw(gamma * math.exp(e * gamma)).real	
 		min_servers = (req_arr_rate / ((s_c / req_size) - ((1 / d_0) * (w - (e * gamma)))))
@@ -56,7 +54,6 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 		min_servers = (req_arr_rate / ((s_c / req_size) - (1 / d_0) * (w - e * gamma)))
 		flag = 0
 	
-	#print min_servers
 	min_servers = int(math.ceil(min_servers))
 	
 	if min_servers > num_of_servers:
@@ -116,8 +113,7 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 		# calculate the power consumption of each server
 		curr_total_power = (((1 / i) * req_arr_rate * req_size / curr_freq) * (b + ((curr_freq - s_b) / k_m)**pow_con_model)) + ((1 - ((1 / i) * req_arr_rate * req_size / curr_freq)) * P_s)
 		curr_total_power = i * curr_total_power
-		#print curr_total_power;
-		#print min_total_power;		
+	
 		# update the optimal servers if we found a new min_total_power
 		if curr_total_power < min_total_power:
 			min_total_power = curr_total_power
@@ -162,6 +158,8 @@ class DistributionHost:
 
 		while True:
 			if state == 0:
+				# generate traffic really quickly 
+				
 				time_till_next_packet_arrival = np.random.exponential(constOffset)
 				beta = np.random.uniform(0, 1)
 				
@@ -170,6 +168,7 @@ class DistributionHost:
 				else:
 					state = 1
 			else:
+				# generate traffic a bit slower
 				time_till_next_packet_arrival = np.random.exponential((1000 / arrival_rate) * (1 + betaThresh/alphaThresh))
 				alpha = np.random.uniform(0, 1)
 					
@@ -177,49 +176,20 @@ class DistributionHost:
 					state = 1
 				else:
 					state = 0
-			
-			# create a new packet
-			#time_till_next_packet_arrival = 1000 / time_till_next_packet_arrival
-			
-			#print time_till_next_packet_arrival
-			#time_till_next_packet_arrival = self.arrival_dist(**self.arrival_kwargs)
+		
 			yield env.timeout(time_till_next_packet_arrival)
 			
+			# create packet 
 			pkt = Packet(env.now)
-			#self.packets.put(pkt)
-			#logging.info('New packet received by main sever')
 		
+			# send packet away
 			i = random.randint(0, Host.num_of_hosts - 1)
-			#p = self.packets.get()
 			Host.hosts[i].packets.put(pkt)
 
+			# wake up server if we found it to be sleeping
 			if Host.hosts[i].state == State.SLEEP:
 				Host.hosts[i].wake_up_server(env)
-				
-	def process_service(self):
-		env = get_env()
-		
-		while True:
-			# distribute packet to process host
-			if self.packets.qsize() == 0:
-					time_to_wait = self.arrival_dist(**self.arrival_kwargs) / 2;
-					yield env.timeout(time_to_wait)
-					continue
-			else:
-				# randomly pick a host to distribute the packet 
-				i = random.randint(0, Host.num_of_hosts - 1)
-				p = self.packets.get()
-				Host.hosts[i].packets.put(p)
-				
-				if Host.hosts[i].state == State.SLEEP:
-					Host.hosts[i].wake_up_server(env)
-				
-				#logging.info('Sending packet to host %i' %(Host.hosts[i].id))
-				#time_to_send = self.arrival_dist(**self.arrival_kwargs)
-				#time_to_send = 0.1
-				#yield env.timeout(time_to_send)
-				
-# this assuming negligble forwarding times
+
 class ProcessHost:
 	def __init__(self, hostid, config, comp_time, arrival_dist, arrival_kwargs, wake_up_dist, wake_up_kwargs, power_setup):
 				 
@@ -245,16 +215,18 @@ class ProcessHost:
 				self.freq_history = list()
 	
 	def __cmp__(self, other):
+		# I don't think we use this anymore
 		return cmp(self.packets.qsize(), other.packets.qsize())
 				
 	def process_service(self):
 		env = get_env()
 		
 		while True:
-			# only process if the server is awake
 			if (self.state == State.AWAKE): 
-				# no packets in the queue
+				# only process if the server is awake
 				if self.packets.qsize() == 0:
+					#empty queue
+					
 					# this lets the simulator check if there are really no more packets in the queue
 					#yield env.timeout(1)
 					
@@ -272,6 +244,8 @@ class ProcessHost:
 					# log the packet
 					self.finish_packet(env, pkt)
 			elif self.state == State.BOOTING:
+				# we are booting, so we need to figure out for how long
+				
 				time_to_wake_up = self.wake_up_dist(**self.wake_up_kwargs)
 			
 				self.end_timer = env.now
@@ -282,23 +256,8 @@ class ProcessHost:
 				yield env.timeout(time_to_wake_up)
 
 				self.finish_booting_server(env, time_to_wake_up)
-			#elif (self.state == State.SLEEP and self.packets.qsize() != 0):
-			#	time_to_wake_up = self.wake_up_dist(**self.wake_up_kwargs)
-				
-				# calculate sleep times
-			#	self.end_timer = env.now
-			#	diff = self.end_timer - self.start_timer
-			#	self.sleep_times.append(diff)
-				
-				# append wake up times to list
-			#	self.wake_up_times.append(time_to_wake_up)
-			#	self.state = State.BOOTING
-				#logging.info('Host %i is booting up' %(self.id))
-				
-			#	yield env.timeout(time_to_wake_up)
-				
-			#	self.finish_booting_server(env, time_to_wake_up)
 			else:
+				# do nothing, we are already asleep
 				time_to_wait = self.arrival_dist(**self.arrival_kwargs) / 2
 				yield env.timeout(time_to_wait)
 					
@@ -309,25 +268,10 @@ class ProcessHost:
 		#logging.info('Host %i finished a packet. time spent: %f' % (self.id, full_processing_time))
 	
 	def wake_up_server(self, env):
-		#time_to_wake_up = self.wake_up_dist(**self.wake_up_kwargs)
-				
-		# calculate sleep times
-		#self.end_timer = env.now
-		#diff = self.end_timer - self.start_timer
-		#self.sleep_times.append(diff)
-		
-		# append wake up times to list
-		#self.wake_up_times.append(time_to_wake_up)
 		self.state = State.BOOTING
-		#logging.info('Host %i is booting up' %(self.id))
-		
-		#yield env.timeout(time_to_wake_up)
-		
-		#self.finish_booting_server(env, time_to_wake_up)
 				
 	def finish_booting_server(self, env, time_to_wake_up):
 		self.start_timer = env.now
-		#logging.info('Host %i took %f time to wake up' %(self.id, time_to_wake_up))
 		self.state = State.AWAKE
 		
 	def sleep_server(self, env):
@@ -336,5 +280,3 @@ class ProcessHost:
 		self.start_timer = env.now
 		self.computing_times.append(diff)
 		self.state = State.SLEEP
-
-		#logging.info('Host %i is now going to sleep' %(self.id))
