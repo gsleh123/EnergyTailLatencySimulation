@@ -64,6 +64,7 @@ def show_packet_lifetimes(config):
 	elif pow_con_model == 2:
 		comp_power = ((freq - s_b) / k_m)**2 + b
 		power_usage = (comp_power * comp_ratio + wake_up_ratio * P_s + sleep_ratio * P_s) * servers_used
+		power_usage = np.mean(Host.main_host.powers)
 		Host.csv_temp_list.append(power_usage)
 		
 	with open('simdata%d%dN=%sk=%s.csv' %(problem_type, freq_setting, num_of_servers, pow_con_model), 'ab') as csvfile:
