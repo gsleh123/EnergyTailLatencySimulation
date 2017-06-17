@@ -294,6 +294,10 @@ class ProcessHost:
 		env = get_env()
 		
 		while True:
+			 if self.activate == 0:
+                                yield env.timeout(1001)
+                                continue
+				
 			if (self.state == State.AWAKE): 
 				# only process if the server is awake
 				if self.packets.qsize() == 0:
