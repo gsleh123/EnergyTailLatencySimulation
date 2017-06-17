@@ -142,19 +142,21 @@ class State(Enum):
 	AWAKE = 2
 	
 class DistributionHost:
-	def __init__(self, arrival_distribution, arrival_kwargs, arrival_rate):
+	def __init__(self, arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh):
 		self.packets = Queue()
 		self.arrival_dist = arrival_distribution
 		self.arrival_kwargs = arrival_kwargs
 		self.arrival_rate = arrival_rate 
+		self.alphaThresh = alphaThresh
+		self.betaThresh = betaThresh
 		
 	def process_arrivals(self):
 		env = get_env()
 		arrival_rate = self.arrival_rate
 		state = 1
 		constOffset = 1000 / arrival_rate / 1000;
-		alphaThresh = 1
-		betaThresh = 0
+		alphaThresh = self.alphaThresh
+		betaThresh = self.betaThresh
 
 		while True:
 			if state == 0:
