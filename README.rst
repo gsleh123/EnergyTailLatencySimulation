@@ -13,7 +13,7 @@ A anaconda environment "py_conda_env.yml" is provided to create the required env
 Note: The current yml file may not necessarily contain all the packages needed to run the simulation. On Windows, uncomment the lines that were commented. These packages were Windows Dependent. On Linux, use the current yml file and add packages as needed. 
 
 Running the code
-^^^^^^^^^^^^^^^^
+----------------
 To Run: Run CCRunner.py with an ini file as the sole argument. A sample ini file is provided ("abstract.ini"). The ini file contains all the configurations for the simulation. In Pycharm, at the top right is the configurations dropdown. You can "Edit Configurations" and add new ones as needed. I generally use two.
 
 For all configurations, make sure the interpreter is pointing to the conda-created environment (Something like C:\Miniconda2\envs\py2_ghosal\python.exe for windows)
@@ -26,12 +26,26 @@ Script parameters: Abstract.ini
 
 Full Command: python CCRunner.py Energy.ini 
 
+All settings should be changed in Energy.ini. The three settings we will change the most is the alphaThresh, betaThresh, and the arrival rate. A description of these settings can be found below. 
+
+When running to verify the theoretical results, there is a script available that will automatically change the arrival rate called theoreticalSim.sh and runTheoreticalSim.sh. On a system using SLURM Workload Manager like the UC Davis College of Engineering HPC, we can simply run the command "sbatch runTheoreticalSim.sh". Otherwise, on any other machine, we simply excecute theoreticalSim.sh. 
+
 Simulation Overview
 -------------------
 
 The overall simulation works using Simpy, a python library for simulation. It is complex, but the only thing that really matters is the simpy environment (stored in simenv.py). The simulation is asynchronous (each host runs its own "threads" -- one for arrivals and one for computation). They aren't really threads, but simpy makes the programming feel that way. env.timeout will sleep a thread for a given amount of time--this is how we simulation computation, packet arrival, etc. For example, if a host is "generating" data, it will predetermine the time until the next packet arrival through sampling a distribution, and the sleep (using env.timeout) for that long. Simpy will automatically wake up the "thread" and continue where it left off. This is why you will see a lot of functions surrounded by "while True:". Think of each of these functions as an async "thread".
 
 There are a few files that make up the core of the simulation.
+
+runTheoreticalSim.sh
+^^^^^^^^^^^^^^^^^^^^
+ 
+This is only useful on machines using SLURM. This sets the time limit and max memory usage. It also emails the user when the job is starting or done making it useful to let jobs run without checking on it. 
+
+theoreticalSim.sh
+^^^^^^^^^^^^^^^^^
+
+This verfies the theoretical calculations. While looking very complex, the basic idea is it has all the interarrival times stored in an array. The script then runs the first interarrival time and afterwards replaces the interarrival time with a new one and runs the simulation again. 
 
 CCRunner.py
 ^^^^^^^^^^^
@@ -52,7 +66,7 @@ init_hosts(config): All it does is create the servers that we need for the simul
 get_hosts(): Returns the host list 
 
 EnergyConstHost.py
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^
 
 Energy_Runner(target_timestep): Runs the simulation and is responsible for stopping it once we hit the time limit. 
 
@@ -70,12 +84,17 @@ There are two classes: DistributionHost and ProcessHost.
       sleep_server(self, env): Set server state to sleep. 
 
 Vis_Energy.py
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^
 
-This outputs a csv file with raw data. The csv file format is listed below. The csv file is then processed in MATLAB. 
+This outputs a csv file with raw data. The csv file format is listed below. The csv file is then processed in MATLAB. The MATLAB programs can be found in CreateGraphs Folder. 
 
-Energy.ini Overview
------------------
+editFile.py
+^^^^^^^^^^^
+
+This file goes into Energy.ini and finds a text to replace with something else. 
+
+Energy.ini
+^^^^^^^^^^
 
 The following configurations are listed under CC_Config. 
 
@@ -119,6 +138,12 @@ k_m
 
 b
   This is some offset for the power when calculating the power usage.
+ 
+alphaThresh
+  Setting for burst level ranging from 0 to 1. alphaThresh + betaThresh must always equal 1. Higher alphaThresh values correspond to less bursts of traffic. Thus, an alphaThresh of 1 leads to the normal Poisson Process. alphaThresh can also never be 0. 
+  
+betaThresh
+  Setting for burst level ranging from 0 to 1. alphaThresh + betaThresh must always equal 1. Higher betaThresh values correspond to more bursts of traffic.
   
 The problem_type and freq_setting is only useful for running the theoretical simulation to verify the results. Almost all other cases where we are going to extend the theoretical model will involve using optimal number of servers and optimal frequency, so we should just leave the problem_type and freq_setting to 1. 
 
