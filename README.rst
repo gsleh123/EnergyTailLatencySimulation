@@ -88,6 +88,8 @@ mpip_report_type
 req_size
   This was agreed upon to be 1,000,000 bytes or 1MB. 
 
+The following configurations are listed under Energy. 
+
 d_0
   Some number for the theoretical algorithm. It was set to 0.01. 
 
@@ -117,9 +119,7 @@ k_m
 
 b
   This is some offset for the power when calculating the power usage.
-
-The following configurations are listed under Energy. 
-
+  
 The problem_type and freq_setting is only useful for running the theoretical simulation to verify the results. Almost all other cases where we are going to extend the theoretical model will involve using optimal number of servers and optimal frequency, so we should just leave the problem_type and freq_setting to 1. 
 
 problem_type
