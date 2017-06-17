@@ -64,7 +64,8 @@ def init_hosts(config):
 
 	env = get_env()
 	env.process(main_host.process_arrivals())
-	
+	env.process(main_host.refresh_system())
+
 	for i in np.random.permutation(num_of_hosts):
 		env.process(hosts[i].process_service())
 
