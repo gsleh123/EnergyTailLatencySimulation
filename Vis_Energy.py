@@ -44,14 +44,14 @@ def show_packet_lifetimes(config):
 		
 	Host.csv_temp_list.append(prob_lifetimes)
 	
-	num_of_servers = config['Abstract']['num_of_servers']
-	pow_con_model = config['Abstract']['pow_con_model']
-	b = config['Abstract']['b']
-	P_s = config['Abstract']['P_s']
-	k_m = config['Abstract']['k_m'] / 10**9
-	s_b = config['Abstract']['s_b'] / 10**9
-	problem_type = config['Abstract']['problem_type']
-	freq_setting = config['Abstract']['freq_setting']
+	num_of_servers = config['Energy']['num_of_servers']
+	pow_con_model = config['Energy']['pow_con_model']
+	b = config['Energy']['b']
+	P_s = config['Energy']['P_s']
+	k_m = config['Energy']['k_m'] / 10**9
+	s_b = config['Energy']['s_b'] / 10**9
+	problem_type = config['Energy']['problem_type']
+	freq_setting = config['Energy']['freq_setting']
 	
 	servers_used = Host.csv_temp_list[1]
 	freq = Host.csv_temp_list[2]
