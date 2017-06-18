@@ -154,6 +154,8 @@ class DistributionHost:
 		self.alphaThresh = alphaThresh
 		self.betaThresh = betaThresh
 		
+		self.arrival_times = list()
+
 	def process_arrivals(self):
 		env = get_env()
 		arrival_rate = self.arrival_rate
@@ -184,6 +186,7 @@ class DistributionHost:
 					state = 0
 		
 			yield env.timeout(time_till_next_packet_arrival)
+			self.arrival_times.append(time_till_next_packet_arrival)
 			
 			# create packet 
 			pkt = Packet(env.now)

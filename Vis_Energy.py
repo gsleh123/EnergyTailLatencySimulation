@@ -24,6 +24,12 @@ def show_graphs(config):
 def show_packet_lifetimes(config):
 	hosts = Host.get_hosts()
 
+	arr_times_var = np.var(Host.main_host.arrival_times)
+        arr_times_mean = np.mean(Host.main_host.arrival_times)
+        cv = arr_times_var / (arr_times_mean**2)
+
+	Host.csv_temp_list.append(cv)
+
 	lifetimes = list()
 
 	for host in hosts:
