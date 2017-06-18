@@ -24,7 +24,7 @@ For all configurations, make sure the interpreter is pointing to the conda-creat
 
 Script: CCRunner.py
 
-Script parameters: Abstract.ini medium_rate_iatimes_41k.txt
+Script parameters: Energy.ini medium_rate_iatimes_41k.txt
 
 Full Command: python CCRunner.py Energy.ini medium_rate_iatimes_41k.txt 
 
