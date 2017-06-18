@@ -113,7 +113,7 @@ req_size
 The following configurations are listed under Energy. 
 
 d_0
-  Some number for the theoretical algorithm. It was set to 0.01. 
+  Tail latency constraint. 0.01 means that packets need to be processed before 0.01s or 10ms. 
 
 P_s
   This is the power consumption during sleep and booting stages. This is 50W. 
@@ -125,8 +125,8 @@ num_of_servers
   Control the total amount of servers available to the simulation. 
 
 e
-  This is the tail latency contrainst. 0.1 means a 10ms tail latency constraint.
-
+ This determines how many packets can go over d_0. Thus, a value of 0.1 means, only 10% of the packet will be over 10ms. 
+ 
 s_b 
   Base frequency - 1.2
 
