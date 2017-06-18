@@ -144,6 +144,12 @@ alphaThresh
   
 betaThresh
   Setting for burst level ranging from 0 to 1. alphaThresh + betaThresh must always equal 1. Higher betaThresh values correspond to more bursts of traffic.
+
+servers_to_use
+ This is used for problem_type 4 and allows us to fix the servers to our chosen value. This comes in helpful when we are trying to figure out the number of servers to add to meet the tail latency when dealing with different bursts of traffic. 
+ 
+freq_to_use
+  This is used for problem_type 4 and allows us to fix the frequency to our chosen value. This comes in helpful when we are trying to figure out the frequency to use to meet the tail latency when dealing with different bursts of traffic. 
   
 The problem_type and freq_setting is only useful for running the theoretical simulation to verify the results. Almost all other cases where we are going to extend the theoretical model will involve using optimal number of servers and optimal frequency, so we should just leave the problem_type and freq_setting to 1. 
 
@@ -151,6 +157,7 @@ problem_type
   1: Optimal Number of Servers
   2: Min Number of Servers
   3: Max Number of Servers
+  4: Custom number of servers and custom frequency
   
 freq_setting
   1: Optimal Frequency
