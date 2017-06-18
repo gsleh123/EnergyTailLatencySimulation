@@ -42,8 +42,9 @@ def show_packet_lifetimes(config):
 		
 	# this determines which tail latencies violates the tail latency constraint
 	temp = 0
+	d_0 = config['Energy']['d_0'] * 1000
 	for lifetime in lifetimes:
-		if lifetime > 10:
+		if lifetime > d_0:
 			temp+=1
 	
 	if len(lifetimes) > 0:
