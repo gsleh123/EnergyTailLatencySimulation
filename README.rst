@@ -86,7 +86,7 @@ There are two classes: DistributionHost and ProcessHost.
 Vis_Energy.py
 ^^^^^^^^^^^^^
 
-This outputs a csv file with raw data. The csv file format is listed below. The csv file is then processed in MATLAB. The MATLAB programs can be found in CreateGraphs Folder. 
+This outputs a csv file with raw data. The csv file is then processed in MATLAB. The MATLAB programs can be found in CreateGraphs Folder. 
 
 editFile.py
 ^^^^^^^^^^^
