@@ -88,6 +88,8 @@ def create_config_dict(parser):
 	options['Energy']['b'] = int(parser.get('Energy', 'b'));
 	options['Energy']['alphaThresh'] = float(parser.get('Energy', 'alphaThresh'));
 	options['Energy']['betaThresh'] = float(parser.get('Energy', 'betaThresh'));
+	options['Energy']['servers_to_use'] = int(parser.get('Energy', 'servers_to_use'));
+        options['Energy']['freq_to_use'] = float(parser.get('Energy', 'freq_to_use')) * 10**9;
 	
 	wake_up_dist_str = parser.get('Energy', 'wake_up_distribution')
 	wake_up_kwargs = ast.literal_eval(parser.get('Energy', 'wake_up_kwargs'))

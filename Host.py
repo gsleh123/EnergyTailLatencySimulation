@@ -47,10 +47,12 @@ def init_hosts(config):
 	b = config['Energy']['b']
 	problem_type = config['Energy']['problem_type']
 	freq_setting = config['Energy']['freq_setting']
+	servers_to_use = config['Energy']['servers_to_use']
+	freq_to_use = config['Energy']['freq_to_use']
 	
 	# determine optimal number of servers and optimal frequency
 	dimension_depth = 2
-	[num_of_hosts, freq] = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting)
+	[num_of_hosts, freq] = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting, servers_to_use, freq_to_use)
 	comp_time = (1000 * req_size) / (freq)
 	
 	# error

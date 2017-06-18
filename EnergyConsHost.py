@@ -33,7 +33,7 @@ def Energy_Runner(target_timestep):
 	for host in Host.get_hosts():
 		host.sleep_server(env)
 
-def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting):
+def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting, servers_to_use, freq_to_use):
 	min_servers = 0
 	min_total_power = 1000000
 	opt_servers = 0
@@ -123,6 +123,10 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 	if freq_setting == 2:
 		# we want the max freq which is S_c
 		opt_freq = s_c 
+
+	if problem_type == 4:
+		opt_servers = servers_to_use
+		opt_freq = freq_to_use
 
 	Host.csv_temp_list.append(req_arr_rate)
 	Host.csv_temp_list.append(opt_servers)
