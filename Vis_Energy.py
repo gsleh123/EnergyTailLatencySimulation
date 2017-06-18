@@ -11,6 +11,7 @@ from simenv import get_env
 import networkx as nx
 import pickle
 import csv
+import sys
 
 def setup():
 	sns.set_context('poster')
@@ -42,7 +43,7 @@ def show_packet_lifetimes(config):
 	else:
 		prob_lifetimes = 0
 		
-	Host.csv_temp_list.append(prob_lifetimes)
+	#Host.csv_temp_list.append(prob_lifetimes)
 	
 	num_of_servers = config['Energy']['num_of_servers']
 	pow_con_model = config['Energy']['pow_con_model']
@@ -53,20 +54,59 @@ def show_packet_lifetimes(config):
 	problem_type = config['Energy']['problem_type']
 	freq_setting = config['Energy']['freq_setting']
 	
-	servers_used = Host.csv_temp_list[1]
-	freq = Host.csv_temp_list[2]
-	comp_ratio = Host.csv_temp_list[3]
-	wake_up_ratio = Host.csv_temp_list[4]
-	sleep_ratio = Host.csv_temp_list[5]
+	#servers_used = Host.csv_temp_list[1]
+	#freq = Host.csv_temp_list[2]
+	#comp_ratio = Host.csv_temp_list[3]
+	#wake_up_ratio = Host.csv_temp_list[4]
+	#sleep_ratio = Host.csv_temp_list[5]
 	
 	if pow_con_model == 1:
 		power_usage = 1;
 	elif pow_con_model == 2:
-		comp_power = ((freq - s_b) / k_m)**2 + b
-		power_usage = (comp_power * comp_ratio + wake_up_ratio * P_s + sleep_ratio * P_s) * servers_used
+		#comp_power = ((freq - s_b) / k_m)**2 + b
+		#power_usage = (comp_power * comp_ratio + wake_up_ratio * P_s + sleep_ratio * P_s) * servers_used
 		power_usage = np.mean(Host.main_host.powers)
-		Host.csv_temp_list.append(power_usage)
-		
-	with open('simdata%d%dN=%sk=%s.csv' %(problem_type, freq_setting, num_of_servers, pow_con_model), 'ab') as csvfile:
+		#Host.csv_temp_list.append(power_usage)
+		#Host.csv_temp_list = Host.main_host.packet_latency
+	
+	Host.csv_temp_list = Host.main_host.mean_history
+        with open('%s_results.csv' %(sys.argv[2]), 'ab') as csvfile:
+                simdata = csv.writer(csvfile, delimiter=',')
+                simdata.writerow(Host.csv_temp_list)
+
+	Host.csv_temp_list = Host.main_host.ewma_history
+        with open('%s_results.csv' %(sys.argv[2]), 'ab') as csvfile:
+                simdata = csv.writer(csvfile, delimiter=',')
+                simdata.writerow(Host.csv_temp_list)
+
+	Host.csv_temp_list = Host.main_host.cv_history
+        with open('%s_results.csv' %(sys.argv[2]), 'ab') as csvfile:
+                simdata = csv.writer(csvfile, delimiter=',')
+                simdata.writerow(Host.csv_temp_list)
+
+        Host.csv_temp_list = Host.main_host.ewcv_history
+        with open('%s_results.csv' %(sys.argv[2]), 'ab') as csvfile:
+                simdata = csv.writer(csvfile, delimiter=',')
+                simdata.writerow(Host.csv_temp_list)
+
+	Host.csv_temp_list = Host.main_host.servers_used
+	with open('%s_results.csv' %(sys.argv[2]), 'ab') as csvfile:
 		simdata = csv.writer(csvfile, delimiter=',')
 		simdata.writerow(Host.csv_temp_list)
+
+	Host.csv_temp_list = Host.main_host.freq_history
+	with open('%s_results.csv' %(sys.argv[2]), 'ab') as csvfile:
+                simdata = csv.writer(csvfile, delimiter=',')
+                simdata.writerow(Host.csv_temp_list)
+
+	Host.csv_temp_list = Host.main_host.packet_latency
+	with open('%s_results.csv' %(sys.argv[2]), 'ab') as csvfile:
+                simdata = csv.writer(csvfile, delimiter=',')
+                simdata.writerow(Host.csv_temp_list)
+
+	Host.csv_temp_list = Host.main_host.powers
+	with open('%s_results.csv' %(sys.argv[2]), 'ab') as csvfile:
+                simdata = csv.writer(csvfile, delimiter=',')
+                simdata.writerow(Host.csv_temp_list)
+
+	

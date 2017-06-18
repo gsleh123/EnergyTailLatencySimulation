@@ -10,7 +10,7 @@ def main():
 	#logging.basicConfig(filename = "CCRunner_Logs.log", format="%(levelname)s:%(message)s", level=logging.DEBUG)
 	
 
-	if len(sys.argv) != 2:
+	if len(sys.argv) == 0:
 		print "1 argument needed: path-to-config-file"
 		return 1
 

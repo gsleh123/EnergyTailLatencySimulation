@@ -22,14 +22,6 @@ def init_hosts(config):
 	report_type = config['mpip_report_type']
 	csv_temp_list = list()
 
-	# set up the distribution host
-	arrival_distribution = config['Energy']['arrival_distribution']
-	arrival_kwargs = config['Energy']['arrival_kwargs']
-	arrival_rate = config['arrival_rate']
-	alphaThresh = config['Energy']['alphaThresh']
-	betaThresh = config['Energy']['betaThresh']
-	main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh)
-
 	# retrieve all the settings
 	wake_up_dist = config['Energy']['wake_up_distribution']
 	wake_up_kwargs = config['Energy']['wake_up_kwargs']
@@ -56,15 +48,23 @@ def init_hosts(config):
 	# error
 	if (num_of_hosts == -1):
 		return 0
-		
-	for i in range(num_of_hosts):
+	
+	# set up the distribution host
+        arrival_distribution = config['Energy']['arrival_distribution']
+        arrival_kwargs = config['Energy']['arrival_kwargs']
+        arrival_rate = config['arrival_rate']
+        alphaThresh = config['Energy']['alphaThresh']
+        betaThresh = config['Energy']['betaThresh']
+        main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, config, freq)
+	
+	for i in range(num_of_servers):
 		# instantiate a new host
 		host = ech.ProcessHost(i, config, comp_time, arrival_distribution, arrival_kwargs, wake_up_dist, wake_up_kwargs, P_s)
 		hosts.append(host)
 
 	env = get_env()
-	env.process(main_host.process_arrivals())
 	env.process(main_host.refresh_system())
+	env.process(main_host.process_arrivals())
 
 	for i in np.random.permutation(num_of_servers):
 		env.process(hosts[i].process_service())

@@ -53,7 +53,7 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 		w = lambertw(gamma * math.exp(e * gamma), -1).real
 		min_servers = (req_arr_rate / ((s_c / req_size) - (1 / d_0) * (w - e * gamma)))
 		flag = 0
-	
+
 	min_servers = int(math.ceil(min_servers))
 	
 	if min_servers > num_of_servers:
@@ -142,14 +142,30 @@ class State(Enum):
 	AWAKE = 2
 	
 class DistributionHost:
-	def __init__(self, arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh):
+	def __init__(self, arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, config, freq):
 		self.packets = Queue()
 		self.arrival_dist = arrival_distribution
 		self.arrival_kwargs = arrival_kwargs
 		self.arrival_rate = arrival_rate 
 		self.alphaThresh = alphaThresh
 		self.betaThresh = betaThresh
-		
+	
+		self.a = 0.25
+		self.arr_times = list()
+		self.config = config
+		self.est_mean = 1000 / arrival_rate
+		self.est_cv = 0
+		self.freq = freq
+		self.powers = list()
+		self.count = 0
+		self.packet_latency = list()
+		self.servers_used = list()
+		self.freq_history = list()
+		self.mean_history = list()
+		self.ewma_history = list()
+		self.cv_history = list()
+		self.ewcv_history = list() 
+
 	def process_arrivals(self):
 		env = get_env()
 		arrival_rate = self.arrival_rate
@@ -159,27 +175,17 @@ class DistributionHost:
 		betaThresh = self.betaThresh
 
 		while True:
-			if state == 0:
-				# generate traffic really quickly 
-				
-				time_till_next_packet_arrival = np.random.exponential(constOffset)
-				beta = np.random.uniform(0, 1)
-				
-				if beta <= betaThresh:
-					state = 0
-				else:
-					state = 1
-			else:
-				# generate traffic a bit slower
-				time_till_next_packet_arrival = np.random.exponential((1000 / arrival_rate) * (1 + betaThresh/alphaThresh))
-				alpha = np.random.uniform(0, 1)
-					
-				if alpha <= alphaThresh:
-					state = 1
-				else:
-					state = 0
-		
+			#print self.config['Energy']['real_data'][self.count]
+			time_till_next_packet_arrival = float(self.config['Energy']['real_data'][self.count])
+			self.count = self.count + 1
+
+			if self.count == len(self.config['Energy']['real_data']):
+				self.count = 0
+			
 			yield env.timeout(time_till_next_packet_arrival)
+			
+			# append the arrival time to a list
+			self.arr_times.append(time_till_next_packet_arrival)	
 			
 			# create packet 
 			pkt = Packet(env.now)
@@ -192,36 +198,48 @@ class DistributionHost:
 			if Host.hosts[i].state == State.SLEEP:
 				Host.hosts[i].wake_up_server(env)
 				
-	
-	 def refresh_system(self):
+
+	def refresh_system(self):
                 env = get_env()
 
                 while True:
-                        #wait for the system to generate packets
-                        yield env.timeout(1000)
-
                         #find exponentially weighted moving average
-                        curr_mean = np.mean(self.arr_times)
-                        self.arr_times[:] = []
+			if len(self.arr_times) != 0:
+                        	curr_mean = np.mean(self.arr_times)
+				curr_cv = np.var(self.arr_times) / curr_mean**2
+			else:
+				curr_mean = self.est_mean
+				curr_cv = self.est_cv
+
+                        #self.arr_times[:] = []
                         ewma = self.a * curr_mean + (1 - self.a) * self.est_mean
                         self.est_mean = ewma
                         self.arrival_rate = req_arr_rate = 1000 / ewma
+			
+                        ewcv = self.a * curr_cv + (1 - self.a) * self.est_cv
+			self.est_cv = ewcv
 
-                        ew_burst = 1
+			self.mean_history.append(curr_mean)
+			self.ewma_history.append(ewma)
+			self.cv_history.append(curr_cv)
+			self.ewcv_history.append(ewcv)
+
+			#if curr_cv > 5:
+				#print curr_cv
 
                         req_size = self.config['req_size']
-                        d_0 = self.config['Abstract']['d_0']
-                        P_s = self.config['Abstract']['P_s']
-                        alpha = self.config['Abstract']['alpha']
-                        num_of_servers = self.config['Abstract']['num_of_servers']
-                        e = self.config['Abstract']['e']
-                        s_b = self.config['Abstract']['s_b']
-                        s_c = self.config['Abstract']['s_c']
-                        pow_con_model = self.config['Abstract']['pow_con_model']
-                        k_m = self.config['Abstract']['k_m']
-                        b = self.config['Abstract']['b']
-                        problem_type = self.config['Abstract']['problem_type']
-                        freq_setting = self.config['Abstract']['freq_setting']
+                        d_0 = self.config['Energy']['d_0']
+                        P_s = self.config['Energy']['P_s']
+                        alpha = self.config['Energy']['alpha']
+                        num_of_servers = self.config['Energy']['num_of_servers']
+                        e = self.config['Energy']['e']
+                        s_b = self.config['Energy']['s_b']
+                        s_c = self.config['Energy']['s_c']
+                        pow_con_model = self.config['Energy']['pow_con_model']
+                        k_m = self.config['Energy']['k_m']
+                        b = self.config['Energy']['b']
+                        problem_type = self.config['Energy']['problem_type']
+                        freq_setting = self.config['Energy']['freq_setting']
 
                         #servers needed for the run
                         servers_needed, freq = servers_needed, freq = find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting)
@@ -230,6 +248,11 @@ class DistributionHost:
                         # number of additional servers needed
                         servers_needed = servers_needed + 1
 
+			self.servers_used.append(servers_needed)
+			self.freq_history.append(freq)
+
+			#print servers_needed, req_arr_rate, comp_time
+			temp_list = list()
                         total_computing_time = 0
                         total_wake_up_time = 0
                         total_sleep_time = 0
@@ -237,7 +260,35 @@ class DistributionHost:
                                 total_computing_time += sum(Host.hosts[i].computing_times)
                                 total_wake_up_time += sum(Host.hosts[i].wake_up_times)
                                 total_sleep_time += sum(Host.hosts[i].sleep_times)
+				Host.hosts[i].packets.queue.clear()
+				Host.hosts[i].start_timer = 0
+				Host.hosts[i].end_timer = 0 
+
+				for latency in Host.hosts[i].packet_latency:
+					temp_list.append(latency)
+				
+				Host.hosts[i].packet_latency[:] = []
                                 Host.hosts[i].turn_off()
+			
+			count2 = 0
+			for latency in temp_list:
+				if latency > 10:
+					count2 = count2 + 1
+
+			if len(temp_list) == 0:
+				self.packet_latency.append(0)
+			else:
+				self.packet_latency.append(count2 / len(temp_list))
+				print count2 / len(temp_list), ewma, curr_mean
+
+			#print "new second"
+			#for i in range(len(temp_list)):
+			#	print self.arr_times[i], temp_list[i]
+
+			#if len(temp_list) == 0:
+			#	print 0, curr_mean, servers_needed, freq
+			#else:
+			#	print count2 / len(temp_list), ewma, curr_mean
 
                         total_time = total_computing_time + total_wake_up_time + total_sleep_time
 
@@ -258,7 +309,10 @@ class DistributionHost:
                                 Host.hosts[i].turn_on()
                                 Host.hosts[i].comp_time = comp_time
 
+			self.arr_times[:] = []
                         Host.num_of_hosts = servers_needed
+
+			yield env.timeout(1000)
 			
 class ProcessHost:
 	def __init__(self, hostid, config, comp_time, arrival_dist, arrival_kwargs, wake_up_dist, wake_up_kwargs, power_setup):
@@ -294,10 +348,10 @@ class ProcessHost:
 		env = get_env()
 		
 		while True:
-			 if self.activate == 0:
-                                yield env.timeout(1001)
-                                continue
-				
+			if self.activate == 0:
+				yield env.timeout(1001)
+				continue
+			
 			if (self.state == State.AWAKE): 
 				# only process if the server is awake
 				if self.packets.qsize() == 0:
@@ -339,6 +393,7 @@ class ProcessHost:
 					
 	def finish_packet(self, env, pkt):
 		full_processing_time = env.now - pkt.birth_tick
+		#print full_processing_time
 		self.packet_latency.append(full_processing_time)
 
 		#logging.info('Host %i finished a packet. time spent: %f' % (self.id, full_processing_time))

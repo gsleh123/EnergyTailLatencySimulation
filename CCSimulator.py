@@ -7,6 +7,7 @@ import ast
 import Host
 from simenv import get_env
 import Vis_Energy
+import sys
 
 def run(parser):	
 	config = create_config_dict(parser)
@@ -27,21 +28,21 @@ def run(parser):
 
 	#logging.info('Simulation Complete')
 
-	total_computing_time = 0
-	total_wake_up_time = 0
-	total_sleep_time = 0
-	for host in Host.hosts:
-		total_computing_time += sum(host.computing_times)
-		total_wake_up_time += sum(host.wake_up_times)
-		total_sleep_time += sum(host.sleep_times)
+	#total_computing_time = 0
+	#total_wake_up_time = 0
+	#total_sleep_time = 0
+	#for host in Host.hosts:
+	#	total_computing_time += sum(host.computing_times)
+	#	total_wake_up_time += sum(host.wake_up_times)
+	#	total_sleep_time += sum(host.sleep_times)
 	
-	total_time = total_computing_time + total_wake_up_time + total_sleep_time
-	comp_ratio = total_computing_time / total_time
-	wake_up_ratio = total_wake_up_time / total_time
-	sleep_ratio = total_sleep_time / total_time
-	Host.csv_temp_list.append(comp_ratio)
-	Host.csv_temp_list.append(wake_up_ratio)
-	Host.csv_temp_list.append(sleep_ratio)
+	#total_time = total_computing_time + total_wake_up_time + total_sleep_time
+	#comp_ratio = total_computing_time / total_time
+	#wake_up_ratio = total_wake_up_time / total_time
+	#sleep_ratio = total_sleep_time / total_time
+	#Host.csv_temp_list.append(comp_ratio)
+	#Host.csv_temp_list.append(wake_up_ratio)
+	#Host.csv_temp_list.append(sleep_ratio)
 	
 	#logging.info('Computing time: %f' %(total_computing_time / total_time))
 	#logging.info('Wake up time: %f' %(total_wake_up_time / total_time))
@@ -123,5 +124,10 @@ def create_config_dict(parser):
 	options['Energy']['arrival_kwargs'] = arrival_kwargs
 	options['Energy']['wake_up_dist_str'] = wake_up_dist_str
 	options['Energy']['wake_up_kwargs'] = wake_up_kwargs
-		
+
+	with open(sys.argv[2]) as f:
+		options['Energy']['real_data'] = f.readlines()
+
+	options['Energy']['real_data'] = [x.strip() for x in options['Energy']['real_data']] 
+
 	return options
