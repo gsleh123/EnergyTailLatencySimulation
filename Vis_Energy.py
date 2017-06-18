@@ -24,12 +24,14 @@ def show_graphs(config):
 def show_packet_lifetimes(config):
 	hosts = Host.get_hosts()
 
+	# get the coefficient of variation
 	arr_times_var = np.var(Host.main_host.arrival_times)
         arr_times_mean = np.mean(Host.main_host.arrival_times)
         cv = arr_times_var / (arr_times_mean**2)
 
 	Host.csv_temp_list.append(cv)
 
+	# get the tail latency
 	lifetimes = list()
 
 	for host in hosts:
@@ -38,6 +40,7 @@ def show_packet_lifetimes(config):
 	dump_data = dict()
 	dump_data['lifetimes'] = lifetimes
 		
+	# this determines which tail latencies violates the tail latency constraint
 	temp = 0
 	for lifetime in lifetimes:
 		if lifetime > 10:
@@ -50,6 +53,7 @@ def show_packet_lifetimes(config):
 		
 	Host.csv_temp_list.append(prob_lifetimes)
 	
+	# get the power usage settings
 	num_of_servers = config['Energy']['num_of_servers']
 	pow_con_model = config['Energy']['pow_con_model']
 	b = config['Energy']['b']
@@ -65,13 +69,15 @@ def show_packet_lifetimes(config):
 	wake_up_ratio = Host.csv_temp_list[4]
 	sleep_ratio = Host.csv_temp_list[5]
 	
+	# calculate power usage
 	if pow_con_model == 1:
 		power_usage = 1;
 	elif pow_con_model == 2:
 		comp_power = ((freq - s_b) / k_m)**2 + b
 		power_usage = (comp_power * comp_ratio + wake_up_ratio * P_s + sleep_ratio * P_s) * servers_used
 		Host.csv_temp_list.append(power_usage)
-		
+	
+	# write to a csv file 
 	with open('simdata%d%dN=%sk=%s.csv' %(problem_type, freq_setting, num_of_servers, pow_con_model), 'ab') as csvfile:
 		simdata = csv.writer(csvfile, delimiter=',')
 		simdata.writerow(Host.csv_temp_list)
