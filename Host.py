@@ -31,9 +31,10 @@ def init_hosts(config):
 	main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh)
 
 	# retrieve all the settings
+	real_data = config['Energy']['real_data']
 	wake_up_dist = config['Energy']['wake_up_distribution']
 	wake_up_kwargs = config['Energy']['wake_up_kwargs']
-	req_arr_rate = config['arrival_rate']
+	req_arr_rate = 1000 / np.mean(real_data) if len(real_data) != 0 else config['arrival_rate']
 	req_size = config['req_size']
 	d_0 = config['Energy']['d_0']
 	P_s = config['Energy']['P_s']
@@ -66,7 +67,6 @@ def init_hosts(config):
 
 	env = get_env()
 	
-	real_data = config['Energy']['real_data']
 	if (len(real_data) != 0):
 		env.process(main_host.process_arrivals_real(real_data))
 	else:
