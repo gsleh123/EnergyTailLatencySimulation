@@ -194,4 +194,4 @@ simdata[problem_type][freq_setting]N=[num_of_servers]k=[power_setting].csv
 For example, simdata32N=32k=2.csv will have a problem_type of 3 (max servers used), freq setting of 2(max frequency), 32 total servers, and using the second power model. You will want to rename the csv files to add in more descriptions of the simulation run. 
 
 The columns of the csv will follow the format shown below. Each row will just be a new simulation run since the code appends to the csv.
-Format: Arrival Rate (req/s), Servers used, Freq (GHz), Waking Up Rate (%), Sleep Rate (%), Coefficient of Variation, Tail Latency (%), Total Power Usage (W)
+Format: Arrival Rate (req/s), Servers used, Freq (GHz), Waking Up Rate (%), Sleep Rate (%), Coefficient of Variation, Autocorrelation, Tail Latency (%), Total Power Usage (W)
