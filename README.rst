@@ -177,3 +177,16 @@ arrival_distribution
   
 arrival_kwargs
   The interarrival times of the packets. This is the inverse of the arrival rate.
+
+CSV Format
+^^^^^^^^^^
+
+Base Naming Convention - This is the naming convention given by the simulation. It simply takes whatever name the input file is and appends "_results" at the end. 
+
+[nameOftheFile]_results.csv
+
+The columns of the csv will be the scheduling intervals.
+Each row will follow the format below. 
+Format: Mean of the Last Scheduling Interval, Estimated Mean for the Next Scheduling Interval, Coefficient of Variation of the Last Scheduling Interval, Estimated Coefficient of Variation for the Next Scheduling Interval, Tail Latency (%), Total Power Usage (W)
+
+It is important to note when comparing how well the estimated mean matches the actual mean, we will need to look at the mean of the column and look at the previous column's estimated mean. 
