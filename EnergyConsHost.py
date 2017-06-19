@@ -150,7 +150,7 @@ class DistributionHost:
 		self.alphaThresh = alphaThresh
 		self.betaThresh = betaThresh
 	
-		self.a = 0.25
+		self.a = 0.5
 		self.arr_times = list()
 		self.config = config
 		self.est_mean = 1000 / arrival_rate
@@ -224,9 +224,6 @@ class DistributionHost:
 			self.cv_history.append(curr_cv)
 			self.ewcv_history.append(ewcv)
 
-			#if curr_cv > 5:
-				#print curr_cv
-
                         req_size = self.config['req_size']
                         d_0 = self.config['Energy']['d_0']
                         P_s = self.config['Energy']['P_s']
@@ -245,13 +242,19 @@ class DistributionHost:
                         servers_needed, freq = servers_needed, freq = find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting)
                         comp_time = (1000 * req_size) / (freq)
 
-                        # number of additional servers needed
+                        # number of additional servers needed to account for burst
+			# this eventually needs to be changed
+			# it's always adding 1 because for the medium arrival rates with the cv found above
+			# we will always need to add 1 sever
                         servers_needed = servers_needed + 1
+
+			# number of additional servers needed to account for independence
+			servers_needed = servers_needed + 6
 
 			self.servers_used.append(servers_needed)
 			self.freq_history.append(freq)
 
-			#print servers_needed, req_arr_rate, comp_time
+			# get the tail latency and power usage for the last 1s
 			temp_list = list()
                         total_computing_time = 0
                         total_wake_up_time = 0
@@ -270,6 +273,7 @@ class DistributionHost:
 				Host.hosts[i].packet_latency[:] = []
                                 Host.hosts[i].turn_off()
 			
+			# determine tail latency
 			count2 = 0
 			for latency in temp_list:
 				if latency > 10:
@@ -279,17 +283,8 @@ class DistributionHost:
 				self.packet_latency.append(0)
 			else:
 				self.packet_latency.append(count2 / len(temp_list))
-				print count2 / len(temp_list), ewma, curr_mean
 
-			#print "new second"
-			#for i in range(len(temp_list)):
-			#	print self.arr_times[i], temp_list[i]
-
-			#if len(temp_list) == 0:
-			#	print 0, curr_mean, servers_needed, freq
-			#else:
-			#	print count2 / len(temp_list), ewma, curr_mean
-
+			# determine power usage
                         total_time = total_computing_time + total_wake_up_time + total_sleep_time
 
 			if total_time != 0:
@@ -305,6 +300,7 @@ class DistributionHost:
 
                         self.powers.append(power_usage)
 
+			# enable the correct number of servers that we need
                         for i in range(servers_needed):
                                 Host.hosts[i].turn_on()
                                 Host.hosts[i].comp_time = comp_time
@@ -312,6 +308,7 @@ class DistributionHost:
 			self.arr_times[:] = []
                         Host.num_of_hosts = servers_needed
 
+			#w ait for 1s
 			yield env.timeout(1000)
 			
 class ProcessHost:
