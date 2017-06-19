@@ -14,17 +14,23 @@ Note: The current yml file may not necessarily contain all the packages needed t
 
 Running the code
 ----------------
-To Run: Run CCRunner.py with an ini file as the sole argument. A sample ini file is provided ("abstract.ini"). The ini file contains all the configurations for the simulation. In Pycharm, at the top right is the configurations dropdown. You can "Edit Configurations" and add new ones as needed. I generally use two.
+To Run: Run CCRunner.py needs to have at least one argument and that is the ini file. The second argument is optional and is used for real traffic trace. The ini file contains all the configurations for the simulation. In Pycharm, at the top right is the configurations dropdown. You can "Edit Configurations" and add new ones as needed. I generally use two.
 
 For all configurations, make sure the interpreter is pointing to the conda-created environment (Something like C:\Miniconda2\envs\py2_ghosal\python.exe for windows)
 
-1) CCRunner configuration
+1) CCRunner configuration with only the ini file
 
 Script: CCRunner.py
-
-Script parameters: Abstract.ini
-
+Script parameters: Energy.ini
 Full Command: python CCRunner.py Energy.ini 
+
+2) CCRunner configuration with ini file and real traffic trace
+
+Script: CCRunner.py
+Script parameters: Energy.ini someFile.txt
+Full Command: python CCRunner.py Energy.ini someFile.txt
+
+someFile.txt contains all the inter arrival times of the real traffic. The format of the text file should be one inter arrival time per line. 
 
 All settings should be changed in Energy.ini. The three settings we will change the most is the alphaThresh, betaThresh, and the arrival rate. A description of these settings can be found below. 
 
@@ -75,7 +81,9 @@ find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s,
 There are two classes: DistributionHost and ProcessHost. 
 
   DistributionHost: The DistributionHost is responsible for creating and sending packets to the ProcessHost.  
-    process_arrivals(self): This function generates the packets using the IPP (interrupted Poisson Process). The IPP is simply a model with two states where one state generates packets really quickly and the other state the packets generate slowly depending on some alpha and beta values. This is how we can create bursty traffic. After generating the packet, the distribution server randomly chooses which process server it should send the packet. 
+    process_arrivals_synthetic(self): This function generates the packets using the IPP (interrupted Poisson Process). The IPP is simply a model with two states where one state generates packets really quickly and the other state the packets generate slowly depending on some alpha and beta values. This is how we can create bursty traffic. After generating the packet, the distribution server randomly chooses which process server it should send the packet. 
+    process_arrivals_real(self): This function uses the data from a real traffic trace. 
+    create_packet(self, env): Simply create a new packet and distribute it to a server. 
     
     ProcessHost: The ProcessHost is responsible for processing the packets. 
       process_service(self): It'll either process the packet, go to sleep, or do nothing. 
