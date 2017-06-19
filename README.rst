@@ -1,12 +1,14 @@
-EnergyTailLatency Simulator
-===================
+EnergyTailLatency Simulator w/ real data traffic trace
+======================================================
 
-The EnergyTailLatency Simulator is a python-based simulation of to determine the tail latency and energy consumption of a given system. As of now, the system only consists of 1 Distribution Server and N Leaf Servers. The Distribution Server distributes the packets to the Leaf Servers. The EnergyTailLatency is built on top of the CoreClock Simulator making the code very bloated. There are settings that may not be necessary, but are still in the code. I will slowly clean the code up, so the EnergyTailLatency Simulator stands alone. 
+For more information on the EnergyTailLatency Simulator, look at the README in the master branch. This specific simulation with the real data tace is a variation of the EneryTailLatency Simulator. While at its core, the two simulations are similar, there are some logic that needs to be different and thus, made me branch off. It's possible in the future to merge both branches. 
+
+With the real data trace, the number of servers and frequency is being dynamically changed as the packets are coming in. Every 1 second, we update the number of servers and frequency. (It is possible to deactivate a server that has packets waiting in the queue. To get around this, we simply clear our the queue every 1s and treat it as a "new simulation run".) In order to achieve this dynamic allocation, the simulation must add in all possible servers and using a boolean variable we activate or deactivate the servers. This is due to the fact that SimPy has no way for me to dynamically activate and deactivate certain parts of the simulation. 
 
 Important Note: The simulation runs in ms. All the numbers seen have been converted to be in ms.
 
-Running CoreClock Simulator
----------------------------
+Running EnergyTailLatency Simulator w/ real data traffic trace
+--------------------------------------------------------------
 
 A anaconda environment "py_conda_env.yml" is provided to create the required environment. `Download Miniconda <http://conda.pydata.org/miniconda.html>`_ Miniconda2 vs Miniconda3 doesn't really matter. To recreate the environment, open a terminal and run "conda env create -f environment.yml". The file is likely a bit out of date, but if it works, it works.
 
@@ -14,7 +16,7 @@ Note: The current yml file may not necessarily contain all the packages needed t
 
 Running the code
 ----------------
-To Run: Run CCRunner.py with an ini file as the sole argument. A sample ini file is provided ("abstract.ini"). The ini file contains all the configurations for the simulation. In Pycharm, at the top right is the configurations dropdown. You can "Edit Configurations" and add new ones as needed. I generally use two.
+To Run: Run CCRunner.py with an ini file and a text file with the real data trace. A sample ini file is provided ("energy.ini"). The ini file contains all the configurations for the simulation. In Pycharm, at the top right is the configurations dropdown. You can "Edit Configurations" and add new ones as needed. I generally use two.
 
 For all configurations, make sure the interpreter is pointing to the conda-created environment (Something like C:\Miniconda2\envs\py2_ghosal\python.exe for windows)
 
@@ -22,13 +24,11 @@ For all configurations, make sure the interpreter is pointing to the conda-creat
 
 Script: CCRunner.py
 
-Script parameters: Abstract.ini
+Script parameters: Energy.ini medium_rate_iatimes_41k.txt
 
-Full Command: python CCRunner.py Energy.ini 
+Full Command: python CCRunner.py Energy.ini medium_rate_iatimes_41k.txt 
 
-All settings should be changed in Energy.ini. The three settings we will change the most is the alphaThresh, betaThresh, and the arrival rate. A description of these settings can be found below. 
-
-When running to verify the theoretical results, there is a script available that will automatically change the arrival rate called theoreticalSim.sh and runTheoreticalSim.sh. On a system using SLURM Workload Manager like the UC Davis College of Engineering HPC, we can simply run the command "sbatch runTheoreticalSim.sh". Otherwise, on any other machine, we simply excecute theoreticalSim.sh. 
+All settings should be changed in Energy.ini. The three settings we will change the most is the alphaThresh, betaThresh, and the arrival rate. A description of these settings can be found below. For this case, we will only want to change the arrival rate. 
 
 Simulation Overview
 -------------------
@@ -76,12 +76,15 @@ There are two classes: DistributionHost and ProcessHost.
 
   DistributionHost: The DistributionHost is responsible for creating and sending packets to the ProcessHost.  
     process_arrivals(self): This function generates the packets using the IPP (interrupted Poisson Process). The IPP is simply a model with two states where one state generates packets really quickly and the other state the packets generate slowly depending on some alpha and beta values. This is how we can create bursty traffic. After generating the packet, the distribution server randomly chooses which process server it should send the packet. 
+    refresh_system(self): We can think of this function in chucks. The scheduling interval is 1s and is controlled by the "yield env.timeout(1000)" at the end of this function. To change the scheduling interval, change this line of the code to the desired number. This function simply calculates the mean arrival rate for the last 1 second, calculates an estimated arrival rate for the next 1 second, and does the same for the coefficient of variation. Using this information, we determine the new number of servers and freq. Then we log all known tail latency and power usage from the last 1 second. Finally, we turn off all the current servers and activate the new ones needed. 
     
     ProcessHost: The ProcessHost is responsible for processing the packets. 
       process_service(self): It'll either process the packet, go to sleep, or do nothing. 
       wake_up_server(self, env): Set the server state to booting.
       finish_booting_server(self, env, time_to_wake_up): Set server state to awake.
       sleep_server(self, env): Set server state to sleep. 
+      turn_off(self): Just changes self.activate to 0 and clears out the data structures since it's a "new simulation run".
+      turn_on(self): Change self.activate to 1.
 
 Vis_Energy.py
 ^^^^^^^^^^^^^
@@ -110,7 +113,7 @@ req_size
 The following configurations are listed under Energy. 
 
 d_0
-  Some number for the theoretical algorithm. It was set to 0.01. 
+  Tail latency constraint. 0.01 means that packets need to be processed before 0.01s or 10ms. 
 
 P_s
   This is the power consumption during sleep and booting stages. This is 50W. 
@@ -122,8 +125,8 @@ num_of_servers
   Control the total amount of servers available to the simulation. 
 
 e
-  This is the tail latency contrainst. 0.1 means a 10ms tail latency constraint.
-
+ This determines how many packets can go over d_0. Thus, a value of 0.1 means, only 10% of the packet will be over 10ms. 
+ 
 s_b 
   Base frequency - 1.2
 
@@ -144,13 +147,20 @@ alphaThresh
   
 betaThresh
   Setting for burst level ranging from 0 to 1. alphaThresh + betaThresh must always equal 1. Higher betaThresh values correspond to more bursts of traffic.
-  
+
+servers_to_use
+This is used for problem_type 4 and allows us to fix the servers to our chosen value. This comes in helpful when we are trying to figure out the number of servers to add to meet the tail latency when dealing with different bursts of traffic.
+
+freq_to_use
+ This is used for problem_type 4 and allows us to fix the frequency to our chosen value. This comes in helpful when we are trying to figure out the frequency to use to meet the tail latency when dealing with different bursts of traffic.
+
 The problem_type and freq_setting is only useful for running the theoretical simulation to verify the results. Almost all other cases where we are going to extend the theoretical model will involve using optimal number of servers and optimal frequency, so we should just leave the problem_type and freq_setting to 1. 
 
 problem_type
   1: Optimal Number of Servers
   2: Min Number of Servers
   3: Max Number of Servers
+  4: Custom Number of servers and custom frequency
   
 freq_setting
   1: Optimal Frequency
