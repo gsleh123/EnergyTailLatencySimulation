@@ -11,6 +11,7 @@ from simenv import get_env
 import networkx as nx
 import pickle
 import csv
+import pandas as pd
 
 def setup():
 	sns.set_context('poster')
@@ -30,6 +31,10 @@ def show_packet_lifetimes(config):
         cv = arr_times_var / (arr_times_mean**2)
 
 	Host.csv_temp_list.append(cv)
+
+	arrival_times_series = pd.Series(Host.main_host.arrival_times)
+	acf = arrival_times_series.autocorr()
+	Host.csv_temp_list.append(acf)
 
 	# get the tail latency
 	lifetimes = list()
