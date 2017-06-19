@@ -115,6 +115,9 @@ mpip_report_type
 req_size
   This was agreed upon to be 1,000,000 bytes or 1MB. 
 
+random_seed
+ This is just choosing which seed to pick for the random variables. This way we can reproduce the results. 
+ 
 The following configurations are listed under Energy. 
 
 d_0
