@@ -155,8 +155,9 @@ class DistributionHost:
 		self.betaThresh = betaThresh
 		
 		self.arrival_times = list()
+		self.count = 0
 
-	def process_arrivals(self):
+	def process_arrivals_synthetic(self):
 		env = get_env()
 		arrival_rate = self.arrival_rate
 		state = 1
@@ -188,17 +189,45 @@ class DistributionHost:
 			yield env.timeout(time_till_next_packet_arrival)
 			self.arrival_times.append(time_till_next_packet_arrival)
 			
+			self.create_packet(env)
+	
 			# create packet 
-			pkt = Packet(env.now)
+			#pkt = Packet(env.now)
 		
 			# send packet away
-			i = random.randint(0, Host.num_of_hosts - 1)
-			Host.hosts[i].packets.put(pkt)
+			#i = random.randint(0, Host.num_of_hosts - 1)
+			#Host.hosts[i].packets.put(pkt)
 
 			# wake up server if we found it to be sleeping
-			if Host.hosts[i].state == State.SLEEP:
-				Host.hosts[i].wake_up_server(env)
+			#if Host.hosts[i].state == State.SLEEP:
+			#	Host.hosts[i].wake_up_server(env)
 
+	def process_arrivals_real(self, real_traffic):
+		env = get_env()
+
+		while True:
+			time_till_next_packet_arrival = real_traffic[self.count]
+			self.count = self.count + 1
+
+			if self.count == len(real_traffic):
+				self.count = 0
+
+			yield env.timeout(time_till_next_packet_arrival)
+			self.arrival_times.append(time_till_next_packet_arrival)
+	
+			self.create_packet(env)
+
+	def create_packet(self, env):
+		pkt = Packet(env.now)
+
+		# send packet away
+		i = random.randint(0, Host.num_of_hosts - 1)
+		Host.hosts[i].packets.put(pkt)
+		
+		# wake up server if we found it to be sleeping
+		if Host.hosts[i].state == State.SLEEP:
+ 			Host.hosts[i].wake_up_server(env)
+		
 class ProcessHost:
 	def __init__(self, hostid, config, comp_time, arrival_dist, arrival_kwargs, wake_up_dist, wake_up_kwargs, power_setup):
 				 

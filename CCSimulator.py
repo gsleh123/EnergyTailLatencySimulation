@@ -7,6 +7,7 @@ import ast
 import Host
 from simenv import get_env
 import Vis_Energy
+import sys
 
 def run(parser):	
 	config = create_config_dict(parser)
@@ -125,5 +126,15 @@ def create_config_dict(parser):
 	options['Energy']['arrival_kwargs'] = arrival_kwargs
 	options['Energy']['wake_up_dist_str'] = wake_up_dist_str
 	options['Energy']['wake_up_kwargs'] = wake_up_kwargs
-		
+	
+	if (len(sys.argv) == 3):
+		# read the whole file line by line
+		with open(sys.argv[2]) as f:
+			options['Energy']['real_data'] = f.readlines()
+
+		# get rid of all the new lines
+		options['Energy']['real_data'] = [float(x.strip()) for x in options['Energy']['real_data']]
+	else:
+		options['Energy']['real_data'] = list()
+
 	return options

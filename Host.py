@@ -65,7 +65,12 @@ def init_hosts(config):
 		hosts.append(host)
 
 	env = get_env()
-	env.process(main_host.process_arrivals())
+	
+	real_data = config['Energy']['real_data']
+	if (len(real_data) != 0):
+		env.process(main_host.process_arrivals_real(real_data))
+	else:
+		env.process(main_host.process_arrivals_synthetic())
 	
 	for i in np.random.permutation(num_of_hosts):
 		env.process(hosts[i].process_service())
