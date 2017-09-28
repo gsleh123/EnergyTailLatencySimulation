@@ -169,16 +169,15 @@ class DistributionHost:
 			if state == 0:
 				# generate traffic really quickly 
 				
-				time_till_next_packet_arrival = np.random.exponential(constOffset)
 				beta = np.random.uniform(0, 1)
 				
 				if beta <= betaThresh:
-					state = 0
-				else:
 					state = 1
+				else:
+					state = 0
 			else:
 				# generate traffic a bit slower
-				time_till_next_packet_arrival = np.random.exponential((1000 / arrival_rate) * (1 + betaThresh/alphaThresh))
+				time_till_next_packet_arrival = np.random.exponential(arrival_rate)
 				alpha = np.random.uniform(0, 1)
 					
 				if alpha <= alphaThresh:
@@ -186,21 +185,10 @@ class DistributionHost:
 				else:
 					state = 0
 		
-			yield env.timeout(time_till_next_packet_arrival)
-			self.arrival_times.append(time_till_next_packet_arrival)
-			
-			self.create_packet(env)
-	
-			# create packet 
-			#pkt = Packet(env.now)
-		
-			# send packet away
-			#i = random.randint(0, Host.num_of_hosts - 1)
-			#Host.hosts[i].packets.put(pkt)
-
-			# wake up server if we found it to be sleeping
-			#if Host.hosts[i].state == State.SLEEP:
-			#	Host.hosts[i].wake_up_server(env)
+				self.arrival_times.append(time_till_next_packet_arrival)
+				self.create_packet(env)
+				
+			yield env.timeout(1)
 
 	def process_arrivals_real(self, real_traffic):
 		env = get_env()
