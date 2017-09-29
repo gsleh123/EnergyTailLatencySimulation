@@ -175,6 +175,8 @@ class DistributionHost:
 					state = 1
 				else:
 					state = 0
+
+				yield env.timeout(10)
 			else:
 				# generate traffic a bit slower
 				time_till_next_packet_arrival = np.random.exponential(arrival_rate)
@@ -185,10 +187,10 @@ class DistributionHost:
 				else:
 					state = 0
 		
+				yield env.timeout(time_till_next_packet_arrival)
+
 				self.arrival_times.append(time_till_next_packet_arrival)
 				self.create_packet(env)
-				
-			yield env.timeout(1)
 
 	def process_arrivals_real(self, real_traffic):
 		env = get_env()
