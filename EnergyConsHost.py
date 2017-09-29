@@ -186,7 +186,7 @@ class DistributionHost:
 					state = 1
 				else:
 					state = 0
-				print time_till_next_packet_arrival
+
 				yield env.timeout(time_till_next_packet_arrival)
 
 				self.arrival_times.append(time_till_next_packet_arrival)
