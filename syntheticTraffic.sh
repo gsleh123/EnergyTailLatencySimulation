@@ -26,7 +26,7 @@ textToReplace="$beta_thresh"' = '"$arg2"
 python editFile.py "$textToSearch" "$textToReplace"
 
 arg2=${beta[$run - 1]}
-textToSearch="$beta_thresh"' = '"$arg2"
+textToSearch="$alpha_thresh"' = '"$arg2"
 arg2=${beta[$run]}
 textToReplace="$alpha_thresh"' = '"$arg2"
 python editFile.py "$textToSearch" "$textToReplace"
