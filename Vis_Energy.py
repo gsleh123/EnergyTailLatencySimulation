@@ -30,6 +30,7 @@ def show_packet_lifetimes(config):
         arr_times_mean = np.mean(Host.main_host.arrival_times)
         cv = arr_times_var / (arr_times_mean**2)
 
+	Host.csv_temp_list.append(arr_times_mean)
 	Host.csv_temp_list.append(cv)
 
 	arrival_times_series = pd.Series(Host.main_host.arrival_times)
