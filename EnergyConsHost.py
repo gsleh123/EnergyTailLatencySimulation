@@ -171,8 +171,9 @@ class DistributionHost:
 				# generate traffic really quickly 
 				time_to_wait = np.random.exponential(1000 / arrival_rate * (alphaThresh / (alphaThresh + betaThresh)))
 				beta = np.random.uniform(0, 1)
-				
-				if beta <= betaThresh / (alphaThresh + betaThresh) + 2*k / (1+k)**2 / betaThresh:
+			
+				if beta < betaThresh:	
+				#if beta <= betaThresh / (alphaThresh + betaThresh) + 2*k / (1+k)**2 / betaThresh:
 					state = 0
 				else:
 					state = 1
@@ -183,7 +184,8 @@ class DistributionHost:
 				time_till_next_packet_arrival = np.random.exponential(1000/arrival_rate * (betaThresh / (alphaThresh + betaThresh)))
 				alpha = np.random.uniform(0, 1)
 					
-				if alpha <= alphaThresh / (alphaThresh + betaThresh) + 2*k / (1+k)**2 / betaThresh:
+				if alpha < alphaThresh:
+				#if alpha <= alphaThresh / (alphaThresh + betaThresh) + 2*k / (1+k)**2 / betaThresh:
 					state = 1
 				else:
 					state = 0

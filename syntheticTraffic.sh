@@ -6,15 +6,15 @@ alpha_thresh=alphaThresh
 beta_thresh=betaThresh
 arg2=0.01
 
-beta[0]=0.01
-beta[1]=0.1
-beta[2]=1
-beta[3]=10
-beta[4]=100
-beta[5]=1000
-beta[6]=10000
-beta[7]=100000
-beta[8]=1000000
+beta[0]=0.1
+beta[1]=0.2
+beta[2]=0.3
+beta[3]=0.4
+beta[4]=0.5
+beta[5]=0.6
+beta[6]=0.7
+beta[7]=0.8
+beta[8]=0.9
 
 . ~/.bashrc
 source activate py2_ghosal
