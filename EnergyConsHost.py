@@ -164,29 +164,31 @@ class DistributionHost:
 		constOffset = 1000 / arrival_rate / 1000;
 		alphaThresh = self.alphaThresh
 		betaThresh = self.betaThresh
+		k = alphaThresh / betaThresh
 
 		while True:
 			if state == 0:
 				# generate traffic really quickly 
-				
+				time_to_wait = np.random.exponential(1000 / arrival_rate * (betaThresh / (alphaTresh + betaThresh)))
 				beta = np.random.uniform(0, 1)
 				
-				if beta <= betaThresh:
+				if beta <= betaThresh / (alphaThresh + betaThresh) + 2*k / (1+k)**2 / betaThresh:
 					state = 1
 				else:
 					state = 0
 
-				yield env.timeout(constOffset)
+				yield env.timeout(time_to_wait)
 			else:
 				# generate traffic a bit slower
-				time_till_next_packet_arrival = np.random.exponential(1000/arrival_rate)
+				time_till_next_packet_arrival = np.random.exponential(1000/arrival_rate * (betaThresh / (alphaThresh + betaThresh)))
 				alpha = np.random.uniform(0, 1)
 					
-				if alpha <= alphaThresh:
+				if alpha <= alphaThresh / (alphaThresh + betaThresh) + 2*k / (1+k)**2 / betaThresh:
 					state = 1
 				else:
 					state = 0
 
+				#print time_till_next_packet_arrival
 				yield env.timeout(time_till_next_packet_arrival)
 
 				self.arrival_times.append(time_till_next_packet_arrival)
