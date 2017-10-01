@@ -169,13 +169,13 @@ class DistributionHost:
 		while True:
 			if state == 0:
 				# generate traffic really quickly 
-				time_to_wait = np.random.exponential(1000 / arrival_rate * (betaThresh / (alphaTresh + betaThresh)))
+				time_to_wait = np.random.exponential(1000 / arrival_rate * (alphaThresh / (alphaThresh + betaThresh)))
 				beta = np.random.uniform(0, 1)
 				
 				if beta <= betaThresh / (alphaThresh + betaThresh) + 2*k / (1+k)**2 / betaThresh:
-					state = 1
-				else:
 					state = 0
+				else:
+					state = 1
 
 				yield env.timeout(time_to_wait)
 			else:
