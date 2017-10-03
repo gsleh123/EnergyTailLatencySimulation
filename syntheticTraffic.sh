@@ -14,17 +14,13 @@ beta[4]=1
 beta[5]=10
 beta[6]=100
 beta[7]=1000
-beta[8]=10000
-beta[9]=1000000
-beta[10]=10000000
-beta[11]=100000000
 
 . ~/.bashrc
 source activate py2_ghosal
 python CCRunner.py Energy.ini
 echo Done
 
-for run in {1..11}
+for run in {1..7}
 do
 arg2=${beta[$run - 1]}
 textToSearch="$beta_thresh"' = '"$arg2"
@@ -44,13 +40,13 @@ echo $textToSearch
 echo $textToReplace
 done
 
-arg2=${beta[11]}
+arg2=${beta[7]}
 textToSearch="$beta_thresh"' = '"$arg2"
 arg2=${beta[0]}
 textToReplace="$beta_thresh"' = '"$arg2"
 python editFile.py "$textToSearch" "$textToReplace"
 
-arg2=${beta[11]}
+arg2=${beta[7]}
 textToSearch="$alpha_thresh"' = '"$arg2"
 arg2=${beta[0]}
 textToReplace="$alpha_thresh"' = '"$arg2"
