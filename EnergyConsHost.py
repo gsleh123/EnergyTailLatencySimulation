@@ -156,45 +156,78 @@ class DistributionHost:
 		
 		self.arrival_times = list()
 		self.count = 0
+		
+		# only usedfor synthetic traffic
+		self.state = 1
+		self.switch = False
 
 	def process_arrivals_synthetic(self):
 		env = get_env()
 		arrival_rate = self.arrival_rate
-		state = 1
+		state = self.state
 		constOffset = 1000 / arrival_rate / 1000;
 		alphaThresh = self.alphaThresh
 		betaThresh = self.betaThresh
 		k = alphaThresh / betaThresh
+		time_to_switch = 0
 
 		while True:
+			state = self.state
+			switch = self.switch
+
 			if state == 0:
 				# generate traffic really quickly 
 				time_to_wait = np.random.exponential(1000 / arrival_rate * (alphaThresh / (alphaThresh + betaThresh)))
-				beta = np.random.uniform(0, 1)
+				#beta = np.random.uniform(0, 1)
 			
-				if beta < 1- betaThresh:	
+				#np.random.exponetial(1 / betaThresh);
+				#if beta < 1- betaThresh:	
 				#if beta <= betaThresh / (alphaThresh + betaThresh) + 2*k / (1+k)**2 / betaThresh:
-					state = 0
-				else:
-					state = 1
+				#	state = 0
+				#else:
+				#	state = 1
 
 				yield env.timeout(time_to_wait)
+	
+				if (switch):
+					#print "Switching to on."
+					self.state = 1
+					switch = False
 			else:
 				# generate traffic a bit slower
 				time_till_next_packet_arrival = np.random.exponential(1000/arrival_rate * (betaThresh / (alphaThresh + betaThresh)))
-				alpha = np.random.uniform(0, 1)
+				#alpha = np.random.uniform(0, 1)
 					
-				if alpha < 1 - alphaThresh:
+				#if alpha < 1 - alphaThresh:
 				#if alpha <= alphaThresh / (alphaThresh + betaThresh) + 2*k / (1+k)**2 / betaThresh:
-					state = 1
-				else:
-					state = 0
-
+				#	state = 1
+				#else:
+				#	state = 0
+				#np.random.exponential(1 / alphaThresh)
 				#print time_till_next_packet_arrival
 				yield env.timeout(time_till_next_packet_arrival)
-
+				
 				self.arrival_times.append(time_till_next_packet_arrival)
 				self.create_packet(env)
+
+				if (switch):
+					#print "Switching to off."
+					self.state = 0
+					switch = False
+		
+	def process_arrivals_synthetic_mode(self):
+		env = get_env()
+
+		while True:
+			state = self.state
+
+			if state == 0:
+				time_to_switch = np.random.exponential(1 / self.betaThresh)
+			else:
+				time_to_switch = np.random.exponential(1 / self.alphaThresh)
+
+			yield env.timeout(time_to_switch)
+			self.switch = True
 
 	def process_arrivals_real(self, real_traffic):
 		env = get_env()
