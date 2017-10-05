@@ -153,7 +153,7 @@ class DistributionHost:
 		self.arrival_rate = arrival_rate 
 		self.alphaThresh = alphaThresh
 		self.betaThresh = betaThresh
-		
+		self.num_packets = 0	
 		self.arrival_times = list()
 		self.count = 0
 		
@@ -177,7 +177,7 @@ class DistributionHost:
 
 			if state == 0:
 				# generate traffic really quickly 
-				time_to_wait = np.random.exponential(1000 / arrival_rate * (alphaThresh / (alphaThresh + betaThresh)))
+				time_to_wait = np.random.exponential(1000 / arrival_rate * (1 / (1 + alphaThresh/betaThresh)))
 				#beta = np.random.uniform(0, 1)
 			
 				#np.random.exponetial(1 / betaThresh);
@@ -189,13 +189,13 @@ class DistributionHost:
 
 				yield env.timeout(time_to_wait)
 	
-				if (switch):
+				#if (switch):
 					#print "Switching to on."
-					self.state = 1
-					switch = False
+				#	self.state = 1
+				#	switch = False
 			else:
 				# generate traffic a bit slower
-				time_till_next_packet_arrival = np.random.exponential(1000/arrival_rate * (betaThresh / (alphaThresh + betaThresh)))
+				time_till_next_packet_arrival = np.random.exponential(1000/arrival_rate * (1 / (1  + alphaThresh/betaThresh)))
 				#alpha = np.random.uniform(0, 1)
 					
 				#if alpha < 1 - alphaThresh:
@@ -209,25 +209,30 @@ class DistributionHost:
 				
 				self.arrival_times.append(time_till_next_packet_arrival)
 				self.create_packet(env)
+				self.num_packets = self.num_packets + 1
 
-				if (switch):
-					#print "Switching to off."
-					self.state = 0
-					switch = False
+				#if (switch):
+				#	#print "Switching to off."
+				#	self.state = 0
+				#	switch = False
 		
 	def process_arrivals_synthetic_mode(self):
 		env = get_env()
 
 		while True:
 			state = self.state
-
+			
 			if state == 0:
 				time_to_switch = np.random.exponential(1 / self.betaThresh)
 			else:
 				time_to_switch = np.random.exponential(1 / self.alphaThresh)
 
 			yield env.timeout(time_to_switch)
-			self.switch = True
+			
+			if (self.state == 1):
+				self.state = 0
+			else:
+				self.state = 1
 
 	def process_arrivals_real(self, real_traffic):
 		env = get_env()

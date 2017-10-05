@@ -24,6 +24,8 @@ def show_graphs(config):
 
 def show_packet_lifetimes(config):
 	hosts = Host.get_hosts()
+	
+	Host.csv_temp_list.append(Host.main_host.num_packets / 300)
 
 	# get the coefficient of variation
 	arr_times_var = np.var(Host.main_host.arrival_times)
