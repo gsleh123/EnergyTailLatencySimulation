@@ -4,18 +4,18 @@ rm *.csv
 
 alpha_thresh=alphaThresh
 beta_thresh=betaThresh
-arg2=0.01
+arg2=0.1
 
-beta[0]=0.01
-beta[1]=0.05
-beta[2]=0.1
-beta[3]=0.5
+beta[0]=0.1
+beta[1]=0.25
+beta[2]=0.5
+beta[3]=0.75
 beta[4]=1
-beta[5]=5
-beta[6]=10
-beta[7]=50
-beta[8]=500
-beta[9]=1000
+beta[5]=25
+beta[6]=50
+beta[7]=75
+beta[8]=100
+beta[9]=250
 
 . ~/.bashrc
 source activate py2_ghosal
