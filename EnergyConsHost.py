@@ -53,7 +53,7 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 		w = lambertw(gamma * math.exp(e * gamma), -1).real
 		min_servers = (req_arr_rate / ((s_c / req_size) - (1 / d_0) * (w - e * gamma)))
 		flag = 0
-	
+
 	min_servers = int(math.ceil(min_servers))
 	
 	if min_servers > num_of_servers:
@@ -160,6 +160,16 @@ class DistributionHost:
 		# only usedfor synthetic traffic
 		self.state = 1
 		self.switch = False
+
+	def process_arrivals_theoretical(self):
+		env = get_env()
+		
+		while True:
+			time_till_next_packet_arrival = np.random.exponential(1000/self.arrival_rate)
+			yield env.timeout(time_till_next_packet_arrival)
+			self.arrival_times.append(time_till_next_packet_arrival)
+ 			self.create_packet(env)
+			self.num_packets = self.num_packets + 1
 
 	def process_arrivals_synthetic(self):
 		env = get_env()
@@ -308,7 +318,7 @@ class ProcessHost:
 					# determine computation time
 					comp_time = np.random.exponential(self.comp_time)
 					pkt = self.packets.get()
-					
+					#print self.comp_time
 					yield env.timeout(comp_time)
 					
 					# log the packet
@@ -328,7 +338,7 @@ class ProcessHost:
 				self.finish_booting_server(env, time_to_wake_up)
 			else:
 				# do nothing, we are already asleep
-				time_to_wait = self.arrival_dist(**self.arrival_kwargs) / 2
+				time_to_wait = self.arrival_dist(**self.arrival_kwargs) / 10
 				yield env.timeout(time_to_wait)
 					
 	def finish_packet(self, env, pkt):

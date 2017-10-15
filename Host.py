@@ -50,7 +50,7 @@ def init_hosts(config):
 	freq_setting = config['Energy']['freq_setting']
 	servers_to_use = config['Energy']['servers_to_use']
 	freq_to_use = config['Energy']['freq_to_use']
-	
+		
 	# determine optimal number of servers and optimal frequency
 	dimension_depth = 2
 	[num_of_hosts, freq] = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting, servers_to_use, freq_to_use)
@@ -70,8 +70,9 @@ def init_hosts(config):
 	if (len(real_data) != 0):
 		env.process(main_host.process_arrivals_real(real_data))
 	else:
-		env.process(main_host.process_arrivals_synthetic_mode())
-		env.process(main_host.process_arrivals_synthetic())
+		env.process(main_host.process_arrivals_theoretical())
+		#env.process(main_host.process_arrivals_synthetic_mode())
+		#env.process(main_host.process_arrivals_synthetic())
 	
 	for i in np.random.permutation(num_of_hosts):
 		env.process(hosts[i].process_service())
