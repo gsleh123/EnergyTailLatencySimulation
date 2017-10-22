@@ -59,7 +59,15 @@ def init_hosts(config):
 	# error
 	if (num_of_hosts == -1):
 		return 0
-		
+
+	if (len(real_data) != 0):
+		temp_list = list()
+
+		cv = 100 * np.std(real_data) / np.mean(real_data)
+		print cv
+		print np.mean(real_data)
+		#num_of_hosts = num_of_hosts + 3
+				
 	for i in range(num_of_hosts):
 		# instantiate a new host
 		host = ech.ProcessHost(i, config, comp_time, arrival_distribution, arrival_kwargs, wake_up_dist, wake_up_kwargs, P_s)
@@ -68,6 +76,7 @@ def init_hosts(config):
 	env = get_env()
 	
 	if (len(real_data) != 0):
+		#env.process(main_host.refresh_system(real_data))
 		env.process(main_host.process_arrivals_real(real_data))
 	else:
 		env.process(main_host.process_arrivals_theoretical())

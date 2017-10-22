@@ -244,6 +244,43 @@ class DistributionHost:
 			else:
 				self.state = 1
 
+	def refresh_system(self, real_traffic):
+		env = get_env()
+		temp_list = list()
+		total_time = 0
+		inter_arrival_time = 0
+		i = self.count
+		packet_count = 0
+		temp_arr_rates = list()
+
+		while True:
+			if i < len(real_traffic):
+				inter_arrival_time = real_traffic[i]
+				temp_arr_rates.append(inter_arrival_time)
+				total_time = total_time + inter_arrival_time
+			else:
+				inter_arrival_time = real_traffic[i - len(real_traffic)]
+				temp_arr_rates.append(inter_arrival_time)
+				total_time = total_time + inter_arrival_time
+			
+			i = i + 1
+			packet_count = packet_count + 1
+
+			if total_time >= 1:
+				cv = 100 * np.std(temp_arr_rates) / 10
+				if cv > 13000:
+					print cv
+				#if (np.mean(temp_arr_rates) < 10):
+				#print packet_count * 10
+				yield env.timeout(1)
+
+				temp_list = list()
+				total_time = 0
+				inter_arrival_time = 0
+				i = self.count
+				packet_count = 0
+				temp_arr_rates = list()
+
 	def process_arrivals_real(self, real_traffic):
 		env = get_env()
 
@@ -256,7 +293,7 @@ class DistributionHost:
 
 			yield env.timeout(time_till_next_packet_arrival)
 			self.arrival_times.append(time_till_next_packet_arrival)
-	
+			self.num_packets = self.num_packets + 1	
 			self.create_packet(env)
 
 	def create_packet(self, env):
