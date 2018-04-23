@@ -2,7 +2,7 @@ import os
 
 editFileCmd = os.path.join(os.getcwd(), "editFile.py")
 runCmd = os.path.join(os.getcwd(), "CCRunner.py")
-realTrafficTraceFile = 'low_rate_iatimes_100.txt'
+realTrafficTraceFile = 'high_rate_iatimes_400.txt'
 
 oldFreq = 2.2
 newFreq = 2.2

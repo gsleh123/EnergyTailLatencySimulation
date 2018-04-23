@@ -44,10 +44,6 @@ def run(parser):
 	Host.csv_temp_list.append(wake_up_ratio)
 	Host.csv_temp_list.append(sleep_ratio)
 	
-	#logging.info('Computing time: %f' %(total_computing_time / total_time))
-	#logging.info('Wake up time: %f' %(total_wake_up_time / total_time))
-	#logging.info('Sleep time: %f' %(total_sleep_time / total_time))
-	
 	Vis_Energy.show_graphs(config)
 	
 def create_config_dict(parser):
