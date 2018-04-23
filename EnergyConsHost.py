@@ -268,8 +268,7 @@ class DistributionHost:
 
 			if total_time >= 1:
 				cv = 100 * np.std(temp_arr_rates) / 10
-				if cv > 13000:
-					print cv
+
 				#if (np.mean(temp_arr_rates) < 10):
 				#print packet_count * 10
 				yield env.timeout(1)
@@ -297,10 +296,11 @@ class DistributionHost:
 			self.create_packet(env)
 
 	def create_packet(self, env):
-		pkt = Packet(env.now)
+		#pkt = Packet(env.now, num_packets)
 
 		# send packet away
 		i = random.randint(0, Host.num_of_hosts - 1)
+		pkt = Packet(env.now, Host.hosts[i].packets.qsize())
 		Host.hosts[i].packets.put(pkt)
 		
 		# wake up server if we found it to be sleeping
@@ -322,14 +322,16 @@ class ProcessHost:
 				self.packets = Queue()
 				self.start_timer = 0
 				self.end_timer = 0
-				
+				self.freq = 2.46 * (10**9)
+	
 				# data collection
 				self.computing_times = list()
 				self.wake_up_times = list()
 				self.sleep_times = list()
 				self.packet_latency = list()
+				self.packet_comp_time = list()
+				self.packet_freq_history = list()
 				self.queue_size = dict()
-				self.freq_history = list()
 	
 	def __cmp__(self, other):
 		# I don't think we use this anymore
@@ -354,12 +356,30 @@ class ProcessHost:
 				else:
 					# determine computation time
 					comp_time = np.random.exponential(self.comp_time)
+					
 					pkt = self.packets.get()
-					#print self.comp_time
+				
 					yield env.timeout(comp_time)
 					
 					# log the packet
-					self.finish_packet(env, pkt)
+					self.finish_packet(env, pkt, comp_time, self.freq)
+
+                                        if self.packets.qsize() == 0:
+						self.comp_time = (1000 * 100000000) / (2.46*(10**9))
+						self.freq = 2.46*(10**9)
+					else:
+						new_freq = 2.46 * (10**9)
+						for i in range(self.packets.qsize()):
+                                                	time_spent_in_sys = (env.now - pkt.birth_tick) / 1000
+                                                	temp_freq = (1.23 * (10**9)) / (0.5 - time_spent_in_sys)
+
+							if temp_freq > new_freq:
+								new_freq = temp_freq
+
+						new_freq = min(new_freq, 3*(10**9))
+						self.freq = new_freq
+                                        	self.comp_time = (1000 * 100000000) / (new_freq)
+
 			elif self.state == State.BOOTING:
 				# we are booting, so we need to figure out for how long
 				
@@ -378,10 +398,11 @@ class ProcessHost:
 				time_to_wait = self.arrival_dist(**self.arrival_kwargs) / 10
 				yield env.timeout(time_to_wait)
 					
-	def finish_packet(self, env, pkt):
+	def finish_packet(self, env, pkt, comp_time, freq):
 		full_processing_time = env.now - pkt.birth_tick
 		self.packet_latency.append(full_processing_time)
-
+		self.packet_comp_time.append(comp_time)
+		self.packet_freq_history.append(freq)
 		#logging.info('Host %i finished a packet. time spent: %f' % (self.id, full_processing_time))
 	
 	def wake_up_server(self, env):
