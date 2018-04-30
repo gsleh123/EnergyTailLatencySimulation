@@ -28,7 +28,8 @@ def init_hosts(config):
 	arrival_rate = config['arrival_rate']
 	alphaThresh = config['Energy']['alphaThresh']
 	betaThresh = config['Energy']['betaThresh']
-	main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh)
+	routing_option = config['Energy']['routing_option']
+	main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option)
 
 	# retrieve all the settings
 	real_data = config['Energy']['real_data']
@@ -50,6 +51,7 @@ def init_hosts(config):
 	freq_setting = config['Energy']['freq_setting']
 	servers_to_use = config['Energy']['servers_to_use']
 	freq_to_use = config['Energy']['freq_to_use']
+	dvfs_option = config['Energy']['dvfs_option']
 		
 	# determine optimal number of servers and optimal frequency
 	dimension_depth = 2
@@ -61,7 +63,7 @@ def init_hosts(config):
 				
 	for i in range(num_of_hosts):
 		# instantiate a new host
-		host = ech.ProcessHost(i, config, req_size, freq, max_freq, arrival_distribution, arrival_kwargs, wake_up_dist, wake_up_kwargs, P_s)
+		host = ech.ProcessHost(i, config, req_size, freq, max_freq, arrival_distribution, arrival_kwargs, wake_up_dist, wake_up_kwargs, dvfs_option)
 		hosts.append(host)
 
 	env = get_env()

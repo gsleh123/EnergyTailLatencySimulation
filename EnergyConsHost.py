@@ -146,7 +146,7 @@ class State(Enum):
 	AWAKE = 2
 	
 class DistributionHost:
-	def __init__(self, arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh):
+	def __init__(self, arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option):
 		self.packets = Queue()
 		self.arrival_dist = arrival_distribution
 		self.arrival_kwargs = arrival_kwargs
@@ -156,7 +156,8 @@ class DistributionHost:
 		self.num_packets = 0	
 		self.arrival_times = list()
 		self.count = 0
-		
+		self.routing_option = routing_option
+
 		# only usedfor synthetic traffic
 		self.state = 1
 		self.switch = False
@@ -269,13 +270,17 @@ class DistributionHost:
 
 	def create_packet(self, env):
 		# determine which host to send the packet to
-		i = random.randint(0, Host.num_of_hosts - 1)
-		min_queue_len = float("inf")
-                for x in range(Host.num_of_hosts):
-                        queue_len = Host.hosts[x].packets.qsize()
-                        if queue_len < min_queue_len:
-                                i = x
-                                min_queue_len = queue_len
+		i = 0
+
+		if self.routing_option == 'min_queue_length':
+			min_queue_len = float("inf")
+                	for x in range(Host.num_of_hosts):
+                        	queue_len = Host.hosts[x].packets.qsize()
+                        	if queue_len < min_queue_len:
+                                	i = x
+                                	min_queue_len = queue_len
+		else:
+			i = random.randint(0, Host.num_of_hosts - 1)
 
 		#create packet
 		pkt = Packet(env.now, Host.hosts[i].packets.qsize())
@@ -288,7 +293,7 @@ class DistributionHost:
  			Host.hosts[i].wake_up_server(env)
 		
 class ProcessHost:
-	def __init__(self, hostid, config, req_size, freq, max_freq, arrival_dist, arrival_kwargs, wake_up_dist, wake_up_kwargs, power_setup):
+	def __init__(self, hostid, config, req_size, freq, max_freq, arrival_dist, arrival_kwargs, wake_up_dist, wake_up_kwargs, dvfs_option):
 				 
 				# class variables
 				self.id = hostid
@@ -300,12 +305,12 @@ class ProcessHost:
 				self.arrival_kwargs = arrival_kwargs
 				self.wake_up_dist = wake_up_dist
 				self.wake_up_kwargs = wake_up_kwargs
-				self.power_setup = power_setup
 				self.state = State.SLEEP
 				self.packets = Queue()
 				self.start_timer = 0
 				self.end_timer = 0
-	
+				self.dvfs_option = dvfs_option
+
 				# data collection
 				self.computing_times = list()
 				self.wake_up_times = list()
@@ -349,15 +354,16 @@ class ProcessHost:
 					# calculate new comp time based on Rubik's dvfs
 					freq = self.fixed_freq
 
-                                        if self.packets.qsize() != 0:
-						for i in range(self.packets.qsize()):
-                                                	time_spent_in_sys = (env.now - pkt.birth_tick) / 1000
-                                                	temp_freq = (self.fixed_freq / 2) / (0.5 - time_spent_in_sys)
+					if self.dvfs_option == 'rubik':
+                                        	if self.packets.qsize() != 0:
+							for i in range(self.packets.qsize()):
+                                                		time_spent_in_sys = (env.now - pkt.birth_tick) / 1000
+                                                		temp_freq = (self.fixed_freq / 2) / (0.5 - time_spent_in_sys)
 							
-							if temp_freq > freq:
-								freq = temp_freq
+								if temp_freq > freq:
+									freq = temp_freq
 
-						freq = min(freq, self.max_freq)
+							freq = min(freq, self.max_freq)
 
                                         self.comp_time = (1000 * self.req_size) / (freq)
 					self.freq = freq
