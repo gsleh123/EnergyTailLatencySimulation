@@ -42,7 +42,7 @@ def init_hosts(config):
 	num_of_servers = config['Energy']['num_of_servers']
 	e = config['Energy']['e']
 	s_b = config['Energy']['s_b']
-	s_c = config['Energy']['s_c']
+	max_freq = s_c = config['Energy']['s_c']
 	pow_con_model = config['Energy']['pow_con_model']
 	k_m = config['Energy']['k_m']
 	b = config['Energy']['b']
@@ -54,23 +54,14 @@ def init_hosts(config):
 	# determine optimal number of servers and optimal frequency
 	dimension_depth = 2
 	[num_of_hosts, freq] = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting, servers_to_use, freq_to_use)
-	comp_time = (1000 * req_size) / (freq)
 	
 	# error
 	if (num_of_hosts == -1):
 		return 0
-
-	if (len(real_data) != 0):
-		temp_list = list()
-
-		cv = 100 * np.std(real_data) / np.mean(real_data)
-		print cv
-		print np.mean(real_data)
-		#num_of_hosts = num_of_hosts + 3
 				
 	for i in range(num_of_hosts):
 		# instantiate a new host
-		host = ech.ProcessHost(i, config, comp_time, arrival_distribution, arrival_kwargs, wake_up_dist, wake_up_kwargs, P_s)
+		host = ech.ProcessHost(i, config, req_size, freq, max_freq, arrival_distribution, arrival_kwargs, wake_up_dist, wake_up_kwargs, P_s)
 		hosts.append(host)
 
 	env = get_env()

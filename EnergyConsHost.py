@@ -188,43 +188,15 @@ class DistributionHost:
 			if state == 0:
 				# generate traffic really quickly 
 				time_to_wait = np.random.exponential(1000 / arrival_rate * (1 / (1 + alphaThresh/betaThresh)))
-				#beta = np.random.uniform(0, 1)
-			
-				#np.random.exponetial(1 / betaThresh);
-				#if beta < 1- betaThresh:	
-				#if beta <= betaThresh / (alphaThresh + betaThresh) + 2*k / (1+k)**2 / betaThresh:
-				#	state = 0
-				#else:
-				#	state = 1
 
 				yield env.timeout(time_to_wait)
-	
-				#if (switch):
-					#print "Switching to on."
-				#	self.state = 1
-				#	switch = False
 			else:
-				# generate traffic a bit slower
 				time_till_next_packet_arrival = np.random.exponential(1000/arrival_rate * (1 / (1  + alphaThresh/betaThresh)))
-				#alpha = np.random.uniform(0, 1)
-					
-				#if alpha < 1 - alphaThresh:
-				#if alpha <= alphaThresh / (alphaThresh + betaThresh) + 2*k / (1+k)**2 / betaThresh:
-				#	state = 1
-				#else:
-				#	state = 0
-				#np.random.exponential(1 / alphaThresh)
-				#print time_till_next_packet_arrival
 				yield env.timeout(time_till_next_packet_arrival)
 				
 				self.arrival_times.append(time_till_next_packet_arrival)
 				self.create_packet(env)
 				self.num_packets = self.num_packets + 1
-
-				#if (switch):
-				#	#print "Switching to off."
-				#	self.state = 0
-				#	switch = False
 		
 	def process_arrivals_synthetic_mode(self):
 		env = get_env()
@@ -296,11 +268,19 @@ class DistributionHost:
 			self.create_packet(env)
 
 	def create_packet(self, env):
-		#pkt = Packet(env.now, num_packets)
-
-		# send packet away
+		# determine which host to send the packet to
 		i = random.randint(0, Host.num_of_hosts - 1)
+		min_queue_len = float("inf")
+                for x in range(Host.num_of_hosts):
+                        queue_len = Host.hosts[x].packets.qsize()
+                        if queue_len < min_queue_len:
+                                i = x
+                                min_queue_len = queue_len
+
+		#create packet
 		pkt = Packet(env.now, Host.hosts[i].packets.qsize())
+
+		#place packet in the queue
 		Host.hosts[i].packets.put(pkt)
 		
 		# wake up server if we found it to be sleeping
@@ -308,11 +288,14 @@ class DistributionHost:
  			Host.hosts[i].wake_up_server(env)
 		
 class ProcessHost:
-	def __init__(self, hostid, config, comp_time, arrival_dist, arrival_kwargs, wake_up_dist, wake_up_kwargs, power_setup):
+	def __init__(self, hostid, config, req_size, freq, max_freq, arrival_dist, arrival_kwargs, wake_up_dist, wake_up_kwargs, power_setup):
 				 
 				# class variables
 				self.id = hostid
-				self.comp_time = comp_time
+				self.comp_time = (1000 * req_size) / freq
+				self.req_size = req_size
+				self.fixed_freq = self.freq = freq
+				self.max_freq = max_freq
 				self.arrival_dist = arrival_dist
 				self.arrival_kwargs = arrival_kwargs
 				self.wake_up_dist = wake_up_dist
@@ -322,7 +305,6 @@ class ProcessHost:
 				self.packets = Queue()
 				self.start_timer = 0
 				self.end_timer = 0
-				self.freq = 2.46 * (10**9)
 	
 				# data collection
 				self.computing_times = list()
@@ -364,22 +346,21 @@ class ProcessHost:
 					# log the packet
 					self.finish_packet(env, pkt, comp_time, self.freq)
 
-                                        if self.packets.qsize() == 0:
-						self.comp_time = (1000 * 100000000) / (2.46*(10**9))
-						self.freq = 2.46*(10**9)
-					else:
-						new_freq = 2.46 * (10**9)
+					# calculate new comp time based on Rubik's dvfs
+					freq = self.fixed_freq
+
+                                        if self.packets.qsize() != 0:
 						for i in range(self.packets.qsize()):
                                                 	time_spent_in_sys = (env.now - pkt.birth_tick) / 1000
-                                                	temp_freq = (1.23 * (10**9)) / (0.5 - time_spent_in_sys)
+                                                	temp_freq = (self.fixed_freq / 2) / (0.5 - time_spent_in_sys)
+							
+							if temp_freq > freq:
+								freq = temp_freq
 
-							if temp_freq > new_freq:
-								new_freq = temp_freq
+						freq = min(freq, self.max_freq)
 
-						new_freq = min(new_freq, 3*(10**9))
-						self.freq = new_freq
-                                        	self.comp_time = (1000 * 100000000) / (new_freq)
-
+                                        self.comp_time = (1000 * self.req_size) / (freq)
+					self.freq = freq
 			elif self.state == State.BOOTING:
 				# we are booting, so we need to figure out for how long
 				
