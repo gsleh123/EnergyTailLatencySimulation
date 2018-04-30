@@ -63,7 +63,7 @@ def init_hosts(config):
 				
 	for i in range(num_of_hosts):
 		# instantiate a new host
-		host = ech.ProcessHost(i, config, req_size, freq, max_freq, arrival_distribution, arrival_kwargs, wake_up_dist, wake_up_kwargs, dvfs_option)
+		host = ech.ProcessHost(i, config, req_size, freq, max_freq, arrival_distribution, arrival_kwargs, arrival_rate, wake_up_dist, wake_up_kwargs, dvfs_option)
 		hosts.append(host)
 
 	env = get_env()

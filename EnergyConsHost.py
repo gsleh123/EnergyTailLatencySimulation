@@ -166,6 +166,7 @@ class DistributionHost:
 		env = get_env()
 		
 		while True:
+			print "hello"
 			time_till_next_packet_arrival = np.random.exponential(1000/self.arrival_rate)
 			yield env.timeout(time_till_next_packet_arrival)
 			self.arrival_times.append(time_till_next_packet_arrival)
@@ -293,7 +294,7 @@ class DistributionHost:
  			Host.hosts[i].wake_up_server(env)
 		
 class ProcessHost:
-	def __init__(self, hostid, config, req_size, freq, max_freq, arrival_dist, arrival_kwargs, wake_up_dist, wake_up_kwargs, dvfs_option):
+	def __init__(self, hostid, config, req_size, freq, max_freq, arrival_dist, arrival_kwargs, arrival_rate, wake_up_dist, wake_up_kwargs, dvfs_option):
 				 
 				# class variables
 				self.id = hostid
@@ -303,6 +304,7 @@ class ProcessHost:
 				self.max_freq = max_freq
 				self.arrival_dist = arrival_dist
 				self.arrival_kwargs = arrival_kwargs
+				self.arrival_rate = arrival_rate
 				self.wake_up_dist = wake_up_dist
 				self.wake_up_kwargs = wake_up_kwargs
 				self.state = State.SLEEP
@@ -382,7 +384,7 @@ class ProcessHost:
 				self.finish_booting_server(env, time_to_wake_up)
 			else:
 				# do nothing, we are already asleep
-				time_to_wait = self.arrival_dist(**self.arrival_kwargs) / 10
+				time_to_wait = 1000 / self.arrival_rate / 10
 				yield env.timeout(time_to_wait)
 					
 	def finish_packet(self, env, pkt, comp_time, freq):
