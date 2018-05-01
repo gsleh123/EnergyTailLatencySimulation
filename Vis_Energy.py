@@ -27,17 +27,10 @@ def show_packet_lifetimes(config):
 	
 	Host.csv_temp_list.append(Host.main_host.num_packets / 7200)
 
-	# get the coefficient of variation
-	arr_times_var = np.var(Host.main_host.arrival_times)
+	# get the mean
         arr_times_mean = np.mean(Host.main_host.arrival_times)
-        cv = arr_times_var / (arr_times_mean**2)
 
 	Host.csv_temp_list.append(arr_times_mean)
-	Host.csv_temp_list.append(cv)
-
-	arrival_times_series = pd.Series(Host.main_host.arrival_times)
-	acf = arrival_times_series.autocorr()
-	Host.csv_temp_list.append(acf)
 
 	# get the tail latency
 	lifetimes = list()

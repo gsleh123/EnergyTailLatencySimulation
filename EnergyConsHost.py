@@ -166,8 +166,7 @@ class DistributionHost:
 		env = get_env()
 		
 		while True:
-			print "hello"
-			time_till_next_packet_arrival = np.random.exponential(1000/self.arrival_rate)
+			time_till_next_packet_arrival = self.arrival_dist(**self.arrival_kwargs)
 			yield env.timeout(time_till_next_packet_arrival)
 			self.arrival_times.append(time_till_next_packet_arrival)
  			self.create_packet(env)
