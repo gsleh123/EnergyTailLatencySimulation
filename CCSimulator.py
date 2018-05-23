@@ -73,6 +73,7 @@ def create_config_dict(parser):
 	options['Energy']['problem_type'] = int(parser.get('Energy', 'problem_type'))
 	options['Energy']['freq_setting'] = int(parser.get('Energy', 'freq_setting'))
 
+        options['Energy']['sim_mode'] = str(parser.get('Energy', 'sim_mode'));
 	options['Energy']['d_0'] = float(parser.get('Energy', 'd_0'));
 	options['Energy']['P_s'] = int(parser.get('Energy', 'P_s'));
 	options['Energy']['alpha'] = int(parser.get('Energy', 'alpha'));
