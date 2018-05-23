@@ -100,7 +100,7 @@ def create_config_dict(parser):
 		options['arrival_rate'] = ((1 * 10**3) / arrival_kwargs['scale'])
 	elif arrival_dist_str == 'pareto':
 		options['Energy']['arrival_distribution'] = scipy.stats.pareto.rvs
-		options['arrival_rate'] = ((1 * 10**3) / arrival_kwargs['scale'])
+		options['arrival_rate'] = ((1 * 10**3) / (arrival_kwargs['scale'] * arrival_kwargs['b'] / (arrival_kwargs['b'] - 1)))
 	elif arrival_dist_str == 'lognormal':
 		options['Energy']['arrival_distribution'] = np.random.lognormal
 	elif arrival_dist_str == 'fixed':
