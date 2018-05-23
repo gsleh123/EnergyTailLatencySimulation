@@ -29,7 +29,6 @@ def init_hosts(config):
 	alphaThresh = config['Energy']['alphaThresh']
 	betaThresh = config['Energy']['betaThresh']
 	routing_option = config['Energy']['routing_option']
-	main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option)
 
 	# retrieve all the settings
 	real_data = config['Energy']['real_data']
@@ -49,10 +48,13 @@ def init_hosts(config):
 	b = config['Energy']['b']
 	problem_type = config['Energy']['problem_type']
 	freq_setting = config['Energy']['freq_setting']
-	servers_to_use = config['Energy']['servers_to_use']
+	active_servers = config['Energy']['active_servers']
+        servers_to_use = config['Energy']['servers_to_use']
 	freq_to_use = config['Energy']['freq_to_use']
 	dvfs_option = config['Energy']['dvfs_option']
-		
+	
+        main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option, active_servers)
+
 	# determine optimal number of servers and optimal frequency
 	dimension_depth = 2
 	[num_of_hosts, freq] = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting, servers_to_use, freq_to_use)

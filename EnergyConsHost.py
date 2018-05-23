@@ -146,7 +146,7 @@ class State(Enum):
 	AWAKE = 2
 	
 class DistributionHost:
-	def __init__(self, arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option):
+	def __init__(self, arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option, active_servers):
 		self.packets = Queue()
 		self.arrival_dist = arrival_distribution
 		self.arrival_kwargs = arrival_kwargs
@@ -157,6 +157,7 @@ class DistributionHost:
 		self.arrival_times = list()
 		self.count = 0
 		self.routing_option = routing_option
+                self.active_servers = active_servers
 
 		# only usedfor synthetic traffic
 		self.state = 1
@@ -274,13 +275,13 @@ class DistributionHost:
 
 		if self.routing_option == 'min_queue_length':
 			min_queue_len = float("inf")
-                	for x in range(Host.num_of_hosts):
+                	for x in range(self.active_servers):
                         	queue_len = Host.hosts[x].packets.qsize()
                         	if queue_len < min_queue_len:
                                 	i = x
                                 	min_queue_len = queue_len
 		else:
-			i = random.randint(0, Host.num_of_hosts - 1)
+			i = random.randint(0, self.active_servers - 1)
 
 		#create packet
 		pkt = Packet(env.now, Host.hosts[i].packets.qsize())

@@ -85,7 +85,8 @@ def create_config_dict(parser):
 	options['Energy']['b'] = int(parser.get('Energy', 'b'));
 	options['Energy']['alphaThresh'] = float(parser.get('Energy', 'alphaThresh'));
 	options['Energy']['betaThresh'] = float(parser.get('Energy', 'betaThresh'));
-	options['Energy']['servers_to_use'] = int(parser.get('Energy', 'servers_to_use'));
+	options['Energy']['active_servers'] = int(parser.get('Energy', 'active_servers'));
+        options['Energy']['servers_to_use'] = int(parser.get('Energy', 'servers_to_use'));
         options['Energy']['freq_to_use'] = float(parser.get('Energy', 'freq_to_use')) * 10**9;
 	options['Energy']['routing_option'] = str(parser.get('Energy', 'routing_option'))
 	options['Energy']['dvfs_option'] = str(parser.get('Energy', 'dvfs_option'))
@@ -100,7 +101,7 @@ def create_config_dict(parser):
 		options['arrival_rate'] = ((1 * 10**3) / arrival_kwargs['scale'])
 	elif arrival_dist_str == 'pareto':
 		options['Energy']['arrival_distribution'] = scipy.stats.pareto.rvs
-		options['arrival_rate'] = ((1 * 10**3) / arrival_kwargs['scale'])
+		options['arrival_rate'] = ((1 * 10**3) / (arrival_kwargs['scale'] * arrival_kwargs['b'] / (arrival_kwargs['b'] - 1)))
 	elif arrival_dist_str == 'lognormal':
 		options['Energy']['arrival_distribution'] = np.random.lognormal
 	elif arrival_dist_str == 'fixed':
