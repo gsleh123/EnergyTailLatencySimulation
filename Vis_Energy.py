@@ -75,23 +75,27 @@ def show_packet_lifetimes(config):
 	if pow_con_model == 1:
 		power_usage = 1;
 	elif pow_con_model == 2:
-		comp_power = ((freq - s_b) / k_m)**2 + b
-		power_usage = (comp_power * comp_ratio + wake_up_ratio * P_s + sleep_ratio * P_s) * servers_used
-		Host.csv_temp_list.append(power_usage)
+	    total_power_usage = 0
+	    for host in Host.hosts:
+                if sum(host.packet_latency) != 0:
+		    freq = (sum(x * y for x, y in zip(host.packet_freq_history, host.packet_latency)) / sum(host.packet_latency)) / (10**9)
+		    comp_power = ((freq - s_b) / k_m)**2 + b
+                else:
+                    comp_power = 0
 
-	total_power_usage = 0
-	for host in Host.hosts:
-		freq = (sum(x * y for x, y in zip(host.packet_freq_history, host.packet_latency)) / sum(host.packet_latency)) / (10**9)
-		comp_power = ((freq - s_b) / k_m)**2 + b
                 total_time = sum(host.computing_times) + sum(host.wake_up_times) + sum(host.sleep_times)
-		host.packet_freq_history
-		comp_ratio = sum(host.computing_times) / total_time
-		wake_up_ratio = sum(host.wake_up_times) / total_time
-		sleep_ratio = sum(host.sleep_times) / total_time
-		power_usage = (comp_power * comp_ratio + wake_up_ratio * P_s + sleep_ratio * P_s)
+                
+                if total_time == 0:
+                    power_usage = P_s
+                else:
+		    comp_ratio = sum(host.computing_times) / total_time
+		    wake_up_ratio = sum(host.wake_up_times) / total_time
+		    sleep_ratio = sum(host.sleep_times) / total_time
+		    power_usage = (comp_power * comp_ratio + wake_up_ratio * P_s + sleep_ratio * P_s)
+
                 total_power_usage = total_power_usage + power_usage
 	
-	Host.csv_temp_list.append(total_power_usage)
+	    Host.csv_temp_list.append(total_power_usage)
 		
 	# write to a csv file 
 	with open('simdata%d%dN=%sk=%s.csv' %(problem_type, freq_setting, num_of_servers, pow_con_model), 'ab') as csvfile:

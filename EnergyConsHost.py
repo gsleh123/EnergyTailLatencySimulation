@@ -26,7 +26,7 @@ def Energy_Runner(target_timestep):
 	        queue_size += q.qsize()
 
     for host in Host.get_hosts():
-        host.sleep_server(env)
+        host.end_sim(env)
 
 def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting, servers_to_use, freq_to_use):
     min_servers = 0
@@ -245,6 +245,9 @@ class DistributionHost:
 	    # wake up server if we found it to be sleeping
 	    if Host.hosts[i].state == State.SLEEP:
  	        Host.hosts[i].wake_up_server(env)
+
+        self.active_servers = self.active_servers + 1
+        self.active_servers = self.active_servers - 1
 		
 class ProcessHost:
     def __init__(self, hostid, config, req_size, freq, max_freq, arrival_dist, arrival_kwargs, arrival_rate, wake_up_dist, wake_up_kwargs, dvfs_option):
@@ -345,3 +348,14 @@ class ProcessHost:
 	self.start_timer = env.now
 	self.computing_times.append(diff)
 	self.state = State.SLEEP
+
+    def end_sim(self, env):
+        if self.state == State.SLEEP:
+            self.end_timer = env.now
+            diff = self.end_timer - self.start_timer
+            self.start_timer = env.now
+            self.sleep_times.append(diff)
+            self.state = State.SLEEP
+        else:
+            self.sleep_server(env)
+
