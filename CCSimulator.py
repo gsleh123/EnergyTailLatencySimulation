@@ -22,28 +22,8 @@ def run(parser):
 		
 	time.sleep(1)
 
-	#logging.info('Simulation Started')
-
 	env.run(proc)
 
-	#logging.info('Simulation Complete')
-
-	total_computing_time = 0
-	total_wake_up_time = 0
-	total_sleep_time = 0
-	for host in Host.hosts:
-		total_computing_time += sum(host.computing_times)
-		total_wake_up_time += sum(host.wake_up_times)
-		total_sleep_time += sum(host.sleep_times)
-	
-	total_time = total_computing_time + total_wake_up_time + total_sleep_time
-	comp_ratio = total_computing_time / total_time
-	wake_up_ratio = total_wake_up_time / total_time
-	sleep_ratio = total_sleep_time / total_time
-	Host.csv_temp_list.append(comp_ratio)
-	Host.csv_temp_list.append(wake_up_ratio)
-	Host.csv_temp_list.append(sleep_ratio)
-	
 	Vis_Energy.show_graphs(config)
 	
 def create_config_dict(parser):

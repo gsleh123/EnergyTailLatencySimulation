@@ -25,12 +25,7 @@ def show_graphs(config):
 def show_packet_lifetimes(config):
 	hosts = Host.get_hosts()
 	
-	Host.csv_temp_list.append(Host.main_host.num_packets / 7200)
-
-	# get the mean
         arr_times_mean = np.mean(Host.main_host.arrival_times)
-
-	Host.csv_temp_list.append(arr_times_mean)
 
 	# get the tail latency
 	lifetimes = list()
@@ -53,8 +48,6 @@ def show_packet_lifetimes(config):
 	else:
 		prob_lifetimes = 0
 		
-	Host.csv_temp_list.append(prob_lifetimes)
-	
 	# get the power usage settings
 	num_of_servers = config['Energy']['num_of_servers']
 	pow_con_model = config['Energy']['pow_con_model']
@@ -65,17 +58,16 @@ def show_packet_lifetimes(config):
 	problem_type = config['Energy']['problem_type']
 	freq_setting = config['Energy']['freq_setting']
 	
-	servers_used = Host.csv_temp_list[1]
-	freq = Host.csv_temp_list[2]
-	comp_ratio = Host.csv_temp_list[3]
-	wake_up_ratio = Host.csv_temp_list[4]
-	sleep_ratio = Host.csv_temp_list[5]
-	
+	servers_used = len(Host.hosts)
+	total_comp_ratio = 0
+        total_wake_up_ratio = 0
+        total_sleep_ratio = 0
+        total_power_usage = 0
+
 	# calculate power usage
 	if pow_con_model == 1:
 		power_usage = 1;
 	elif pow_con_model == 2:
-	    total_power_usage = 0
 	    for host in Host.hosts:
                 if sum(host.packet_latency) != 0:
 		    freq = (sum(x * y for x, y in zip(host.packet_freq_history, host.packet_latency)) / sum(host.packet_latency)) / (10**9)
@@ -94,10 +86,22 @@ def show_packet_lifetimes(config):
 		    power_usage = (comp_power * comp_ratio + wake_up_ratio * P_s + sleep_ratio * P_s)
 
                 total_power_usage = total_power_usage + power_usage
-	
-	    Host.csv_temp_list.append(total_power_usage)
+	        total_comp_ratio = total_comp_ratio + comp_ratio
+                total_wake_up_ratio = total_wake_up_ratio + wake_up_ratio
+                total_sleep_ratio = total_sleep_ratio + sleep_ratio
+
+        csv_temp_list = list()
+        csv_temp_list.append(Host.main_host.num_packets / 7200)
+        csv_temp_list.append(arr_times_mean)
+        csv_temp_list.append(servers_used)
+        csv_temp_list.append(freq)
+	csv_temp_list.append(total_comp_ratio / servers_used)
+        csv_temp_list.append(total_wake_up_ratio / servers_used)
+        csv_temp_list.append(total_sleep_ratio / servers_used)
+        csv_temp_list.append(prob_lifetimes)
+        csv_temp_list.append(total_power_usage)
 		
 	# write to a csv file 
 	with open('simdata%d%dN=%sk=%s.csv' %(problem_type, freq_setting, num_of_servers, pow_con_model), 'ab') as csvfile:
 		simdata = csv.writer(csvfile, delimiter=',')
-		simdata.writerow(Host.csv_temp_list)
+		simdata.writerow(csv_temp_list)

@@ -15,12 +15,10 @@ def init_hosts(config):
     global hosts
     global num_of_hosts
     global main_host
-    global csv_temp_list
 	
     hosts = []
     num_of_hosts = 0
     report_type = config['mpip_report_type']
-    csv_temp_list = list()
 
     # set up the distribution host
     arrival_distribution = config['Energy']['arrival_distribution']

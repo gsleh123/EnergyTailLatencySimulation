@@ -122,10 +122,6 @@ def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, 
 	opt_servers = servers_to_use
 	opt_freq = freq_to_use
 
-    Host.csv_temp_list.append(req_arr_rate)
-    Host.csv_temp_list.append(opt_servers)
-    Host.csv_temp_list.append(opt_freq / 10**9)
-	
     return opt_servers, opt_freq
 
 # enumerate state values
@@ -246,8 +242,14 @@ class DistributionHost:
 	    if Host.hosts[i].state == State.SLEEP:
  	        Host.hosts[i].wake_up_server(env)
 
-        self.active_servers = self.active_servers + 1
-        self.active_servers = self.active_servers - 1
+        #total_latency = 0
+        #for x in range(self.active_servers):
+        #    total_latency = Host.hosts[i].packet_latency
+        
+        #if total_latency > 0.10:
+        #    self.active_servers = self.active_servers + 1
+        #else:
+        #    self.active_servers = self.active_servers - 1
 		
 class ProcessHost:
     def __init__(self, hostid, config, req_size, freq, max_freq, arrival_dist, arrival_kwargs, arrival_rate, wake_up_dist, wake_up_kwargs, dvfs_option):
