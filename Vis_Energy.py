@@ -63,15 +63,20 @@ def show_packet_lifetimes(config):
         total_wake_up_ratio = 0
         total_sleep_ratio = 0
         total_power_usage = 0
+        total_freq = 0
+        count_freq = 0
 
 	# calculate power usage
 	if pow_con_model == 1:
 		power_usage = 1;
 	elif pow_con_model == 2:
 	    for host in Host.hosts:
+                freq = 0
+
                 if sum(host.packet_latency) != 0:
 		    freq = (sum(x * y for x, y in zip(host.packet_freq_history, host.packet_latency)) / sum(host.packet_latency)) / (10**9)
 		    comp_power = ((freq - s_b) / k_m)**2 + b
+                    count_freq = count_freq + 1
                 else:
                     comp_power = 0
 
@@ -89,12 +94,13 @@ def show_packet_lifetimes(config):
 	        total_comp_ratio = total_comp_ratio + comp_ratio
                 total_wake_up_ratio = total_wake_up_ratio + wake_up_ratio
                 total_sleep_ratio = total_sleep_ratio + sleep_ratio
+                total_freq = total_freq + freq
 
         csv_temp_list = list()
         csv_temp_list.append(Host.main_host.num_packets / 7200)
         csv_temp_list.append(arr_times_mean)
         csv_temp_list.append(servers_used)
-        csv_temp_list.append(freq)
+        csv_temp_list.append(total_freq / count_freq)
 	csv_temp_list.append(total_comp_ratio / servers_used)
         csv_temp_list.append(total_wake_up_ratio / servers_used)
         csv_temp_list.append(total_sleep_ratio / servers_used)

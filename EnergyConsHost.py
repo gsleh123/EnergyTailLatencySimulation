@@ -221,7 +221,7 @@ class DistributionHost:
     def create_packet(self, env):
 	# determine which host to send the packet to
 	i = 0
-
+        #print(self.active_servers)
 	if self.routing_option == 'min_queue_length':
 	    min_queue_len = float("inf")
             for x in range(self.active_servers):
@@ -232,24 +232,25 @@ class DistributionHost:
 	else:
 	    i = random.randint(0, self.active_servers - 1)
 
-	    #create packet
-	    pkt = Packet(env.now, Host.hosts[i].packets.qsize())
+	#create packet
+	pkt = Packet(env.now, Host.hosts[i].packets.qsize())
 
-	    #place packet in the queue
-	    Host.hosts[i].packets.put(pkt)
+	#place packet in the queue
+	Host.hosts[i].packets.put(pkt)
 		
-	    # wake up server if we found it to be sleeping
-	    if Host.hosts[i].state == State.SLEEP:
- 	        Host.hosts[i].wake_up_server(env)
+	# wake up server if we found it to be sleeping
+	if Host.hosts[i].state == State.SLEEP:
+ 	    Host.hosts[i].wake_up_server(env)
 
-        #total_latency = 0
-        #for x in range(self.active_servers):
-        #    total_latency = Host.hosts[i].packet_latency
+        total_latency = 0
+        max_servers = len(Host.hosts)
+        for x in range(self.active_servers):
+            total_latency = Host.hosts[i].packet_latency
         
-        #if total_latency > 0.10:
-        #    self.active_servers = self.active_servers + 1
-        #else:
-        #    self.active_servers = self.active_servers - 1
+        if total_latency > 0.10:
+            self.active_servers = min(self.active_servers + 1, max_servers)
+        else:
+            self.active_servers = max(self.active_servers - 1, 1)
 		
 class ProcessHost:
     def __init__(self, hostid, config, req_size, freq, max_freq, arrival_dist, arrival_kwargs, arrival_rate, wake_up_dist, wake_up_kwargs, dvfs_option):
