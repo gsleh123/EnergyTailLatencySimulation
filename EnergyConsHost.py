@@ -131,7 +131,7 @@ class State(Enum):
     AWAKE = 2
 	
 class DistributionHost:
-    def __init__(self, arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option, active_servers, timescale, e):
+    def __init__(self, arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option, active_servers, d_0, timescale, e):
 	self.packets = Queue()
 	self.arrival_dist = arrival_distribution
 	self.arrival_kwargs = arrival_kwargs
@@ -151,7 +151,9 @@ class DistributionHost:
 	self.state = 1
 	self.switch = False
 
+        self.timescale = timescale
         self.e = e
+        self.d_0 = d_0 * self.timescale
 
     def process_arrivals_theoretical(self):
 	env = get_env()
@@ -167,7 +169,7 @@ class DistributionHost:
         env = get_env()
 	arrival_rate = self.arrival_rate
 	state = self.state
-	constOffset = timescale / arrival_rate / timescale;
+	constOffset = self.timescale / arrival_rate / self.timescale;
 	alphaThresh = self.alphaThresh
 	betaThresh = self.betaThresh
 	k = alphaThresh / betaThresh
@@ -179,11 +181,11 @@ class DistributionHost:
 
 	    if state == 0:
 		# generate traffic really quickly 
-	        time_to_wait = np.random.exponential(timescale / arrival_rate * (1 / (1 + alphaThresh/betaThresh)))
+	        time_to_wait = np.random.exponential(self.timescale / arrival_rate * (1 / (1 + alphaThresh/betaThresh)))
 
 		yield env.timeout(time_to_wait)
 	    else:
-		time_till_next_packet_arrival = np.random.exponential(timescale/arrival_rate * (1 / (1  + alphaThresh/betaThresh)))
+		time_till_next_packet_arrival = np.random.exponential(self.timescale/arrival_rate * (1 / (1  + alphaThresh/betaThresh)))
 		yield env.timeout(time_till_next_packet_arrival)
 				
 		self.arrival_times.append(time_till_next_packet_arrival)
@@ -262,7 +264,7 @@ class DistributionHost:
         
         if len(total_latency) >= int(self.arrival_rate * constInt)  and not self.packetFlag:
             temp = 0
-            d_0 = 0.5 * self.timescale
+            d_0 = self.d_0
 
             for latency in total_latency:
                 if latency > d_0:
