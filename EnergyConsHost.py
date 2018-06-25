@@ -30,7 +30,7 @@ def Energy_Runner(target_timestep):
 
 def find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting, servers_to_use, freq_to_use):
     min_servers = 0
-    min_total_power = 1000000
+    min_total_power = float('inf')
     opt_servers = 0
     opt_freq = 0
     flag = 0	
@@ -131,7 +131,7 @@ class State(Enum):
     AWAKE = 2
 	
 class DistributionHost:
-    def __init__(self, arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option, active_servers):
+    def __init__(self, arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option, active_servers, timescale, e):
 	self.packets = Queue()
 	self.arrival_dist = arrival_distribution
 	self.arrival_kwargs = arrival_kwargs
@@ -148,6 +148,8 @@ class DistributionHost:
 	self.state = 1
 	self.switch = False
 
+        self.e = e
+
     def process_arrivals_theoretical(self):
 	env = get_env()
 		
@@ -162,7 +164,7 @@ class DistributionHost:
         env = get_env()
 	arrival_rate = self.arrival_rate
 	state = self.state
-	constOffset = 1000 / arrival_rate / 1000;
+	constOffset = timescale / arrival_rate / timescale;
 	alphaThresh = self.alphaThresh
 	betaThresh = self.betaThresh
 	k = alphaThresh / betaThresh
@@ -174,11 +176,11 @@ class DistributionHost:
 
 	    if state == 0:
 		# generate traffic really quickly 
-	        time_to_wait = np.random.exponential(1000 / arrival_rate * (1 / (1 + alphaThresh/betaThresh)))
+	        time_to_wait = np.random.exponential(timescale / arrival_rate * (1 / (1 + alphaThresh/betaThresh)))
 
 		yield env.timeout(time_to_wait)
 	    else:
-		time_till_next_packet_arrival = np.random.exponential(1000/arrival_rate * (1 / (1  + alphaThresh/betaThresh)))
+		time_till_next_packet_arrival = np.random.exponential(timescale/arrival_rate * (1 / (1  + alphaThresh/betaThresh)))
 		yield env.timeout(time_till_next_packet_arrival)
 				
 		self.arrival_times.append(time_till_next_packet_arrival)
@@ -247,7 +249,7 @@ class DistributionHost:
         for x in range(self.active_servers):
             total_latency = Host.hosts[i].packet_latency
         
-        if total_latency > 0.10:
+        if total_latency > self.e:
             self.active_servers = min(self.active_servers + 1, max_servers)
         else:
             self.active_servers = max(self.active_servers - 1, 1)
@@ -256,7 +258,8 @@ class ProcessHost:
     def __init__(self, hostid, config, req_size, freq, max_freq, arrival_dist, arrival_kwargs, arrival_rate, wake_up_dist, wake_up_kwargs, dvfs_option):
         # class variables
         self.id = hostid
-        self.comp_time = (1000 * req_size) / freq
+        self.timescale = config['timescale']
+        self.comp_time = (self.timescale * req_size) / freq
 	self.req_size = req_size
         self.fixed_freq = self.freq = freq
 	self.max_freq = max_freq
@@ -307,7 +310,7 @@ class ProcessHost:
 		    if self.dvfs_option == 'rubik':
                         if self.packets.qsize() != 0:
 			    for i in range(self.packets.qsize()):
-                                time_spent_in_sys = (env.now - pkt.birth_tick) / 1000
+                                time_spent_in_sys = (env.now - pkt.birth_tick) / self.timescale
                                 temp_freq = (self.fixed_freq / 2) / (0.5 - time_spent_in_sys)
 							
 				if temp_freq > freq:
@@ -315,7 +318,7 @@ class ProcessHost:
 
 				freq = min(freq, self.max_freq)
 
-                            self.comp_time = (1000 * self.req_size) / (freq)
+                            self.comp_time = (self.timescale * self.req_size) / (freq)
 			    self.freq = freq
             elif self.state == State.BOOTING:
 	        # we are booting, so we need to figure out for how long	
@@ -329,7 +332,7 @@ class ProcessHost:
 		self.finish_booting_server(env, time_to_wake_up)
 	    else:
 	        # do nothing, we are already asleep
-		time_to_wait = 1000 / self.arrival_rate / 10
+		time_to_wait = self.timescale / self.arrival_rate / 10
 		yield env.timeout(time_to_wait)
 					
     def finish_packet(self, env, pkt, comp_time, freq):

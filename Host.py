@@ -19,6 +19,7 @@ def init_hosts(config):
     hosts = []
     num_of_hosts = 0
     report_type = config['mpip_report_type']
+    timescale = config['timescale']
 
     # set up the distribution host
     arrival_distribution = config['Energy']['arrival_distribution']
@@ -53,7 +54,7 @@ def init_hosts(config):
     freq_to_use = config['Energy']['freq_to_use']
     dvfs_option = config['Energy']['dvfs_option']
 	
-    main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option, active_servers)
+    main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option, active_servers, timescale, e)
 
     # determine optimal number of servers and optimal frequency
     dimension_depth = 2

@@ -48,6 +48,8 @@ def create_config_dict(parser):
 	if parser.has_option('CC_Config', 'mpip_report_type'):
 		mpip_report_type = parser.get('CC_Config', 'mpip_report_type')
 	options['mpip_report_type'] = mpip_report_type
+        
+        options['timescale'] = float(parser.get('CC_Config', 'timescale'))
 
 	options['Energy'] = dict()
 	options['Energy']['problem_type'] = int(parser.get('Energy', 'problem_type'))
