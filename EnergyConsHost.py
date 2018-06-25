@@ -143,6 +143,9 @@ class DistributionHost:
 	self.count = 0
 	self.routing_option = routing_option
         self.active_servers = active_servers
+        self.min_servers = active_servers
+        self.packetCount = 0
+        self.packetFlag = 0
 
 	# only used for ipp traffic
 	self.state = 1
@@ -239,20 +242,45 @@ class DistributionHost:
 
 	#place packet in the queue
 	Host.hosts[i].packets.put(pkt)
-		
+    
+        constInt = 15
+
 	# wake up server if we found it to be sleeping
 	if Host.hosts[i].state == State.SLEEP:
  	    Host.hosts[i].wake_up_server(env)
 
-        total_latency = 0
-        max_servers = len(Host.hosts)
-        for x in range(self.active_servers):
-            total_latency = Host.hosts[i].packet_latency
+        if self.packetFlag:
+            self.packetCount = self.packetCount + 1
+
+            if self.packetCount >= int(self.arrival_rate * constInt):
+                self.packetFlag = 0
         
-        if total_latency > self.e:
-            self.active_servers = min(self.active_servers + 1, max_servers)
-        else:
-            self.active_servers = max(self.active_servers - 1, 1)
+        total_latency = list()
+        for x in range(self.active_servers):
+            packet_latency_len = min(len(Host.hosts[i].packet_latency), int((self.arrival_rate * constInt / self.active_servers) + 1))
+            total_latency = total_latency + Host.hosts[i].packet_latency[-packet_latency_len:]
+        
+        if len(total_latency) >= int(self.arrival_rate * constInt)  and not self.packetFlag:
+            temp = 0
+            d_0 = 0.5 * self.timescale
+
+            for latency in total_latency:
+                if latency > d_0:
+                    temp+=1
+
+            if len(total_latency) > 0:
+                prob_lifetimes = temp / len(total_latency)
+            else:
+                prob_lifetimes = 0
+
+            if prob_lifetimes > self.e:
+                max_servers = len(Host.hosts)
+                self.active_servers = min(self.active_servers + 1, max_servers)
+                self.packetFlag = 1
+                self.packetCount = 0
+            else:
+                min_servers = self.min_servers
+                self.active_servers = max(self.active_servers - 1, min_servers)
 		
 class ProcessHost:
     def __init__(self, hostid, config, req_size, freq, max_freq, arrival_dist, arrival_kwargs, arrival_rate, wake_up_dist, wake_up_kwargs, dvfs_option):
