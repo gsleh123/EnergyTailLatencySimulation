@@ -67,34 +67,31 @@ def show_packet_lifetimes(config):
         count_freq = 0
 
 	# calculate power usage
-	if pow_con_model == 1:
-		power_usage = 1;
-	elif pow_con_model == 2:
-	    for host in Host.hosts:
-                freq = 0
+	for host in Host.hosts:
+            freq = 0
 
-                if sum(host.packet_latency) != 0:
-		    freq = (sum(x * y for x, y in zip(host.packet_freq_history, host.packet_latency)) / sum(host.packet_latency)) / (10**9)
-		    comp_power = ((freq - s_b) / k_m)**2 + b
-                    count_freq = count_freq + 1
-                else:
-                    comp_power = 0
+            if sum(host.packet_latency) != 0:
+		freq = (sum(x * y for x, y in zip(host.packet_freq_history, host.packet_latency)) / sum(host.packet_latency)) / (10**9)
+		comp_power = ((freq - s_b) / k_m)**2 + b
+                count_freq = count_freq + 1
+            else:
+                comp_power = 0
 
-                total_time = sum(host.computing_times) + sum(host.wake_up_times) + sum(host.sleep_times)
+            total_time = sum(host.computing_times) + sum(host.wake_up_times) + sum(host.sleep_times)
                 
-                if total_time == 0:
-                    power_usage = P_s
-                else:
-		    comp_ratio = sum(host.computing_times) / total_time
-		    wake_up_ratio = sum(host.wake_up_times) / total_time
-		    sleep_ratio = sum(host.sleep_times) / total_time
-		    power_usage = (comp_power * comp_ratio + wake_up_ratio * P_s + sleep_ratio * P_s)
+            if total_time == 0:
+                power_usage = P_s
+            else:
+		comp_ratio = sum(host.computing_times) / total_time
+		wake_up_ratio = sum(host.wake_up_times) / total_time
+		sleep_ratio = sum(host.sleep_times) / total_time
+		power_usage = (comp_power * comp_ratio + wake_up_ratio * P_s + sleep_ratio * P_s)
 
-                total_power_usage = total_power_usage + power_usage
-	        total_comp_ratio = total_comp_ratio + comp_ratio
-                total_wake_up_ratio = total_wake_up_ratio + wake_up_ratio
-                total_sleep_ratio = total_sleep_ratio + sleep_ratio
-                total_freq = total_freq + freq
+            total_power_usage = total_power_usage + power_usage
+	    total_comp_ratio = total_comp_ratio + comp_ratio
+            total_wake_up_ratio = total_wake_up_ratio + wake_up_ratio
+            total_sleep_ratio = total_sleep_ratio + sleep_ratio
+            total_freq = total_freq + freq
 
         csv_temp_list = list()
         csv_temp_list.append(Host.main_host.num_packets / 7200)
