@@ -110,6 +110,8 @@ def create_config_dict(parser):
 	options['Energy']['wake_up_dist_str'] = wake_up_dist_str
 	options['Energy']['wake_up_kwargs'] = wake_up_kwargs
 	
+        options['Energy']['packet_window_size'] = int(parser.get('Energy', 'packet_window_size'))
+
 	if (len(sys.argv) == 3):
 		# read the whole file line by line
 		with open(sys.argv[2]) as f:

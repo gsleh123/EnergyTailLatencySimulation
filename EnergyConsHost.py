@@ -131,7 +131,7 @@ class State(Enum):
     AWAKE = 2
 	
 class DistributionHost:
-    def __init__(self, arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option, active_servers, d_0, timescale, e):
+    def __init__(self, arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option, active_servers, d_0, timescale, e, packet_window_size):
 	self.packets = Queue()
 	self.arrival_dist = arrival_distribution
 	self.arrival_kwargs = arrival_kwargs
@@ -151,6 +151,7 @@ class DistributionHost:
 	self.state = 1
 	self.switch = False
 
+        self.packet_window_size = packet_window_size
         self.timescale = timescale
         self.e = e
         self.d_0 = d_0 * self.timescale
@@ -244,8 +245,6 @@ class DistributionHost:
 
 	#place packet in the queue
 	Host.hosts[i].packets.put(pkt)
-    
-        constInt = 15
 
 	# wake up server if we found it to be sleeping
 	if Host.hosts[i].state == State.SLEEP:
@@ -254,15 +253,15 @@ class DistributionHost:
         if self.packetFlag:
             self.packetCount = self.packetCount + 1
 
-            if self.packetCount >= int(self.arrival_rate * constInt):
+            if self.packetCount >= int(self.packet_window_size):
                 self.packetFlag = 0
         
         total_latency = list()
         for x in range(self.active_servers):
-            packet_latency_len = min(len(Host.hosts[i].packet_latency), int((self.arrival_rate * constInt / self.active_servers) + 1))
+            packet_latency_len = min(len(Host.hosts[i].packet_latency), int((self.packet_window_size / self.active_servers) + 1))
             total_latency = total_latency + Host.hosts[i].packet_latency[-packet_latency_len:]
         
-        if len(total_latency) >= int(self.arrival_rate * constInt)  and not self.packetFlag:
+        if len(total_latency) >= int(self.packet_window_size)  and not self.packetFlag:
             temp = 0
             d_0 = self.d_0
 

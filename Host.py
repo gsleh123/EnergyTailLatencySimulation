@@ -28,6 +28,7 @@ def init_hosts(config):
     alphaThresh = config['Energy']['alphaThresh']
     betaThresh = config['Energy']['betaThresh']
     routing_option = config['Energy']['routing_option']
+    packet_window_size = config['Energy']['packet_window_size']
 
     # retrieve all the settings
     real_data = config['Energy']['real_data']
@@ -54,7 +55,7 @@ def init_hosts(config):
     freq_to_use = config['Energy']['freq_to_use']
     dvfs_option = config['Energy']['dvfs_option']
 	
-    main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option, active_servers, d_0, timescale, e)
+    main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option, active_servers, d_0, timescale, e, packet_window_size)
 
     # determine optimal number of servers and optimal frequency
     dimension_depth = 2
