@@ -3,7 +3,10 @@ from simenv import get_env
 import numpy as np
 from collections import namedtuple
 import itertools
-import EnergyConsHost as ech
+import EnergyRunner as er
+import PoissonAlgorithm as pa
+import ProcessHost
+import DistributionHost
 import sys
 from Queue import Queue
 
@@ -55,11 +58,11 @@ def init_hosts(config):
     freq_to_use = config['Energy']['freq_to_use']
     dvfs_option = config['Energy']['dvfs_option']
 	
-    main_host = ech.DistributionHost(arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option, active_servers, d_0, timescale, e, packet_window_size)
+    main_host = DistributionHost.DistributionHost(arrival_distribution, arrival_kwargs, arrival_rate, alphaThresh, betaThresh, routing_option, active_servers, d_0, timescale, e, packet_window_size)
 
     # determine optimal number of servers and optimal frequency
     dimension_depth = 2
-    [num_of_hosts, freq] = ech.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting, servers_to_use, freq_to_use)
+    [num_of_hosts, freq] = pa.find_hosts(req_arr_rate, req_size, e, d_0, s_b, s_c, pow_con_model, k_m, b, P_s, alpha, num_of_servers, problem_type, freq_setting, servers_to_use, freq_to_use)
 
     # error
     if (num_of_hosts == -1):
@@ -67,7 +70,7 @@ def init_hosts(config):
 				
     for i in range(num_of_hosts):
         # instantiate a new host
-	host = ech.ProcessHost(i, config, req_size, freq, max_freq, arrival_distribution, arrival_kwargs, arrival_rate, wake_up_dist, wake_up_kwargs, dvfs_option)
+	host = ProcessHost.ProcessHost(i, config, req_size, freq, max_freq, arrival_distribution, arrival_kwargs, arrival_rate, wake_up_dist, wake_up_kwargs, dvfs_option)
         hosts.append(host)
 
     env = get_env()
@@ -88,7 +91,7 @@ def init_hosts(config):
 
     target_timestep = config['timesteps']
 		
-    return get_env().process(ech.Energy_Runner(target_timestep))
+    return get_env().process(er.EnergyRunner(target_timestep))
 
 def get_hosts():
     global hosts

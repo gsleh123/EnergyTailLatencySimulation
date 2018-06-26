@@ -1,16 +1,11 @@
-import random
-import logging
-import numpy as np
-import time
-import scipy.stats
-import ast
-import Host
 from simenv import get_env
+import time
 import Vis_Energy
-import sys
+import Host
+import CreateConfigDict
 
 def run(parser):	
-	config = create_config_dict(parser)
+	config = CreateConfigDict.create_config_dict(parser)
 	
 	config['timescalar'] = 1/1.
 	report_type = config['mpip_report_type']
